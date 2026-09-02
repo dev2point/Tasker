@@ -18,6 +18,7 @@ import { ViewMode } from '@/types/task';
 import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PWAInstallButton } from '@/components/pwa/PWAInstallButton';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -147,6 +148,9 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Right Action Tools & Buttons */}
             <div className="flex items-center gap-1 sm:gap-2">
               
+              {/* PWA Install Button */}
+              <PWAInstallButton size="sm" />
+
               {/* Sound Toggle */}
               <Button
                 id="toggle-sound-btn"

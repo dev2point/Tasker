@@ -1,6 +1,6 @@
 {
   "name": "Gestionnaire de Tâches & Calendrier",
-  "description": "Application complète de gestion de tâches avec rappels automatiques, calendrier interactif mensuel/hebdomadaire/quotidien, catégories et notifications.",
+  "description": "Application PWA complète de gestion de tâches et calendrier avec persistance IndexedDB hors-ligne, rappels automatiques et assistant IA.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

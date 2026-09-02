@@ -12,6 +12,8 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { AIAssistantModal } from '@/components/AIAssistantModal';
 import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
+import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
 import {
@@ -536,6 +538,10 @@ export default function HomePage() {
         tasks={tasks}
         onImportTasks={(imported) => saveTasks(imported)}
       />
+
+      {/* PWA Background Services & Offline Connectivity Indicator */}
+      <ServiceWorkerRegister />
+      <OfflineIndicator />
     </div>
   );
 }

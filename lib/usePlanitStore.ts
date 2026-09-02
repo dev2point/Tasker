@@ -1,8 +1,15 @@
 'use client';
 
-import { useSyncExternalStore, useCallback, useMemo } from 'react';
+import { useSyncExternalStore, useCallback, useMemo, useEffect } from 'react';
 import { Task, Category, TaskNotification, ViewMode } from '@/types/task';
 import { DEFAULT_CATEGORIES, getInitialSampleTasks } from '@/lib/constants';
+import {
+  dbPutAllTasks,
+  dbPutAllCategories,
+  dbPutAllNotifications,
+  dbSetPreference,
+  initIndexedDBStore,
+} from '@/lib/db';
 
 const STORAGE_KEYS = {
   TASKS: 'planit_tasks_v1',
@@ -30,6 +37,8 @@ function subscribe(callback: () => void) {
     }
   };
 }
+
+let isDBInitialized = false;
 
 export function usePlanitStore() {
   // Check mounted status safely via useSyncExternalStore
@@ -140,13 +149,36 @@ export function usePlanitStore() {
 
   const soundEnabled = soundEnabledRaw === 'true';
 
-  // State update actions
+  // Initialize and synchronize with IndexedDB on mount
+  useEffect(() => {
+    if (!isMounted || isDBInitialized) return;
+    isDBInitialized = true;
+
+    initIndexedDBStore()
+      .then((data) => {
+        // If IndexedDB had existing records, ensure local store is aligned
+        if (data.tasks.length > 0) {
+          const currentLocal = localStorage.getItem(STORAGE_KEYS.TASKS);
+          if (!currentLocal || currentLocal === '[]') {
+            localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(data.tasks));
+            notify();
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('IndexedDB sync skipped:', err);
+      });
+  }, [isMounted]);
+
+  // State update actions with dual write to LocalStorage & IndexedDB
   const setTasks = useCallback((newTasks: Task[] | ((prev: Task[]) => Task[])) => {
     try {
       const currentTasks: Task[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS) || '[]');
       const resolved = typeof newTasks === 'function' ? newTasks(currentTasks) : newTasks;
       localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(resolved));
       notify();
+      // Background IndexedDB async persist
+      dbPutAllTasks(resolved).catch(console.error);
     } catch {}
   }, []);
 
@@ -158,6 +190,8 @@ export function usePlanitStore() {
       const resolved = typeof newCats === 'function' ? newCats(current) : newCats;
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(resolved));
       notify();
+      // Background IndexedDB async persist
+      dbPutAllCategories(resolved).catch(console.error);
     } catch {}
   }, []);
 
@@ -170,6 +204,8 @@ export function usePlanitStore() {
         const resolved = typeof newNotifs === 'function' ? newNotifs(current) : newNotifs;
         localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(resolved));
         notify();
+        // Background IndexedDB async persist
+        dbPutAllNotifications(resolved).catch(console.error);
       } catch {}
     },
     []
@@ -179,6 +215,7 @@ export function usePlanitStore() {
     try {
       localStorage.setItem(STORAGE_KEYS.VIEW_MODE, view);
       notify();
+      dbSetPreference('view_mode', view).catch(console.error);
     } catch {}
   }, []);
 
@@ -186,6 +223,7 @@ export function usePlanitStore() {
     try {
       localStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, String(enabled));
       notify();
+      dbSetPreference('sound_enabled', enabled).catch(console.error);
     } catch {}
   }, []);
 

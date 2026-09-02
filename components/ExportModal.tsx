@@ -9,6 +9,8 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Database,
+  Smartphone,
 } from 'lucide-react';
 import { Task } from '@/types/task';
 import { generateICalendar, downloadFile } from '@/lib/ical';
@@ -205,6 +207,30 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 onChange={handleFileChange}
                 className="hidden"
               />
+            </div>
+          </div>
+
+          {/* 3. Local IndexedDB & Offline Engine */}
+          <div className="p-3.5 rounded-2xl border border-emerald-100 bg-emerald-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-900 text-xs">Moteur Local IndexedDB</span>
+                  <Badge variant="success" className="text-[9px] py-0 px-1">
+                    Actif
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Stockage structuré local & mode hors-ligne PWA
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-200">
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>{tasks.length} tâches</span>
             </div>
           </div>
         </div>
