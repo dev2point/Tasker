@@ -15,8 +15,10 @@ import {
   Folder,
   AlertCircle,
   Loader2,
+  User as UserIcon,
 } from 'lucide-react';
 import { Task, Priority, Recurrence, Category, Subtask } from '@/types/task';
+import { User } from '@/types/user';
 import { REMINDER_OPTIONS, PRIORITY_CONFIG } from '@/lib/constants';
 import { soundManager } from '@/lib/sound';
 
@@ -26,6 +28,7 @@ interface TaskModalProps {
   onSaveTask: (task: Partial<Task>) => void;
   initialTask?: Task | null;
   categories: Category[];
+  teamUsers?: User[];
   defaultDate?: string; // If opened from a specific calendar date click
 }
 
@@ -34,6 +37,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   onSaveTask,
   initialTask,
   categories,
+  teamUsers = [],
   defaultDate,
 }) => {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -45,6 +49,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   const [hasTime, setHasTime] = useState(Boolean(initialTask?.dueTime || !initialTask));
   const [priority, setPriority] = useState<Priority>(initialTask?.priority || 'medium');
   const [category, setCategory] = useState(initialTask?.category || 'travail');
+  const [assigneeId, setAssigneeId] = useState(initialTask?.assigneeId || '');
   const [reminderMinutesBefore, setReminderMinutesBefore] = useState<number>(
     typeof initialTask?.reminderMinutesBefore === 'number'
       ? initialTask.reminderMinutesBefore
@@ -154,6 +159,8 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
       return;
     }
 
+    const assignedUser = teamUsers.find((u) => u.id === assigneeId);
+
     const taskPayload: Partial<Task> = {
       ...(initialTask ? { id: initialTask.id } : {}),
       title: title.trim(),
@@ -162,6 +169,8 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
       dueTime: hasTime ? dueTime : undefined,
       priority,
       category,
+      assigneeId: assigneeId || undefined,
+      assigneeName: assignedUser ? assignedUser.name : undefined,
       reminderMinutesBefore: Number(reminderMinutesBefore),
       reminderTriggered: false, // reset trigger so new reminder can fire
       recurrence,
@@ -401,6 +410,28 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               </select>
             </div>
           </div>
+
+          {/* Team Member Assignee Selector */}
+          {teamUsers.length > 0 && (
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                <UserIcon className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Membre Assigné (Équipe)</span>
+              </label>
+              <select
+                value={assigneeId}
+                onChange={(e) => setAssigneeId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+              >
+                <option value="">Non assigné (Libre)</option>
+                {teamUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} — {u.role.toUpperCase()} ({u.department || 'Équipe'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Recurrence & Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

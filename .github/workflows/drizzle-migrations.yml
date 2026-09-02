@@ -1,0 +1,68 @@
+name: Drizzle PostgreSQL Migrations
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/db/**'
+      - 'drizzle/**'
+      - 'drizzle.config.ts'
+      - '.github/workflows/drizzle-migrations.yml'
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Action à exécuter'
+        required: true
+        default: 'migrate'
+        type: choice
+        options:
+          - migrate
+          - push
+
+jobs:
+  run-migrations:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install dependencies (including drizzle & drizzle-kit)
+        run: |
+          npm ci || npm install
+
+      - name: 🚀 Run Drizzle Migrations on PostgreSQL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "❌ ERREUR: Le secret DATABASE_URL n'est pas défini dans les secrets GitHub du repository."
+            echo "Veuillez ajouter DATABASE_URL dans Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          if [ "${{ github.event.inputs.command }}" = "push" ]; then
+            echo "⚡ Exécution directe de 'drizzle-kit push'..."
+            npx drizzle-kit push
+          else
+            echo "📦 Exécution des migrations versionnées 'drizzle-kit migrate'..."
+            npx drizzle-kit migrate
+          fi
+
+      - name: ✅ Migration Summary
+        if: success()
+        run: |
+          echo "### 🚀 Drizzle Migrations appliquées avec succès !" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base de données** : PostgreSQL / Supabase" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branche** : \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit** : \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Statut** : Schéma relationnel à jour." >> $GITHUB_STEP_SUMMARY

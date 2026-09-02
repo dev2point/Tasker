@@ -20,6 +20,13 @@ export interface Task {
   completedAt?: string;
   createdAt: string;
   updatedAt: string;
+  // Team & Collaboration
+  workspaceId?: string;
+  creatorId?: string;
+  creatorName?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  assigneeAvatar?: string;
   // Automated reminders configuration
   reminderMinutesBefore: number; // -1 for disabled, 0 for exact time, 5, 10, 15, 30, 60, 120, 1440, 2880
   reminderTriggered?: boolean;

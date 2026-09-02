@@ -218,7 +218,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 text-xs">Moteur Local IndexedDB</span>
+                  <span className="font-bold text-slate-900 text-xs">Moteur Local IndexedDB & PWA</span>
                   <Badge variant="success" className="text-[9px] py-0 px-1">
                     Actif
                   </Badge>
@@ -231,6 +231,26 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-200">
               <Smartphone className="w-3.5 h-3.5" />
               <span>{tasks.length} tâches</span>
+            </div>
+          </div>
+
+          {/* 4. PostgreSQL (Supabase) + Drizzle ORM */}
+          <div className="p-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-900 text-xs">PostgreSQL Supabase (Drizzle ORM)</span>
+                  <Badge variant="default" className="text-[9px] py-0 px-1 bg-indigo-600">
+                    Schéma Prêt
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Support RBAC multi-utilisateurs & montée en charge
+                </p>
+              </div>
             </div>
           </div>
         </div>

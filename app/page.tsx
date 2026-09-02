@@ -12,10 +12,12 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { AIAssistantModal } from '@/components/AIAssistantModal';
 import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
+import { PostgresTeamModal } from '@/components/PostgresTeamModal';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
+import { User } from '@/types/user';
 import {
   evaluateReminders,
   isTaskOverdue,
@@ -48,6 +50,64 @@ export default function HomePage() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isPostgresModalOpen, setIsPostgresModalOpen] = useState<boolean>(false);
+
+  // User & Team State (RBAC)
+  const [currentUser, setCurrentUser] = useState<User>({
+    id: 'usr_admin_1',
+    name: 'Alexandre Roy (Admin)',
+    email: 'alexandre.roy@entreprise.com',
+    role: 'admin',
+    department: 'Direction & Produit',
+    status: 'active',
+  });
+  const [teamUsers, setTeamUsers] = useState<User[]>([
+    {
+      id: 'usr_admin_1',
+      name: 'Alexandre Roy (Admin)',
+      email: 'alexandre.roy@entreprise.com',
+      role: 'admin',
+      department: 'Direction & Produit',
+      status: 'active',
+    },
+    {
+      id: 'usr_mgr_1',
+      name: 'Sophie Martin (Manager)',
+      email: 'sophie.martin@entreprise.com',
+      role: 'manager',
+      department: 'Gestion de Projet',
+      status: 'active',
+    },
+    {
+      id: 'usr_dev_1',
+      name: 'Thomas Dubois',
+      email: 'thomas.dubois@entreprise.com',
+      role: 'member',
+      department: 'Ingénierie & Tech',
+      status: 'active',
+    },
+    {
+      id: 'usr_des_1',
+      name: 'Camille Leroy',
+      email: 'camille.leroy@entreprise.com',
+      role: 'member',
+      department: 'Design UI/UX',
+      status: 'active',
+    },
+  ]);
+
+  // Load team users from API
+  useEffect(() => {
+    if (!isMounted) return;
+    fetch('/api/users')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.users && data.users.length > 0) {
+          setTeamUsers(data.users);
+        }
+      })
+      .catch(() => {});
+  }, [isMounted]);
 
   // Update sound manager & permissions on change after mount
   useEffect(() => {
@@ -428,6 +488,8 @@ export default function HomePage() {
         onOpenAIModal={() => setIsAIModalOpen(true)}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenPostgresModal={() => setIsPostgresModalOpen(true)}
+        currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
         soundEnabled={soundEnabled}
@@ -496,6 +558,7 @@ export default function HomePage() {
         onSaveTask={handleSaveTask}
         initialTask={editingTask}
         categories={categories}
+        teamUsers={teamUsers}
         defaultDate={defaultDateForModal}
       />
 
@@ -537,6 +600,16 @@ export default function HomePage() {
         onClose={() => setIsExportModalOpen(false)}
         tasks={tasks}
         onImportTasks={(imported) => saveTasks(imported)}
+      />
+
+      {/* 6. PostgreSQL Supabase & Team / Roles (RBAC) Modal */}
+      <PostgresTeamModal
+        isOpen={isPostgresModalOpen}
+        onClose={() => setIsPostgresModalOpen(false)}
+        currentUser={currentUser}
+        onSelectUser={(u) => setCurrentUser(u)}
+        tasks={tasks}
+        onTasksSynced={(synced) => saveTasks(synced)}
       />
 
       {/* PWA Background Services & Offline Connectivity Indicator */}

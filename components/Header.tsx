@@ -13,8 +13,11 @@ import {
   Plus,
   Download,
   Clock,
+  Database,
+  User as UserIcon,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
+import { User } from '@/types/user';
 import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +30,8 @@ interface HeaderProps {
   onOpenAIModal: () => void;
   onOpenExportModal: () => void;
   onOpenNotifications: () => void;
+  onOpenPostgresModal?: () => void;
+  currentUser?: User;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
   soundEnabled: boolean;
@@ -41,6 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAIModal,
   onOpenExportModal,
   onOpenNotifications,
+  onOpenPostgresModal,
+  currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
   soundEnabled,
@@ -148,6 +155,27 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Right Action Tools & Buttons */}
             <div className="flex items-center gap-1 sm:gap-2">
               
+              {/* PostgreSQL & Team RBAC Button */}
+              {onOpenPostgresModal && (
+                <Button
+                  id="open-postgres-modal-btn"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenPostgresModal}
+                  title="Base de données PostgreSQL (Supabase) & Équipe / Rôles"
+                  className="border-indigo-200 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold px-2.5 sm:px-3 text-xs gap-1.5"
+                >
+                  <Database className="w-3.5 h-3.5 text-indigo-600" />
+                  {currentUser ? (
+                    <span className="hidden sm:inline font-bold">
+                      {currentUser.name.split(' ')[0]} ({currentUser.role})
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline">PostgreSQL</span>
+                  )}
+                </Button>
+              )}
+
               {/* PWA Install Button */}
               <PWAInstallButton size="sm" />
 

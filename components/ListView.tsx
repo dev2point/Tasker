@@ -645,6 +645,16 @@ export const ListView: React.FC<ListViewProps> = ({
                                 </span>
                               )}
 
+                              {/* Assignee pill */}
+                              {task.assigneeName && (
+                                <span className="flex items-center gap-1 text-indigo-700 font-semibold text-[11px] bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-bold">
+                                    {task.assigneeName.charAt(0)}
+                                  </span>
+                                  <span>{task.assigneeName.split(' ')[0]}</span>
+                                </span>
+                              )}
+
                               {/* Subtasks pill & toggle */}
                               {totalSubtasks > 0 && (
                                 <button
