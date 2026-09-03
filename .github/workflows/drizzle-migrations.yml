@@ -33,12 +33,15 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: 📦 Install dependencies (including drizzle & drizzle-kit)
         run: |
-          npm ci || npm install
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: 🚀 Run Drizzle Migrations on PostgreSQL
         env:
