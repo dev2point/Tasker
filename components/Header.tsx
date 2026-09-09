@@ -15,6 +15,7 @@ import {
   Clock,
   Database,
   User as UserIcon,
+  Lock,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -31,7 +32,8 @@ interface HeaderProps {
   onOpenExportModal: () => void;
   onOpenNotifications: () => void;
   onOpenPostgresModal?: () => void;
-  currentUser?: User;
+  onOpenAuthModal?: () => void;
+  currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
   soundEnabled: boolean;
@@ -47,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenExportModal,
   onOpenNotifications,
   onOpenPostgresModal,
+  onOpenAuthModal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -155,24 +158,55 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Right Action Tools & Buttons */}
             <div className="flex items-center gap-1 sm:gap-2">
               
-              {/* PostgreSQL & Team RBAC Button */}
-              {onOpenPostgresModal && (
+              {/* Better Auth User / Login Button */}
+              {onOpenAuthModal && (
+                <Button
+                  id="open-auth-modal-btn"
+                  variant={currentUser ? 'outline' : 'default'}
+                  size="sm"
+                  onClick={onOpenAuthModal}
+                  title={
+                    currentUser
+                      ? `Connecté en tant que ${currentUser.name} (${currentUser.role})`
+                      : 'Se connecter ou créer un compte (Better Auth)'
+                  }
+                  className={
+                    currentUser
+                      ? 'border-indigo-200 bg-white hover:bg-indigo-50/70 text-indigo-700 font-semibold px-2 sm:px-2.5 text-xs gap-1.5'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 sm:px-3 text-xs gap-1.5 shadow-xs'
+                  }
+                >
+                  <UserIcon className="w-3.5 h-3.5" />
+                  {currentUser ? (
+                    <span className="max-w-[100px] sm:max-w-[130px] truncate font-bold">
+                      {currentUser.name.split(' ')[0]}
+                    </span>
+                  ) : (
+                    <span>Connexion</span>
+                  )}
+                  {currentUser && (
+                    <span className="hidden lg:inline text-[9px] px-1 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold uppercase">
+                      {currentUser.role}
+                    </span>
+                  )}
+                </Button>
+              )}
+
+              {/* PostgreSQL Status Button - Réservé exclusivement aux administrateurs connectés */}
+              {onOpenPostgresModal && currentUser?.role === 'admin' && (
                 <Button
                   id="open-postgres-modal-btn"
                   variant="outline"
                   size="sm"
                   onClick={onOpenPostgresModal}
-                  title="Base de données PostgreSQL (Supabase) & Équipe / Rôles"
-                  className="border-indigo-200 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold px-2.5 sm:px-3 text-xs gap-1.5"
+                  title="Administration PostgreSQL & Rôles (Réservé Admin)"
+                  className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold px-2 sm:px-2.5 text-xs gap-1 shadow-2xs"
                 >
-                  <Database className="w-3.5 h-3.5 text-indigo-600" />
-                  {currentUser ? (
-                    <span className="hidden sm:inline font-bold">
-                      {currentUser.name.split(' ')[0]} ({currentUser.role})
-                    </span>
-                  ) : (
-                    <span className="hidden sm:inline">PostgreSQL</span>
-                  )}
+                  <Database className="w-3.5 h-3.5 text-amber-700" />
+                  <span className="hidden sm:inline">BDD</span>
+                  <span className="hidden lg:inline text-[9px] px-1 py-0.2 rounded bg-amber-200 text-amber-900 font-bold uppercase">
+                    Admin
+                  </span>
                 </Button>
               )}
 
@@ -195,17 +229,39 @@ export const Header: React.FC<HeaderProps> = ({
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </Button>
 
-              {/* AI Assistant Quick Button */}
+              {/* AI Assistant Quick Button - Protégé (invite à la connexion pour les anonymes) */}
               <Button
                 id="open-ai-assistant-btn"
                 variant="outline"
                 size="sm"
-                onClick={onOpenAIModal}
-                title="Assistant IA (Création intelligente & planificateur)"
-                className="border-purple-200/90 bg-purple-50/70 hover:bg-purple-100 text-purple-700 font-semibold px-2.5 sm:px-3 text-xs"
+                onClick={() => {
+                  if (!currentUser) {
+                    // Si anonyme, invite immédiatement à la connexion ou ouvre la modale avec avertissement
+                    if (onOpenAuthModal) {
+                      onOpenAuthModal();
+                    } else {
+                      onOpenAIModal();
+                    }
+                  } else {
+                    onOpenAIModal();
+                  }
+                }}
+                title={
+                  currentUser
+                    ? 'Assistant IA (Création intelligente & planificateur Gemini)'
+                    : 'Assistant IA (Connexion requise pour utiliser Gemini)'
+                }
+                className={`font-semibold px-2.5 sm:px-3 text-xs gap-1.5 transition-all ${
+                  currentUser
+                    ? 'border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-700 shadow-2xs'
+                    : 'border-slate-200 bg-slate-50 hover:bg-purple-50 text-slate-600 hover:text-purple-700'
+                }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                <Sparkles className={`w-3.5 h-3.5 ${currentUser ? 'text-purple-600' : 'text-slate-400'}`} />
                 <span className="hidden sm:inline">Assistant IA</span>
+                {!currentUser && (
+                  <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                )}
               </Button>
 
               {/* Export / iCal Button */}

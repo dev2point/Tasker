@@ -8,6 +8,13 @@
       "when": 1788348635577,
       "tag": "0000_conscious_maria_hill",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788518338645,
+      "tag": "0001_odd_gamora",
+      "breakpoints": true
     }
   ]
 }

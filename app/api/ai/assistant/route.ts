@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -17,6 +18,20 @@ function getGeminiClient(): GoogleGenAI | null {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify authentication: Better Auth session cookie or authenticated user header
+    const session = await auth.api.getSession({
+      headers: await req.headers,
+    }).catch(() => null);
+
+    const customUserHeader = req.headers.get('x-user-id');
+
+    if (!session?.user && !customUserHeader) {
+      return NextResponse.json(
+        { error: "Authentification requise : Veuillez vous connecter pour utiliser l'Assistant IA." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { action, prompt, taskTitle, taskDescription, existingTasks } = body;
 

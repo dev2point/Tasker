@@ -1,6 +1,6 @@
 {
   "name": "Gestionnaire de Tâches & Calendrier",
-  "description": "Application PWA complète de gestion de tâches et calendrier avec persistance IndexedDB hors-ligne, rappels automatiques et assistant IA.",
+  "description": "Application PWA complète de gestion de tâches et calendrier avec authentification Better Auth, base de données PostgreSQL, persistance hors-ligne et rappels automatiques.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

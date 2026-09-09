@@ -13,8 +13,10 @@ import {
   Lightbulb,
   ArrowRight,
   ListTodo,
+  Lock,
 } from 'lucide-react';
 import { Task, Category } from '@/types/task';
+import { User } from '@/types/user';
 import { soundManager } from '@/lib/sound';
 import { PRIORITY_CONFIG } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,8 @@ interface AIAssistantModalProps {
   onAddTask: (task: Partial<Task>) => void;
   existingTasks: Task[];
   categories: Category[];
+  currentUser?: User | null;
+  onOpenAuthModal?: () => void;
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
@@ -35,6 +39,8 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   onAddTask,
   existingTasks,
   categories,
+  currentUser,
+  onOpenAuthModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'plan'>('create');
   const [naturalPrompt, setNaturalPrompt] = useState('');
@@ -62,6 +68,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   ];
 
   const handleParseTask = async (customPrompt?: string) => {
+    if (!currentUser) {
+      setErrorMsg("Authentification requise : Veuillez vous connecter pour utiliser l'Assistant IA.");
+      return;
+    }
     const textToUse = customPrompt || naturalPrompt;
     if (!textToUse.trim()) return;
 
@@ -72,7 +82,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     try {
       const res = await fetch('/api/ai/assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentUser?.id ? { 'x-user-id': currentUser.id } : {}),
+        },
         body: JSON.stringify({
           action: 'parse_task',
           prompt: textToUse.trim(),
@@ -120,6 +133,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   };
 
   const handleGetDailyAdvice = async () => {
+    if (!currentUser) {
+      setErrorMsg("Authentification requise : Veuillez vous connecter pour obtenir des conseils personnalisés.");
+      return;
+    }
     setErrorMsg('');
     setLoading(true);
     setDailyAdvice(null);
@@ -127,7 +144,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     try {
       const res = await fetch('/api/ai/assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentUser?.id ? { 'x-user-id': currentUser.id } : {}),
+        },
         body: JSON.stringify({
           action: 'daily_planner_advice',
           existingTasks: existingTasks.slice(0, 15),
@@ -179,8 +199,51 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           </button>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex border-b border-slate-100 bg-slate-50 px-4 pt-3 gap-2">
+        {/* If User is not logged in, display Authentication Gate */}
+        {!currentUser ? (
+          <div className="p-6 sm:p-8 flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-5 my-auto">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-100 to-indigo-100 text-purple-700 flex items-center justify-center border border-purple-200/80 shadow-xs">
+              <Lock className="w-7 h-7 stroke-[2.2]" />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-bold uppercase tracking-wide border border-purple-200">
+                <Sparkles className="w-3 h-3" />
+                Accès Protégé
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg tracking-tight">
+                Connexion requise pour l&apos;Assistant IA
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
+                L&apos;utilisation de l&apos;intelligence artificielle Gemini pour la création intelligente de tâches et l&apos;optimisation de planning nécessite d&apos;être connecté à votre compte.
+              </p>
+            </div>
+
+            <div className="w-full pt-2 flex flex-col gap-2">
+              <Button
+                id="ai-modal-auth-cta-btn"
+                onClick={() => {
+                  onClose();
+                  onOpenAuthModal?.();
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 shadow-sm shadow-indigo-200"
+              >
+                Se connecter ou créer un compte
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-xs text-slate-500 hover:text-slate-700"
+              >
+                Continuer sans IA
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Tab Selection */}
+            <div className="flex border-b border-slate-100 bg-slate-50 px-4 pt-3 gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('create')}
@@ -428,7 +491,9 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </>
+    )}
+  </div>
+</div>
   );
 };

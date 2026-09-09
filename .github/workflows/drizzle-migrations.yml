@@ -61,6 +61,9 @@ jobs:
             npx drizzle-kit migrate
           fi
 
+          echo "🔍 Vérification des tables créées dans la base de données..."
+          node scripts/verify-db.mjs
+
       - name: ✅ Migration Summary
         if: success()
         run: |

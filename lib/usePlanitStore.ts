@@ -54,10 +54,15 @@ export function usePlanitStore() {
     () => {
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.TASKS);
-        if (raw) return raw;
-        const initial = JSON.stringify(getInitialSampleTasks());
-        localStorage.setItem(STORAGE_KEYS.TASKS, initial);
-        return initial;
+        if (raw) {
+          if (raw.includes('"sample-')) {
+            localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
+            return '[]';
+          }
+          return raw;
+        }
+        localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
+        return '[]';
       } catch {
         return '[]';
       }

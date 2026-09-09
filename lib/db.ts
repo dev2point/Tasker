@@ -234,7 +234,7 @@ export async function initIndexedDBStore(): Promise<{
   const db = await getIndexedDB();
   if (!db) {
     return {
-      tasks: getInitialSampleTasks(),
+      tasks: [],
       categories: DEFAULT_CATEGORIES,
       notifications: [],
       viewMode: 'list',
@@ -245,17 +245,10 @@ export async function initIndexedDBStore(): Promise<{
   try {
     // 1. Check if tasks exist
     let tasks = await db.getAll('tasks');
-    if (tasks.length === 0) {
-      // Check if localStorage has older data
-      const local = localStorage.getItem('planit_tasks_v1');
-      if (local) {
-        try {
-          tasks = JSON.parse(local);
-        } catch {}
-      }
-      if (!tasks || tasks.length === 0) {
-        tasks = getInitialSampleTasks();
-      }
+
+    // Purge any legacy sample mock tasks
+    if (tasks.some((t) => t.id.startsWith('sample-'))) {
+      tasks = tasks.filter((t) => !t.id.startsWith('sample-'));
       await dbPutAllTasks(tasks);
     }
 
@@ -283,7 +276,7 @@ export async function initIndexedDBStore(): Promise<{
   } catch (err) {
     console.error('Failed to initialize IndexedDB:', err);
     return {
-      tasks: getInitialSampleTasks(),
+      tasks: [],
       categories: DEFAULT_CATEGORIES,
       notifications: [],
       viewMode: 'list',

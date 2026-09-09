@@ -13,11 +13,13 @@ import { AIAssistantModal } from '@/components/AIAssistantModal';
 import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
+import { AuthModal } from '@/components/AuthModal';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
+import { useSession } from '@/lib/auth-client';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
-import { User } from '@/types/user';
+import { User, UserRole } from '@/types/user';
 import {
   evaluateReminders,
   isTaskOverdue,
@@ -51,63 +53,64 @@ export default function HomePage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isPostgresModalOpen, setIsPostgresModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
-  // User & Team State (RBAC)
-  const [currentUser, setCurrentUser] = useState<User>({
-    id: 'usr_admin_1',
-    name: 'Alexandre Roy (Admin)',
-    email: 'alexandre.roy@entreprise.com',
-    role: 'admin',
-    department: 'Direction & Produit',
-    status: 'active',
-  });
-  const [teamUsers, setTeamUsers] = useState<User[]>([
-    {
-      id: 'usr_admin_1',
-      name: 'Alexandre Roy (Admin)',
-      email: 'alexandre.roy@entreprise.com',
-      role: 'admin',
-      department: 'Direction & Produit',
-      status: 'active',
-    },
-    {
-      id: 'usr_mgr_1',
-      name: 'Sophie Martin (Manager)',
-      email: 'sophie.martin@entreprise.com',
-      role: 'manager',
-      department: 'Gestion de Projet',
-      status: 'active',
-    },
-    {
-      id: 'usr_dev_1',
-      name: 'Thomas Dubois',
-      email: 'thomas.dubois@entreprise.com',
-      role: 'member',
-      department: 'Ingénierie & Tech',
-      status: 'active',
-    },
-    {
-      id: 'usr_des_1',
-      name: 'Camille Leroy',
-      email: 'camille.leroy@entreprise.com',
-      role: 'member',
-      department: 'Design UI/UX',
-      status: 'active',
-    },
-  ]);
+  // Better Auth session hook
+  const { data: authSession } = useSession();
 
-  // Load team users from API
-  useEffect(() => {
-    if (!isMounted) return;
+  // User & Team State (RBAC) - Strictly loaded from PostgreSQL & Better Auth
+  const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(null);
+  const [teamUsers, setTeamUsers] = useState<User[]>([]);
+
+  // Function to refresh users list from API
+  const refreshUsers = useCallback(() => {
     fetch('/api/users')
       .then((res) => res.json())
       .then((data) => {
-        if (data.users && data.users.length > 0) {
+        if (data.users && Array.isArray(data.users)) {
           setTeamUsers(data.users);
+          if (data.users.length > 0) {
+            setSelectedFallbackUser((prev) => prev || data.users[0]);
+          }
         }
       })
-      .catch(() => {});
-  }, [isMounted]);
+      .catch((err) => console.error('Error fetching users from database:', err));
+  }, []);
+
+  // Derived active user: Better Auth authenticated session takes precedence
+  const currentUser: User | null = useMemo(() => {
+    if (authSession?.user) {
+      const u = authSession.user as any;
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: (u.role as UserRole) || 'member',
+        department: u.department || undefined,
+        status: (u.status as any) || 'active',
+        avatarUrl: u.image || undefined,
+        createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
+      };
+    }
+    return selectedFallbackUser;
+  }, [authSession?.user, selectedFallbackUser]);
+
+  // Load tasks and team users strictly from PostgreSQL API
+  useEffect(() => {
+    if (!isMounted) return;
+
+    refreshUsers();
+
+    // Fetch tasks strictly from PostgreSQL database
+    fetch('/api/tasks')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.tasks && Array.isArray(data.tasks)) {
+          setTasks(data.tasks);
+        }
+      })
+      .catch((err) => console.error('Error fetching tasks from database:', err));
+  }, [isMounted, setTasks, refreshUsers]);
 
   // Update sound manager & permissions on change after mount
   useEffect(() => {
@@ -116,6 +119,29 @@ export default function HomePage() {
       requestNotificationPermission();
     }
   }, [soundEnabled, isMounted]);
+
+  // Database persistence helpers
+  const persistTaskToDb = useCallback(async (task: Task) => {
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+    } catch (err) {
+      console.error('Error persisting task to PostgreSQL:', err);
+    }
+  }, []);
+
+  const deleteTaskFromDb = useCallback(async (taskId: string) => {
+    try {
+      await fetch(`/api/tasks?id=${encodeURIComponent(taskId)}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Error deleting task from PostgreSQL:', err);
+    }
+  }, []);
 
   // Save tasks helper
   const saveTasks = useCallback((updatedTasks: Task[]) => {
@@ -162,11 +188,14 @@ export default function HomePage() {
 
         // Update task states
         const triggeredIds = new Set(triggeredTasks.map((t) => t.id));
-        const updatedTasks = tasks.map((t) =>
-          triggeredIds.has(t.id)
-            ? { ...t, reminderTriggered: true, reminderTriggeredAt: new Date(now).toISOString() }
-            : t
-        );
+        const updatedTasks = tasks.map((t) => {
+          if (triggeredIds.has(t.id)) {
+            const updated = { ...t, reminderTriggered: true, reminderTriggeredAt: new Date(now).toISOString() };
+            persistTaskToDb(updated);
+            return updated;
+          }
+          return t;
+        });
         saveTasks(updatedTasks);
 
         // Append to notifications list
@@ -179,7 +208,7 @@ export default function HomePage() {
     checkReminders();
     const interval = setInterval(checkReminders, 10000); // 10 seconds
     return () => clearInterval(interval);
-  }, [isMounted, tasks, notifications, saveTasks, saveNotifications]);
+  }, [isMounted, tasks, notifications, saveTasks, saveNotifications, persistTaskToDb]);
 
   // Open Task Modal (Create or Edit)
   const handleOpenTaskModal = (task?: Task, defaultDate?: string) => {
@@ -194,15 +223,21 @@ export default function HomePage() {
 
     if (taskPayload.id) {
       // Update existing
-      const updated = tasks.map((t) =>
-        t.id === taskPayload.id
-          ? ({
-              ...t,
-              ...taskPayload,
-              updatedAt: nowIso,
-            } as Task)
-          : t
-      );
+      let updatedTaskObj: Task | null = null;
+      const updated = tasks.map((t) => {
+        if (t.id === taskPayload.id) {
+          updatedTaskObj = {
+            ...t,
+            ...taskPayload,
+            updatedAt: nowIso,
+          } as Task;
+          return updatedTaskObj;
+        }
+        return t;
+      });
+      if (updatedTaskObj) {
+        persistTaskToDb(updatedTaskObj);
+      }
       saveTasks(updated);
     } else {
       // Create new
@@ -227,6 +262,7 @@ export default function HomePage() {
         subtasks: taskPayload.subtasks || [],
         status: taskPayload.status || 'todo',
       };
+      persistTaskToDb(newTask);
       saveTasks([newTask, ...tasks]);
     }
   };
@@ -234,6 +270,7 @@ export default function HomePage() {
   // Toggle Task Completion (with automated recurrence handling)
   const handleToggleComplete = (taskId: string) => {
     let newTaskToSpawn: Task | null = null;
+    let targetUpdatedTask: Task | null = null;
 
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
@@ -256,18 +293,23 @@ export default function HomePage() {
           };
         }
 
-        return {
+        targetUpdatedTask = {
           ...t,
           completed: nextCompleted,
           status: (nextCompleted ? 'completed' : 'todo') as 'completed' | 'todo',
           completedAt: nextCompleted ? nowIso : undefined,
           updatedAt: nowIso,
         };
+        return targetUpdatedTask;
       }
       return t;
     });
 
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     if (newTaskToSpawn) {
+      persistTaskToDb(newTaskToSpawn);
       saveTasks([newTaskToSpawn, ...updated]);
     } else {
       saveTasks(updated);
@@ -276,6 +318,7 @@ export default function HomePage() {
 
   // Delete Task
   const handleDeleteTask = (taskId: string) => {
+    deleteTaskFromDb(taskId);
     saveTasks(tasks.filter((t) => t.id !== taskId));
   };
 
@@ -291,6 +334,7 @@ export default function HomePage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    persistTaskToDb(dup);
     saveTasks([dup, ...tasks]);
     soundManager.playClickSound();
   };
@@ -321,26 +365,33 @@ export default function HomePage() {
       subtasks: [],
       status: 'todo',
     };
+    persistTaskToDb(newTask);
     saveTasks([newTask, ...tasks]);
   };
 
   // Toggle Subtask Completion
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
     soundManager.playClickSound();
+    let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
         const subtasks = t.subtasks.map((st) =>
           st.id === subtaskId ? { ...st, completed: !st.completed } : st
         );
-        return { ...t, subtasks };
+        targetUpdatedTask = { ...t, subtasks };
+        return targetUpdatedTask;
       }
       return t;
     });
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     saveTasks(updated);
   };
 
   // Postpone Task (+1 or +N days)
   const handlePostponeTask = (taskId: string, days: number = 1) => {
+    let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
         const [y, m, d] = t.dueDate.split('-').map(Number);
@@ -349,15 +400,19 @@ export default function HomePage() {
         const yyyy = date.getFullYear();
         const mm = String(date.getMonth() + 1).padStart(2, '0');
         const dd = String(date.getDate()).padStart(2, '0');
-        return {
+        targetUpdatedTask = {
           ...t,
           dueDate: `${yyyy}-${mm}-${dd}`,
           reminderTriggered: false,
           updatedAt: new Date().toISOString(),
         };
+        return targetUpdatedTask;
       }
       return t;
     });
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     saveTasks(updated);
     soundManager.playClickSound();
   };
@@ -365,16 +420,22 @@ export default function HomePage() {
   // Reschedule to Today
   const handleRescheduleToToday = (taskId: string) => {
     const todayStr = new Date().toISOString().split('T')[0];
-    const updated = tasks.map((t) =>
-      t.id === taskId
-        ? {
-            ...t,
-            dueDate: todayStr,
-            reminderTriggered: false,
-            updatedAt: new Date().toISOString(),
-          }
-        : t
-    );
+    let targetUpdatedTask: Task | null = null;
+    const updated = tasks.map((t) => {
+      if (t.id === taskId) {
+        targetUpdatedTask = {
+          ...t,
+          dueDate: todayStr,
+          reminderTriggered: false,
+          updatedAt: new Date().toISOString(),
+        };
+        return targetUpdatedTask;
+      }
+      return t;
+    });
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     saveTasks(updated);
     soundManager.playClickSound();
   };
@@ -386,17 +447,23 @@ export default function HomePage() {
   ) => {
     const isCompleted = newStatus === 'completed';
     const nowIso = new Date().toISOString();
-    const updated = tasks.map((t) =>
-      t.id === taskId
-        ? {
-            ...t,
-            status: newStatus,
-            completed: isCompleted,
-            completedAt: isCompleted ? nowIso : undefined,
-            updatedAt: nowIso,
-          }
-        : t
-    );
+    let targetUpdatedTask: Task | null = null;
+    const updated = tasks.map((t) => {
+      if (t.id === taskId) {
+        targetUpdatedTask = {
+          ...t,
+          status: newStatus,
+          completed: isCompleted,
+          completedAt: isCompleted ? nowIso : undefined,
+          updatedAt: nowIso,
+        };
+        return targetUpdatedTask;
+      }
+      return t;
+    });
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     saveTasks(updated);
   };
 
@@ -485,10 +552,19 @@ export default function HomePage() {
         currentView={currentView}
         onViewChange={handleViewChange}
         onOpenNewTaskModal={() => handleOpenTaskModal()}
-        onOpenAIModal={() => setIsAIModalOpen(true)}
+        onOpenAIModal={() => {
+          if (!currentUser) {
+            setIsAuthModalOpen(true);
+          } else {
+            setIsAIModalOpen(true);
+          }
+        }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenPostgresModal={() => setIsPostgresModalOpen(true)}
+        onOpenPostgresModal={
+          currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
+        }
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -592,6 +668,8 @@ export default function HomePage() {
         onAddTask={(parsed) => handleSaveTask(parsed)}
         existingTasks={tasks}
         categories={categories}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
       {/* 5. iCal & JSON Export/Import Modal */}
@@ -599,17 +677,35 @@ export default function HomePage() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         tasks={tasks}
-        onImportTasks={(imported) => saveTasks(imported)}
+        onImportTasks={(imported) => {
+          saveTasks(imported);
+          fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(imported),
+          }).catch(console.error);
+        }}
       />
 
-      {/* 6. PostgreSQL Supabase & Team / Roles (RBAC) Modal */}
-      <PostgresTeamModal
-        isOpen={isPostgresModalOpen}
-        onClose={() => setIsPostgresModalOpen(false)}
-        currentUser={currentUser}
-        onSelectUser={(u) => setCurrentUser(u)}
-        tasks={tasks}
-        onTasksSynced={(synced) => saveTasks(synced)}
+      {/* 6. PostgreSQL Supabase & Team / Roles (RBAC) Modal - Réservé exclusivement aux administrateurs */}
+      {isPostgresModalOpen && currentUser?.role === 'admin' && (
+        <PostgresTeamModal
+          isOpen={isPostgresModalOpen}
+          onClose={() => setIsPostgresModalOpen(false)}
+          currentUser={currentUser}
+          onSelectUser={(u) => setSelectedFallbackUser(u)}
+          tasks={tasks}
+          onTasksSynced={(synced) => saveTasks(synced)}
+        />
+      )}
+
+      {/* 7. Better Auth Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={() => {
+          refreshUsers();
+        }}
       />
 
       {/* PWA Background Services & Offline Connectivity Indicator */}

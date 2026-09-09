@@ -1,91 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { users } from '@/src/db/schema';
+import { users, user as authUser } from '@/src/db/schema';
+import { eq } from 'drizzle-orm';
 import { User, UserRole } from '@/types/user';
-
-const DEFAULT_TEAM_USERS: User[] = [
-  {
-    id: 'usr_admin_1',
-    name: 'Alexandre Roy (Admin)',
-    email: 'alexandre.roy@entreprise.com',
-    role: 'admin',
-    department: 'Direction & Produit',
-    status: 'active',
-  },
-  {
-    id: 'usr_mgr_1',
-    name: 'Sophie Martin (Manager)',
-    email: 'sophie.martin@entreprise.com',
-    role: 'manager',
-    department: 'Gestion de Projet',
-    status: 'active',
-  },
-  {
-    id: 'usr_dev_1',
-    name: 'Thomas Dubois',
-    email: 'thomas.dubois@entreprise.com',
-    role: 'member',
-    department: 'Ingénierie & Tech',
-    status: 'active',
-  },
-  {
-    id: 'usr_des_1',
-    name: 'Camille Leroy',
-    email: 'camille.leroy@entreprise.com',
-    role: 'member',
-    department: 'Design UI/UX',
-    status: 'active',
-  },
-  {
-    id: 'usr_gst_1',
-    name: 'Invité Client (Lecture)',
-    email: 'guest@partenaire.com',
-    role: 'guest',
-    department: 'Partenariat',
-    status: 'active',
-  },
-];
 
 export async function GET() {
   const db = getDrizzleDb();
 
   if (!db || !isDatabaseConfigured()) {
-    // Return standard team members
     return NextResponse.json({
-      source: 'local_cache',
-      users: DEFAULT_TEAM_USERS,
+      source: 'offline',
+      users: [],
     });
   }
 
   try {
     await ensureDatabaseTables();
-    let dbUsers = await db.select().from(users);
+    const [dbUsers, dbAuthUsers] = await Promise.all([
+      db.select().from(users).catch(() => []),
+      db.select().from(authUser).catch(() => []),
+    ]);
 
-    // Seed default team users if DB is empty
-    if (dbUsers.length === 0) {
-      for (const u of DEFAULT_TEAM_USERS) {
-        await db.insert(users).values({
+    const userMap = new Map<string, User>();
+
+    // Better Auth users (primary authenticated accounts)
+    for (const u of dbAuthUsers) {
+      userMap.set(u.email.toLowerCase(), {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: (u.role as UserRole) || 'member',
+        department: u.department || undefined,
+        status: (u.status as 'active' | 'away' | 'offline') || 'active',
+        avatarUrl: u.image || undefined,
+        createdAt: u.createdAt.toISOString(),
+      });
+    }
+
+    // Additional team users
+    for (const u of dbUsers) {
+      if (!userMap.has(u.email.toLowerCase())) {
+        userMap.set(u.email.toLowerCase(), {
           id: u.id,
           name: u.name,
           email: u.email,
-          role: u.role,
-          department: u.department,
-          status: u.status || 'active',
+          role: (u.role as UserRole) || 'member',
+          department: u.department || undefined,
+          status: (u.status as 'active' | 'away' | 'offline') || 'active',
+          avatarUrl: u.avatarUrl || undefined,
+          createdAt: u.createdAt.toISOString(),
         });
       }
-      dbUsers = await db.select().from(users);
     }
 
-    const formatted: User[] = dbUsers.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      role: (u.role as UserRole) || 'member',
-      department: u.department || undefined,
-      status: (u.status as 'active' | 'away' | 'offline') || 'active',
-      avatarUrl: u.avatarUrl || undefined,
-      createdAt: u.createdAt.toISOString(),
-    }));
+    const formatted = Array.from(userMap.values());
 
     return NextResponse.json({
       source: 'postgresql_supabase',
@@ -94,8 +62,8 @@ export async function GET() {
   } catch (error) {
     console.error('Error querying users from PostgreSQL:', error);
     return NextResponse.json({
-      source: 'fallback',
-      users: DEFAULT_TEAM_USERS,
+      source: 'error',
+      users: [],
       error: error instanceof Error ? error.message : 'Database error',
     });
   }
@@ -133,6 +101,16 @@ export async function POST(req: NextRequest) {
         role: newUser.role,
         department: newUser.department,
         status: newUser.status,
+      }).catch(async () => {
+        // If users fails, try authUser table
+        await db.insert(authUser).values({
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          department: newUser.department,
+          status: newUser.status,
+        });
       });
     }
 
@@ -144,3 +122,31 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 });
+    }
+
+    const db = getDrizzleDb();
+    if (db && isDatabaseConfigured()) {
+      await ensureDatabaseTables();
+      await Promise.all([
+        db.delete(users).where(eq(users.id, id)).catch(() => {}),
+        db.delete(authUser).where(eq(authUser.id, id)).catch(() => {}),
+      ]);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
+}
+

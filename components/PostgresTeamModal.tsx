@@ -26,7 +26,7 @@ import { Task } from '@/types/task';
 interface PostgresTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser: User;
+  currentUser?: User | null;
   onSelectUser: (user: User) => void;
   tasks: Task[];
   onTasksSynced?: (tasks: Task[]) => void;
@@ -442,76 +442,86 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
               {/* Team Members List */}
               <div className="space-y-2">
-                {teamUsers.map((u) => {
-                  const isCurrent = currentUser.id === u.id;
-                  const assignedCount = tasks.filter((t) => t.assigneeId === u.id).length;
+                {teamUsers.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl text-slate-500">
+                    <Users className="w-8 h-8 text-slate-400 mx-auto mb-2 stroke-[1.5]" />
+                    <p className="text-xs font-semibold text-slate-700">Aucun membre dans la base de données</p>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Cliquez sur &quot;Ajouter un membre&quot; ci-dessus pour enregistrer votre premier profil utilisateur dans PostgreSQL.
+                    </p>
+                  </div>
+                ) : (
+                  teamUsers.map((u) => {
+                    const isCurrent = currentUser?.id === u.id;
+                    const assignedCount = tasks.filter((t) => t.assigneeId === u.id).length;
 
-                  return (
-                    <div
-                      key={u.id}
-                      className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
-                        isCurrent
-                          ? 'border-indigo-500 bg-indigo-50/60 shadow-xs'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs uppercase">
-                          {u.name.substring(0, 2)}
+                    return (
+                      <div
+                        key={u.id}
+                        className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
+                          isCurrent
+                            ? 'border-indigo-500 bg-indigo-50/60 shadow-xs'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs uppercase">
+                            {u.name.substring(0, 2)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-slate-900">{u.name}</span>
+                              <span
+                                className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                                  u.role === 'admin'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : u.role === 'manager'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : u.role === 'guest'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                }`}
+                              >
+                                {u.role.toUpperCase()}
+                              </span>
+                              {isCurrent && (
+                                <Badge variant="default" className="text-[9px] py-0 px-1 bg-indigo-600">
+                                  Actuel
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                              <span>{u.email}</span>
+                              {u.department && (
+                                <>
+                                  <span>•</span>
+                                  <span>{u.department}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-slate-900">{u.name}</span>
-                            <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
-                                u.role === 'admin'
-                                  ? 'bg-purple-100 text-purple-700'
-                                  : u.role === 'manager'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : u.role === 'guest'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-emerald-100 text-emerald-700'
-                              }`}
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                            {assignedCount} tâche{assignedCount > 1 ? 's' : ''}
+                          </span>
+                          {!isCurrent && (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              onClick={() => onSelectUser(u)}
+                              className="text-xs gap-1"
                             >
-                              {u.role.toUpperCase()}
-                            </span>
-                            {isCurrent && (
-                              <Badge variant="default" className="text-[9px] py-0 px-1 bg-indigo-600">
-                                Actuel
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                            <span>{u.email}</span>
-                            {u.department && (
-                              <>
-                                <span>•</span>
-                                <span>{u.department}</span>
-                              </>
-                            )}
-                          </div>
+                              <UserCheck className="w-3 h-3" />
+                              Incarner
+                            </Button>
+                          )}
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                          {assignedCount} tâche{assignedCount > 1 ? 's' : ''}
-                        </span>
-                        {!isCurrent && (
-                          <Button
-                            variant="outline"
-                            size="xs"
-                            onClick={() => onSelectUser(u)}
-                            className="text-xs gap-1"
-                          >
-                            <UserCheck className="w-3 h-3" />
-                            Incarner
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
@@ -668,6 +678,18 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                     id, task_id, user_id, user_name, action, details, created_at
                   </p>
                 </div>
+
+                <div className="p-3 rounded-xl border border-indigo-200 bg-indigo-50/40 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-indigo-700 font-mono">user, session, account</span>
+                    <Badge variant="indigo" className="text-[9px]">
+                      Better Auth (Auth & Sessions)
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Authentification complète autonome : comptes, mots de passe chiffrés, sessions avec cookies HttpOnly, rôles et départements.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -676,9 +698,15 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
         {/* Footer */}
         <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-600">
-            <span className="font-semibold text-slate-900">{currentUser.name}</span>
-            <span className="text-slate-400">•</span>
-            <span className="capitalize text-indigo-600 font-bold">{currentUser.role}</span>
+            {currentUser ? (
+              <>
+                <span className="font-semibold text-slate-900">{currentUser.name}</span>
+                <span className="text-slate-400">•</span>
+                <span className="capitalize text-indigo-600 font-bold">{currentUser.role}</span>
+              </>
+            ) : (
+              <span className="text-slate-500 italic">Aucun profil actif sélectionné</span>
+            )}
           </div>
           <Button onClick={onClose} size="sm" className="text-xs font-semibold">
             Fermer
