@@ -4,6 +4,8 @@ import * as schema from '@/src/db/schema';
 
 let client: postgres.Sql | null = null;
 let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let tablesInitialized = false;
+let tablesEnsuredPromise: Promise<{ success: boolean; message: string }> | null = null;
 
 export function getDatabaseUrl(): string | undefined {
   let url = process.env.DATABASE_URL;
@@ -46,6 +48,7 @@ export function getPostgresClient(): postgres.Sql | null {
       max: 10,
       idle_timeout: 20,
       connect_timeout: 10,
+      prepare: false, // Essential for Supabase pooler / PgBouncer transaction mode
       ssl: isRemote ? 'require' : undefined,
     });
   }
@@ -69,18 +72,26 @@ export function getDrizzleDb() {
 
 /**
  * Initializes tables in PostgreSQL if they don't exist yet.
- * Safe to call on first connection.
+ * Safe to call on first connection; memoized to run at most once per process.
  */
 export async function ensureDatabaseTables(): Promise<{ success: boolean; message: string }> {
-  const sql = getPostgresClient();
-  if (!sql) {
-    return {
-      success: false,
-      message: 'DATABASE_URL is not configured.',
-    };
+  if (tablesInitialized) {
+    return { success: true, message: 'PostgreSQL schema already initialized.' };
+  }
+  if (tablesEnsuredPromise) {
+    return tablesEnsuredPromise;
   }
 
-  try {
+  tablesEnsuredPromise = (async () => {
+    const sql = getPostgresClient();
+    if (!sql) {
+      return {
+        success: false,
+        message: 'DATABASE_URL is not configured.',
+      };
+    }
+
+    try {
     // 1. Users
     await sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -311,15 +322,20 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       $$;
     `);
 
-    return {
-      success: true,
-      message: 'PostgreSQL schema verified and initialized successfully with RLS policies.',
-    };
-  } catch (error) {
-    console.error('Error creating PostgreSQL tables:', error);
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Unknown database error',
-    };
-  }
+      tablesInitialized = true;
+      return {
+        success: true,
+        message: 'PostgreSQL schema verified and initialized successfully with RLS policies.',
+      };
+    } catch (error) {
+      tablesEnsuredPromise = null;
+      console.warn('Error creating PostgreSQL tables:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown database error',
+      };
+    }
+  })();
+
+  return tablesEnsuredPromise;
 }

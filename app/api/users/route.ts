@@ -60,7 +60,7 @@ export async function GET() {
       users: formatted,
     });
   } catch (error) {
-    console.error('Error querying users from PostgreSQL:', error);
+    console.warn('Error querying users from PostgreSQL:', error);
     return NextResponse.json({
       source: 'error',
       users: [],

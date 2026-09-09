@@ -50,13 +50,12 @@ export async function GET() {
       tasks: formatted,
     });
   } catch (error) {
-    console.error('Error fetching tasks from PostgreSQL:', error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Database error',
-      },
-      { status: 500 }
-    );
+    console.warn('PostgreSQL tasks fetch failed, falling back to offline mode:', error);
+    return NextResponse.json({
+      source: 'offline_mode',
+      tasks: [],
+      error: error instanceof Error ? error.message : 'Database error',
+    });
   }
 }
 

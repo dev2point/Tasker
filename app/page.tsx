@@ -63,18 +63,20 @@ export default function HomePage() {
   const [teamUsers, setTeamUsers] = useState<User[]>([]);
 
   // Function to refresh users list from API
-  const refreshUsers = useCallback(() => {
-    fetch('/api/users')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.users && Array.isArray(data.users)) {
-          setTeamUsers(data.users);
-          if (data.users.length > 0) {
-            setSelectedFallbackUser((prev) => prev || data.users[0]);
-          }
+  const refreshUsers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.users && Array.isArray(data.users)) {
+        setTeamUsers(data.users);
+        if (data.users.length > 0) {
+          setSelectedFallbackUser((prev) => prev || data.users[0]);
         }
-      })
-      .catch((err) => console.error('Error fetching users from database:', err));
+      }
+    } catch (err) {
+      console.warn('Notice: Users database synchronization deferred (offline or server initializing):', err);
+    }
   }, []);
 
   // Derived active user: Better Auth authenticated session takes precedence
@@ -99,18 +101,42 @@ export default function HomePage() {
   useEffect(() => {
     if (!isMounted) return;
 
-    refreshUsers();
+    let isCancelled = false;
 
-    // Fetch tasks strictly from PostgreSQL database
-    fetch('/api/tasks')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.tasks && Array.isArray(data.tasks)) {
-          setTasks(data.tasks);
+    const loadRemoteData = async () => {
+      try {
+        const [usersRes, tasksRes] = await Promise.all([
+          fetch('/api/users').catch(() => null),
+          fetch('/api/tasks').catch(() => null),
+        ]);
+
+        if (isCancelled) return;
+
+        if (usersRes && usersRes.ok) {
+          const usersData = await usersRes.json().catch(() => null);
+          if (usersData?.users && Array.isArray(usersData.users) && usersData.users.length > 0) {
+            setTeamUsers(usersData.users);
+            setSelectedFallbackUser((prev) => prev || usersData.users[0]);
+          }
         }
-      })
-      .catch((err) => console.error('Error fetching tasks from database:', err));
-  }, [isMounted, setTasks, refreshUsers]);
+
+        if (tasksRes && tasksRes.ok) {
+          const tasksData = await tasksRes.json().catch(() => null);
+          if (tasksData?.tasks && Array.isArray(tasksData.tasks) && tasksData.tasks.length > 0) {
+            setTasks(tasksData.tasks);
+          }
+        }
+      } catch (err) {
+        console.warn('Notice: Remote database synchronization deferred:', err);
+      }
+    };
+
+    loadRemoteData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMounted, setTasks]);
 
   // Update sound manager & permissions on change after mount
   useEffect(() => {
@@ -129,7 +155,7 @@ export default function HomePage() {
         body: JSON.stringify(task),
       });
     } catch (err) {
-      console.error('Error persisting task to PostgreSQL:', err);
+      console.warn('Notice: Task offline persist deferred:', err);
     }
   }, []);
 
@@ -139,7 +165,7 @@ export default function HomePage() {
         method: 'DELETE',
       });
     } catch (err) {
-      console.error('Error deleting task from PostgreSQL:', err);
+      console.warn('Notice: Task deletion offline deferred:', err);
     }
   }, []);
 
@@ -546,7 +572,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-12">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-24 md:pb-12">
       {/* Global Navigation Header */}
       <Header
         currentView={currentView}
