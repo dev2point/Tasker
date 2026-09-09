@@ -55,21 +55,21 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
     {
       id: 'todo',
       title: 'À faire',
-      badge: 'bg-slate-200 text-slate-700',
-      bgHeader: 'border-t-slate-400',
-      accentColor: 'text-slate-700',
+      badge: 'bg-[#F7C59F]/40 text-[#59240A] border border-[#F7C59F]/80 font-bold',
+      bgHeader: 'border-t-[#F7C59F]',
+      accentColor: 'text-[#7c2d12]',
     },
     {
       id: 'in_progress',
       title: 'En cours',
-      badge: 'bg-sky-100 text-sky-700',
-      bgHeader: 'border-t-sky-500',
-      accentColor: 'text-sky-700',
+      badge: 'bg-orange-100 text-orange-800 border border-orange-200',
+      bgHeader: 'border-t-orange-500',
+      accentColor: 'text-orange-700',
     },
     {
       id: 'completed',
       title: 'Terminées',
-      badge: 'bg-emerald-100 text-emerald-700',
+      badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
       bgHeader: 'border-t-emerald-500',
       accentColor: 'text-emerald-700',
     },
@@ -181,7 +181,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                             ? 'border-slate-200 opacity-65'
                             : overdue
                             ? 'border-rose-200 bg-rose-50/20'
-                            : 'border-slate-200/90 hover:border-indigo-300'
+                            : 'border-slate-200/90 hover:border-[#F7C59F]'
                         }`}
                       >
                         {/* Task Card Header & Title */}
@@ -203,7 +203,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
                           <h4
                             onClick={() => onOpenTaskModal(task)}
-                            className={`text-xs font-bold leading-snug cursor-pointer hover:text-indigo-600 transition-colors ${
+                            className={`text-xs font-bold leading-snug cursor-pointer hover:text-[#BA5316] transition-colors ${
                               task.completed ? 'line-through text-slate-400' : 'text-slate-900'
                             }`}
                           >
@@ -232,7 +232,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleStatusChange(task.id, col.id === 'completed' ? 'in_progress' : 'todo')}
-                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors"
+                                className="p-1 rounded-md text-slate-400 hover:text-[#BA5316] hover:bg-slate-100 transition-colors"
                                 title="Reculer d'une colonne"
                               >
                                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleStatusChange(task.id, col.id === 'todo' ? 'in_progress' : 'completed')}
-                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors"
+                                className="p-1 rounded-md text-slate-400 hover:text-[#BA5316] hover:bg-slate-100 transition-colors"
                                 title="Avancer vers la colonne suivante"
                               >
                                 <ArrowRight className="w-3.5 h-3.5" />

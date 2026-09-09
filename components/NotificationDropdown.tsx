@@ -49,7 +49,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
               <Bell className="w-4.5 h-4.5" />
             </div>
             <div>
@@ -68,7 +68,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   size="icon-sm"
                   onClick={onMarkAllAsRead}
                   title="Tout marquer comme lu"
-                  className="text-slate-500 hover:text-indigo-600"
+                  className="text-slate-500 hover:text-[#BA5316]"
                 >
                   <CheckCheck className="w-4 h-4" />
                 </Button>
@@ -123,14 +123,14 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       ? 'bg-white border-slate-200/70 opacity-75 hover:opacity-100'
                       : isOverdue
                       ? 'bg-rose-50/70 border-rose-200'
-                      : 'bg-indigo-50/60 border-indigo-200'
+                      : 'bg-[#F7C59F]/20 border-[#F7C59F]/60'
                   }`}
                 >
                   <div
                     className={`p-2 rounded-xl shrink-0 mt-0.5 ${
                       isOverdue
                         ? 'bg-rose-100 text-rose-700'
-                        : 'bg-indigo-100 text-indigo-700'
+                        : 'bg-[#F7C59F]/40 text-[#59240A]'
                     }`}
                   >
                     {isOverdue ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
@@ -142,7 +142,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                         {notif.taskTitle}
                       </span>
                       {!notif.read && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-[#BA5316] shrink-0" />
                       )}
                     </div>
 

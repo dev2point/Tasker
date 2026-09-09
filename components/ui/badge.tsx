@@ -3,12 +3,12 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 select-none",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-[#F7C59F] focus:ring-offset-2 select-none",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-indigo-600 text-white shadow-xs",
+          "border-transparent bg-[#F7C59F] text-[#422006] font-bold shadow-2xs border border-[#F3A975]/60",
         secondary:
           "border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200",
         destructive:
@@ -17,8 +17,12 @@ const badgeVariants = cva(
           "border border-slate-200 text-slate-700 bg-white",
         success:
           "border-transparent bg-emerald-100 text-emerald-800 border border-emerald-200/60",
+        emerald:
+          "border-transparent bg-emerald-100 text-emerald-800 border border-emerald-200/80",
         warning:
           "border-transparent bg-amber-100 text-amber-800 border border-amber-200/60",
+        orange:
+          "border-transparent bg-orange-100 text-orange-800 border border-orange-200/80",
         amber:
           "border-transparent bg-amber-100 text-amber-800 border border-amber-200/60",
         info:
@@ -26,7 +30,11 @@ const badgeVariants = cva(
         purple:
           "border-transparent bg-purple-100 text-purple-800 border border-purple-200/60",
         indigo:
-          "border-transparent bg-indigo-50 text-indigo-700 border border-indigo-200/60",
+          "border-transparent bg-[#F7C59F]/30 text-[#7c2d12] border border-[#F7C59F]/60 font-semibold",
+        primary:
+          "border-transparent bg-[#F7C59F] text-[#422006] border border-[#F3A975]/70 font-bold",
+        apricot:
+          "border-transparent bg-[#F7C59F] text-[#422006] border border-[#F3A975]/70 font-bold",
       },
     },
     defaultVariants: {

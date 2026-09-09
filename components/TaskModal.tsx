@@ -6,7 +6,7 @@ import {
   Calendar,
   Clock,
   Bell,
-  Sparkles,
+  Wand2,
   Plus,
   Trash2,
   CheckCircle2,
@@ -231,7 +231,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Rédiger le compte-rendu, Faire du sport..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm text-slate-900 transition-all font-medium outline-hidden"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#F7C59F] focus:ring-2 focus:ring-[#F7C59F]/40 text-sm text-slate-900 transition-all font-medium outline-hidden"
               autoFocus
             />
           </div>
@@ -247,7 +247,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Précisions, liens, contexte ou détails..."
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs text-slate-900 transition-all outline-hidden resize-y"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#F7C59F] focus:ring-2 focus:ring-[#F7C59F]/40 text-xs text-slate-900 transition-all outline-hidden resize-y"
             />
           </div>
 
@@ -255,7 +255,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-indigo-600" />
+                <Calendar className="w-4 h-4 text-[#BA5316]" />
                 Date & Heure d&apos;échéance
               </span>
               {/* Quick shortcuts */}
@@ -294,7 +294,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   id="task-date-input"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-900 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-900 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
                 />
               </div>
 
@@ -308,7 +308,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       type="checkbox"
                       checked={hasTime}
                       onChange={(e) => setHasTime(e.target.checked)}
-                      className="rounded text-indigo-600 focus:ring-indigo-500 w-3 h-3"
+                      className="rounded accent-[#EE8D4B] focus:ring-[#F7C59F] w-3 h-3"
                     />
                     <span>Heure précise</span>
                   </label>
@@ -321,7 +321,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   onChange={(e) => setDueTime(e.target.value)}
                   className={`w-full px-3 py-1.5 rounded-lg border text-xs font-medium outline-hidden ${
                     hasTime
-                      ? 'bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-indigo-200'
+                      ? 'bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-[#F7C59F]/40'
                       : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 />
@@ -379,7 +379,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       onClick={() => setPriority(p)}
                       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                         selected
-                          ? `${cfg.badge} ring-2 ring-indigo-400 font-bold shadow-xs`
+                          ? `${cfg.badge} ring-2 ring-[#F7C59F] font-bold shadow-xs`
                           : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -400,7 +400,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                 id="task-category-select"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -415,13 +415,13 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           {teamUsers.length > 0 && (
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
               <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <UserIcon className="w-3.5 h-3.5 text-indigo-600" />
+                <UserIcon className="w-3.5 h-3.5 text-[#BA5316]" />
                 <span>Membre Assigné (Équipe)</span>
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               >
                 <option value="">Non assigné (Libre)</option>
                 {teamUsers.map((u) => (
@@ -443,7 +443,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               <select
                 value={recurrence}
                 onChange={(e) => setRecurrence(e.target.value as Recurrence)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               >
                 <option value="none">Ne pas répéter</option>
                 <option value="daily">Tous les jours</option>
@@ -461,7 +461,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'todo' | 'in_progress' | 'completed')}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               >
                 <option value="todo">À faire</option>
                 <option value="in_progress">En cours</option>
@@ -481,14 +481,14 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                 type="button"
                 onClick={handleGenerateAISubtasks}
                 disabled={isGeneratingSubtasks}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition-colors disabled:opacity-50"
               >
                 {isGeneratingSubtasks ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-600" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+                  <Wand2 className="w-3.5 h-3.5 text-orange-600" />
                 )}
-                <span>Générer avec l&apos;IA</span>
+                <span>Suggérer sous-tâches</span>
               </button>
             </div>
 
@@ -504,7 +504,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       type="checkbox"
                       checked={st.completed}
                       onChange={() => handleToggleSubtask(st.id)}
-                      className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      className="rounded accent-[#EE8D4B] focus:ring-[#F7C59F] w-4 h-4 cursor-pointer"
                     />
                     <span className={st.completed ? 'line-through text-slate-400' : ''}>
                       {st.title}
@@ -534,7 +534,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   }
                 }}
                 placeholder="Ajouter une étape..."
-                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               />
               <button
                 type="button"
@@ -581,7 +581,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   }
                 }}
                 placeholder="Nouveau tag (ex: Urgent, ProjetX)..."
-                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-200 outline-hidden"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
               />
               <button
                 type="button"
@@ -605,7 +605,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
             <button
               type="submit"
               id="save-task-submit-btn"
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 transition-all hover:shadow-indigo-300 active:scale-98"
+              className="px-5 py-2 rounded-xl bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] text-xs font-bold shadow-md shadow-[#F7C59F]/50 transition-all hover:shadow-[#F7C59F] active:scale-98"
             >
               {initialTask ? 'Enregistrer les modifications' : 'Créer la tâche'}
             </button>

@@ -188,7 +188,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
         {/* Header */}
         <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300">
+            <div className="w-10 h-10 rounded-xl bg-[#F7C59F]/20 border border-[#F7C59F]/40 flex items-center justify-center text-[#F7C59F]">
               <Database className="w-5 h-5" />
             </div>
             <div>
@@ -226,7 +226,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             onClick={() => setActiveTab('db')}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === 'db'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -238,7 +238,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             onClick={() => setActiveTab('team')}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === 'team'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -250,7 +250,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             onClick={() => setActiveTab('roles')}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === 'roles'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -262,7 +262,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             onClick={() => setActiveTab('schema')}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === 'schema'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -288,7 +288,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                     {dbStatus.connected ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                     ) : (
-                      <Cloud className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                      <Cloud className="w-5 h-5 text-[#BA5316] shrink-0 mt-0.5" />
                     )}
                     <div>
                       <h4 className="font-bold text-sm">
@@ -338,7 +338,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                   </Button>
                 </div>
                 {syncFeedback && (
-                  <div className="p-2.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-900 text-xs font-medium">
+                  <div className="p-2.5 rounded-lg bg-[#F7C59F]/30 border border-[#F7C59F]/60 text-[#59240A] text-xs font-medium">
                     {syncFeedback}
                   </div>
                 )}
@@ -386,9 +386,9 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
               {showAddUser && (
                 <form
                   onSubmit={handleCreateUser}
-                  className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/50 space-y-3 animate-in fade-in duration-150"
+                  className="p-3.5 rounded-xl border border-[#F7C59F]/60 bg-[#F7C59F]/20 space-y-3 animate-in fade-in duration-150"
                 >
-                  <h5 className="font-bold text-xs text-indigo-950">Créer un nouveau membre</h5>
+                  <h5 className="font-bold text-xs text-[#422006]">Créer un nouveau membre</h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input
                       type="text"
@@ -460,7 +460,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                         key={u.id}
                         className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
                           isCurrent
-                            ? 'border-indigo-500 bg-indigo-50/60 shadow-xs'
+                            ? 'border-[#F7C59F] bg-[#F7C59F]/20 shadow-xs'
                             : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                       >
@@ -485,7 +485,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                                 {u.role.toUpperCase()}
                               </span>
                               {isCurrent && (
-                                <Badge variant="default" className="text-[9px] py-0 px-1 bg-indigo-600">
+                                <Badge variant="apricot" className="text-[9px] py-0 px-1 font-bold">
                                   Actuel
                                 </Badge>
                               )}
@@ -531,7 +531,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             <div className="space-y-3">
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-indigo-600" />
+                  <Shield className="w-4 h-4 text-[#BA5316]" />
                   Matrice des Droits & Permissions Métier
                 </h4>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -597,7 +597,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             <div className="space-y-3">
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-indigo-600" />
+                  <Layers className="w-4 h-4 text-[#BA5316]" />
                   Tables PostgreSQL Définies avec Drizzle ORM
                 </h4>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -608,7 +608,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">users</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">users</span>
                     <Badge variant="outline" className="text-[9px]">
                       Table Principale
                     </Badge>
@@ -620,7 +620,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">tasks</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">tasks</span>
                     <Badge variant="outline" className="text-[9px]">
                       Clé Métier
                     </Badge>
@@ -633,7 +633,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">workspaces</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">workspaces</span>
                     <Badge variant="outline" className="text-[9px]">
                       Multi-Tenant
                     </Badge>
@@ -645,7 +645,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">workspace_members</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">workspace_members</span>
                     <Badge variant="outline" className="text-[9px]">
                       Permissions
                     </Badge>
@@ -657,7 +657,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">categories</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">categories</span>
                     <Badge variant="outline" className="text-[9px]">
                       Organisation
                     </Badge>
@@ -669,7 +669,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
                 <div className="p-3 rounded-xl border border-slate-200 bg-white space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-600 font-mono">activity_logs</span>
+                    <span className="font-bold text-xs text-[#BA5316] font-mono">activity_logs</span>
                     <Badge variant="outline" className="text-[9px]">
                       Audit Trail
                     </Badge>
@@ -679,10 +679,10 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl border border-indigo-200 bg-indigo-50/40 space-y-1">
+                <div className="p-3 rounded-xl border border-[#F7C59F]/60 bg-[#F7C59F]/20 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-indigo-700 font-mono">user, session, account</span>
-                    <Badge variant="indigo" className="text-[9px]">
+                    <span className="font-bold text-xs text-[#59240A] font-mono">user, session, account</span>
+                    <Badge variant="apricot" className="text-[9px] font-bold">
                       Better Auth (Auth & Sessions)
                     </Badge>
                   </div>
@@ -702,7 +702,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
               <>
                 <span className="font-semibold text-slate-900">{currentUser.name}</span>
                 <span className="text-slate-400">•</span>
-                <span className="capitalize text-indigo-600 font-bold">{currentUser.role}</span>
+                <span className="capitalize text-[#BA5316] font-bold">{currentUser.role}</span>
               </>
             ) : (
               <span className="text-slate-500 italic">Aucun profil actif sélectionné</span>

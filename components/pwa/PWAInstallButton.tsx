@@ -34,7 +34,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         variant={variant}
         size={size}
         onClick={install}
-        className={`font-semibold text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 ${className}`}
+        className={`font-semibold text-xs gap-1.5 border-[#F7C59F] text-[#59240A] bg-[#F7C59F]/20 hover:bg-[#F7C59F]/40 ${className}`}
         title="Installer l'application PlanIt"
       >
         <Download className="w-3.5 h-3.5" />
@@ -55,7 +55,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           className={`font-semibold text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-100 ${className}`}
           title="Installer sur iPhone/iPad"
         >
-          <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+          <Smartphone className="w-3.5 h-3.5 text-[#BA5316]" />
           {showText && <span>Installer sur iOS</span>}
         </Button>
 
@@ -69,7 +69,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
                     <Smartphone className="w-4.5 h-4.5" />
                   </div>
                   <div>
@@ -92,25 +92,25 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
               <div className="space-y-2.5 text-xs text-slate-600">
                 <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[#F7C59F]/40 text-[#59240A] font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                     1
                   </span>
                   <div>
                     <p className="font-medium text-slate-800">
-                      Touchez le bouton <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-indigo-600" />{' '}
+                      Touchez le bouton <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-[#BA5316]" />{' '}
                       <strong>Partager</strong> dans Safari.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[#F7C59F]/40 text-[#59240A] font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                     2
                   </span>
                   <div>
                     <p className="font-medium text-slate-800">
                       Faites défiler et sélectionnez{' '}
-                      <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-indigo-600" />{' '}
+                      <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-[#BA5316]" />{' '}
                       <strong>Sur l&apos;écran d&apos;accueil</strong>.
                     </p>
                   </div>
@@ -141,7 +141,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       className={`font-semibold text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-100 ${className}`}
       title="Installer l'application"
     >
-      <Download className="w-3.5 h-3.5 text-indigo-600" />
+      <Download className="w-3.5 h-3.5 text-[#BA5316]" />
       {showText && <span>Installer PWA</span>}
     </Button>
   );

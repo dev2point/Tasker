@@ -23,7 +23,7 @@ export const OfflineIndicator: React.FC = () => {
       <div className="flex items-center gap-1.5 text-[11px]">
         <span>Mode Hors-ligne</span>
         <span className="text-slate-400">•</span>
-        <span className="text-indigo-300 flex items-center gap-1">
+        <span className="text-[#F7C59F] flex items-center gap-1">
           <Database className="w-3 h-3" />
           IndexedDB actif
         </span>

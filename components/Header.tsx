@@ -9,7 +9,7 @@ import {
   Bell,
   Volume2,
   VolumeX,
-  Sparkles,
+  Bot,
   Plus,
   Download,
   Clock,
@@ -99,15 +99,15 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Brand Logo & Live Date */}
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200 shrink-0">
-                <CalendarIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-sm shadow-[#F7C59F]/50 shrink-0 font-bold">
+                <CalendarIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2.3]" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-tight">
                     Planit
                   </span>
-                  <Badge variant="indigo" className="hidden sm:inline-flex text-[10px] py-0 px-1.5 font-semibold">
+                  <Badge variant="apricot" className="hidden sm:inline-flex text-[10px] py-0 px-1.5 font-bold">
                     Rappels & Agenda
                   </Badge>
                 </div>
@@ -137,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
                       active
-                        ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/60 font-bold'
+                        ? 'bg-white text-[#933F15] shadow-xs border border-[#F7C59F]/60 font-bold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                     }`}
                   >
@@ -145,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>{item.label}</span>
                     {item.badge !== undefined && (
                       <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                        active ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-700'
+                        active ? 'bg-[#F7C59F] text-[#422006]' : 'bg-slate-200 text-slate-700'
                       }`}>
                         {item.badge}
                       </span>
@@ -172,8 +172,8 @@ export const Header: React.FC<HeaderProps> = ({
                   }
                   className={
                     currentUser
-                      ? 'border-indigo-200 bg-white hover:bg-indigo-50/70 text-indigo-700 font-semibold px-2 sm:px-2.5 text-xs gap-1.5'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 sm:px-3 text-xs gap-1.5 shadow-xs'
+                      ? 'border-[#F7C59F] bg-white hover:bg-[#F7C59F]/15 text-[#7c2d12] font-semibold px-2 sm:px-2.5 text-xs gap-1.5'
+                      : 'font-bold px-2.5 sm:px-3 text-xs gap-1.5 shadow-xs'
                   }
                 >
                   <UserIcon className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>Connexion</span>
                   )}
                   {currentUser && (
-                    <span className="hidden lg:inline text-[9px] px-1 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold uppercase">
+                    <span className="hidden lg:inline text-[9px] px-1 py-0.2 rounded bg-[#F7C59F]/40 text-[#7c2d12] font-bold uppercase">
                       {currentUser.role}
                     </span>
                   )}
@@ -222,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title={soundEnabled ? 'Désactiver les alertes sonores' : 'Activer les alertes sonores'}
                 className={`transition-colors ${
                   soundEnabled
-                    ? 'border-indigo-200 bg-indigo-50/70 text-indigo-600 hover:bg-indigo-100'
+                    ? 'border-[#F7C59F] bg-[#F7C59F]/30 text-[#7c2d12] hover:bg-[#F7C59F]/50'
                     : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
@@ -253,11 +253,11 @@ export const Header: React.FC<HeaderProps> = ({
                 }
                 className={`font-semibold px-2.5 sm:px-3 text-xs gap-1.5 transition-all ${
                   currentUser
-                    ? 'border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-700 shadow-2xs'
-                    : 'border-slate-200 bg-slate-50 hover:bg-purple-50 text-slate-600 hover:text-purple-700'
+                    ? 'border-orange-200/90 bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 text-orange-800 shadow-2xs'
+                    : 'border-slate-200 bg-slate-50 hover:bg-orange-50 text-slate-600 hover:text-orange-700'
                 }`}
               >
-                <Sparkles className={`w-3.5 h-3.5 ${currentUser ? 'text-purple-600' : 'text-slate-400'}`} />
+                <Bot className={`w-3.5 h-3.5 ${currentUser ? 'text-orange-600' : 'text-slate-400'}`} />
                 <span className="hidden sm:inline">Assistant IA</span>
                 {!currentUser && (
                   <Lock className="w-3 h-3 text-slate-400 shrink-0" />
@@ -298,7 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="open-new-task-btn"
                 size="sm"
                 onClick={onOpenNewTaskModal}
-                className="hidden md:inline-flex font-bold shadow-sm shadow-indigo-200"
+                className="hidden md:inline-flex font-bold shadow-sm shadow-[#F7C59F]/40"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Nouvelle tâche</span>
@@ -321,14 +321,14 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               currentView === 'list'
-                ? 'text-indigo-600 font-bold'
+                ? 'text-[#933F15] font-bold'
                 : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
             <div className="relative">
               <CheckSquare className="w-5 h-5" />
               {pendingTasksCount > 0 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-indigo-600 text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-[#F7C59F] text-[#422006] rounded-full text-[9px] flex items-center justify-center font-bold">
                   {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
                 </span>
               )}
@@ -345,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               currentView === 'calendar'
-                ? 'text-indigo-600 font-bold'
+                ? 'text-[#933F15] font-bold'
                 : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
@@ -359,7 +359,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="mobile-fab-new-task"
               type="button"
               onClick={onOpenNewTaskModal}
-              className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-400/40 active:scale-95 transition-transform"
+              className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] text-[#422006] flex items-center justify-center shadow-md shadow-[#F7C59F]/60 active:scale-95 transition-transform"
               title="Ajouter une tâche"
             >
               <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -375,7 +375,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               currentView === 'kanban'
-                ? 'text-indigo-600 font-bold'
+                ? 'text-[#933F15] font-bold'
                 : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
@@ -392,7 +392,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               currentView === 'stats'
-                ? 'text-indigo-600 font-bold'
+                ? 'text-[#933F15] font-bold'
                 : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >

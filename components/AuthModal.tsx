@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   AlertCircle,
   KeyRound,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -174,8 +173,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/70">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-xs">
-              <KeyRound className="w-4.5 h-4.5" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs font-bold">
+              <KeyRound className="w-4.5 h-4.5 stroke-[2.3]" />
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
@@ -224,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="space-y-4">
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg border border-indigo-200">
+                  <div className="w-12 h-12 rounded-full bg-[#F7C59F]/40 text-[#7c2d12] flex items-center justify-center font-bold text-lg border border-[#F7C59F]/80">
                     {currentUser.name
                       ? currentUser.name
                           .split(' ')
@@ -239,7 +238,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <h4 className="font-bold text-slate-900 truncate text-sm sm:text-base">
                         {currentUser.name}
                       </h4>
-                      <Badge variant="indigo" className="text-[10px] uppercase font-bold py-0">
+                      <Badge variant="apricot" className="text-[10px] uppercase font-bold py-0">
                         {currentUser.role || 'Membre'}
                       </Badge>
                     </div>
@@ -295,7 +294,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     mode === 'signin'
-                      ? 'bg-white text-indigo-600 shadow-xs'
+                      ? 'bg-white text-[#933F15] shadow-xs border border-[#F7C59F]/60'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -310,7 +309,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     mode === 'signup'
-                      ? 'bg-white text-indigo-600 shadow-xs'
+                      ? 'bg-white text-[#933F15] shadow-xs border border-[#F7C59F]/60'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -337,7 +336,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signInEmail}
                         onChange={(e) => setSignInEmail(e.target.value)}
                         placeholder="vous@exemple.com"
-                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] transition-colors"
                       />
                     </div>
                   </div>
@@ -358,7 +357,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signInPassword}
                         onChange={(e) => setSignInPassword(e.target.value)}
                         placeholder="Votre mot de passe"
-                        className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                        className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] transition-colors"
                       />
                       <button
                         type="button"
@@ -378,7 +377,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="submit-signin-btn"
                     type="submit"
                     disabled={isLoading}
-                    className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl shadow-sm text-xs sm:text-sm"
+                    className="w-full mt-2 font-bold py-2.5 rounded-xl shadow-sm text-xs sm:text-sm"
                   >
                     {isLoading ? 'Connexion en cours...' : 'Se connecter'}
                   </Button>
@@ -404,7 +403,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signUpName}
                         onChange={(e) => setSignUpName(e.target.value)}
                         placeholder="Ex: Sophie Martin"
-                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] transition-colors"
                       />
                     </div>
                   </div>
@@ -425,7 +424,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signUpEmail}
                         onChange={(e) => setSignUpEmail(e.target.value)}
                         placeholder="sophie@entreprise.com"
-                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] transition-colors"
                       />
                     </div>
                   </div>
@@ -447,7 +446,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}
                         placeholder="Mot de passe sécurisé"
-                        className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                        className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] transition-colors"
                       />
                       <button
                         type="button"
@@ -475,7 +474,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         id="signup-role-select"
                         value={signUpRole}
                         onChange={(e) => setSignUpRole(e.target.value as UserRole)}
-                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F]"
                       >
                         <option value="member">Membre</option>
                         <option value="manager">Manager</option>
@@ -496,7 +495,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={signUpDepartment}
                         onChange={(e) => setSignUpDepartment(e.target.value)}
                         placeholder="Ex: Produit"
-                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F]"
                       />
                     </div>
                   </div>
@@ -505,7 +504,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="submit-signup-btn"
                     type="submit"
                     disabled={isLoading}
-                    className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl shadow-sm text-xs sm:text-sm"
+                    className="w-full mt-3 font-bold py-2.5 rounded-xl shadow-sm text-xs sm:text-sm"
                   >
                     {isLoading ? 'Création en cours...' : 'Créer mon compte'}
                   </Button>
@@ -517,7 +516,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Security & Infrastructure Notice */}
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] text-slate-500 space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-slate-700">
-              <Shield className="w-3.5 h-3.5 text-indigo-600" />
+              <Shield className="w-3.5 h-3.5 text-[#BA5316]" />
               <span>100% Autonome & Sécurisé</span>
             </div>
             <p>

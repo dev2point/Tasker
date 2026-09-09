@@ -13,7 +13,6 @@ import {
   Tag,
   AlertCircle,
   CalendarDays,
-  Sparkles,
 } from 'lucide-react';
 import { Task, Category, CalendarViewType, Priority } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';
@@ -306,7 +305,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               onClick={() => setViewType('month')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewType === 'month'
-                  ? 'bg-white text-indigo-600 shadow-xs font-bold'
+                  ? 'bg-white text-[#933F15] shadow-xs font-bold border border-[#F7C59F]/60'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -317,7 +316,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               onClick={() => setViewType('week')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewType === 'week'
-                  ? 'bg-white text-indigo-600 shadow-xs font-bold'
+                  ? 'bg-white text-[#933F15] shadow-xs font-bold border border-[#F7C59F]/60'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -328,7 +327,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               onClick={() => setViewType('day')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewType === 'day'
-                  ? 'bg-white text-indigo-600 shadow-xs font-bold'
+                  ? 'bg-white text-[#933F15] shadow-xs font-bold border border-[#F7C59F]/60'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -339,7 +338,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <Button
             size="xs"
             onClick={() => onOpenTaskModal(undefined, selectedMobileDate)}
-            className="font-bold shrink-0 shadow-sm shadow-indigo-200"
+            className="font-bold shrink-0 shadow-sm shadow-[#F7C59F]/40"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span className="hidden sm:inline">Ajouter</span>
@@ -383,7 +382,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       !cell.isCurrentMonth
                         ? 'bg-slate-50/50 text-slate-400'
                         : isSelected
-                        ? 'bg-indigo-50/40 ring-2 ring-indigo-500/20 ring-inset'
+                        ? 'bg-[#F7C59F]/25 ring-2 ring-[#F7C59F]/60 ring-inset'
                         : 'bg-white hover:bg-slate-50/60'
                     }`}
                   >
@@ -392,9 +391,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <span
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                           cell.isToday
-                            ? 'bg-indigo-600 text-white shadow-xs'
+                            ? 'bg-[#EE8D4B] text-white shadow-xs'
                             : isSelected
-                            ? 'bg-indigo-100 text-indigo-700 font-extrabold'
+                            ? 'bg-[#F7C59F] text-[#422006] font-extrabold'
                             : cell.isCurrentMonth
                             ? 'text-slate-800'
                             : 'text-slate-400'
@@ -438,7 +437,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 ? 'bg-slate-100 text-slate-400 border-slate-200 line-through'
                                 : isOverdue
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                : 'bg-slate-50/90 text-slate-800 border-slate-200/80 hover:border-indigo-300'
+                                : 'bg-slate-50/90 text-slate-800 border-slate-200/80 hover:border-[#F7C59F]'
                             }`}
                           >
                             <span
@@ -487,7 +486,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-indigo-600" />
+                <CalendarDays className="w-4 h-4 text-[#BA5316]" />
                 <h3 className="text-sm font-bold text-slate-900 capitalize">
                   {new Date(selectedMobileDate + 'T12:00:00').toLocaleDateString('fr-FR', {
                     weekday: 'long',
@@ -501,7 +500,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 variant="outline"
                 size="xs"
                 onClick={() => onOpenTaskModal(undefined, selectedMobileDate)}
-                className="font-bold text-xs gap-1 border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100"
+                className="font-bold text-xs gap-1 border-[#F7C59F] text-[#7c2d12] bg-[#F7C59F]/20 hover:bg-[#F7C59F]/40"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Planifier</span>
@@ -529,7 +528,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           ? 'bg-slate-50 border-slate-200/80 opacity-60'
                           : isOverdue
                           ? 'bg-rose-50/60 border-rose-200'
-                          : 'bg-white border-slate-200/90 hover:border-indigo-300 shadow-2xs'
+                          : 'bg-white border-slate-200/90 hover:border-[#F7C59F] shadow-2xs'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -541,7 +540,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           {task.completed ? (
                             <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 fill-emerald-100" />
                           ) : (
-                            <Circle className="w-4.5 h-4.5 hover:text-indigo-600" />
+                            <Circle className="w-4.5 h-4.5 hover:text-[#BA5316]" />
                           )}
                         </button>
                         <div className="min-w-0 flex-1">
@@ -599,7 +598,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 key={day.dateStr}
                 className={`bg-white rounded-2xl border p-3.5 shadow-2xs flex flex-col min-h-[300px] ${
                   day.isToday
-                    ? 'border-indigo-300 ring-2 ring-indigo-500/10'
+                    ? 'border-[#F7C59F] ring-2 ring-[#F7C59F]/25'
                     : 'border-slate-200/90'
                 }`}
               >
@@ -611,7 +610,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </span>
                     <span
                       className={`text-base font-extrabold ${
-                        day.isToday ? 'text-indigo-600' : 'text-slate-900'
+                        day.isToday ? 'text-[#BA5316]' : 'text-slate-900'
                       }`}
                     >
                       {day.dayNumber}
@@ -621,7 +620,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => onOpenTaskModal(undefined, day.dateStr)}
-                    className="text-slate-400 hover:text-indigo-600"
+                    className="text-slate-400 hover:text-[#BA5316]"
                     title="Ajouter pour ce jour"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -708,7 +707,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-6 shadow-2xs space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#BA5316] block">
                 Agenda du jour
               </span>
               <h3 className="text-lg sm:text-xl font-bold text-slate-900 capitalize">
@@ -763,7 +762,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         ? 'bg-slate-50 border-slate-200 opacity-60'
                         : overdue
                         ? 'bg-rose-50/70 border-rose-200'
-                        : 'bg-white border-slate-200 hover:border-indigo-300 shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-[#F7C59F] shadow-2xs'
                     }`}
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -775,7 +774,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         {task.completed ? (
                           <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
                         ) : (
-                          <Circle className="w-5 h-5 hover:text-indigo-600" />
+                          <Circle className="w-5 h-5 hover:text-[#BA5316]" />
                         )}
                       </button>
 

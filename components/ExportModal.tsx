@@ -101,7 +101,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
               <Download className="w-5 h-5" />
             </div>
             <div>
@@ -141,13 +141,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {/* Action Blocks */}
         <div className="space-y-3 text-xs">
           {/* 1. iCalendar (.ics) */}
-          <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 space-y-2">
+          <div className="p-4 rounded-2xl border border-[#F7C59F]/50 bg-[#F7C59F]/20 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-600" />
+                <Calendar className="w-4 h-4 text-[#BA5316]" />
                 <span className="font-bold text-slate-900">Export Google Calendar & Apple</span>
               </div>
-              <Badge variant="indigo" className="text-[10px]">
+              <Badge variant="apricot" className="text-[10px] font-bold">
                 .ICS
               </Badge>
             </div>
@@ -235,15 +235,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           {/* 4. PostgreSQL (Supabase) + Drizzle ORM */}
-          <div className="p-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/50 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl border border-[#F7C59F]/50 bg-[#F7C59F]/20 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-[#F7C59F]/40 text-[#59240A] flex items-center justify-center shrink-0">
                 <Database className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-slate-900 text-xs">PostgreSQL Supabase (Drizzle ORM)</span>
-                  <Badge variant="default" className="text-[9px] py-0 px-1 bg-indigo-600">
+                  <Badge variant="apricot" className="text-[9px] py-0 px-1 font-bold">
                     Schéma Prêt
                   </Badge>
                 </div>

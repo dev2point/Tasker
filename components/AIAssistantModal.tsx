@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import {
-  Sparkles,
+  Bot,
+  BrainCircuit,
+  Wand2,
+  Zap,
   X,
   Send,
   Loader2,
@@ -179,15 +182,15 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {/* Header */}
         <div className="bg-slate-900 p-4 sm:p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500/20 to-amber-500/20 border border-orange-400/40 flex items-center justify-center text-orange-400 shadow-2xs">
+              <Bot className="w-5 h-5" />
             </div>
             <div>
               <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight">
                 Assistant IA & Planification
               </h2>
               <p className="text-[11px] text-slate-400">
-                Créez des tâches en langage naturel ou optimisez votre journée
+                Créez des tâches en langage naturel ou optimisez votre journée avec Gemini
               </p>
             </div>
           </div>
@@ -202,13 +205,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {/* If User is not logged in, display Authentication Gate */}
         {!currentUser ? (
           <div className="p-6 sm:p-8 flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-5 my-auto">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-100 to-indigo-100 text-purple-700 flex items-center justify-center border border-purple-200/80 shadow-xs">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-100 to-amber-100 text-orange-600 flex items-center justify-center border border-orange-200/80 shadow-xs">
               <Lock className="w-7 h-7 stroke-[2.2]" />
             </div>
             
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-bold uppercase tracking-wide border border-purple-200">
-                <Sparkles className="w-3 h-3" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-800 text-[11px] font-bold uppercase tracking-wide border border-orange-200">
+                <BrainCircuit className="w-3 h-3" />
                 Accès Protégé
               </div>
               <h3 className="font-bold text-slate-900 text-lg tracking-tight">
@@ -226,7 +229,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   onClose();
                   onOpenAuthModal?.();
                 }}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 shadow-sm shadow-indigo-200"
+                className="w-full bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] font-bold text-xs py-2.5 shadow-sm shadow-[#F7C59F]/50"
               >
                 Se connecter ou créer un compte
               </Button>
@@ -249,11 +252,11 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
             onClick={() => setActiveTab('create')}
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
               activeTab === 'create'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Wand2 className="w-3.5 h-3.5 text-orange-500" />
             <span>Création Intelligente</span>
           </button>
 
@@ -267,7 +270,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
             }}
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
               activeTab === 'plan'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-[#BA5316] text-[#BA5316]'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -307,7 +310,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 <Button
                   onClick={() => handleParseTask()}
                   disabled={loading || !naturalPrompt.trim()}
-                  className="font-bold gap-2 text-xs"
+                  className="font-bold gap-2 text-xs bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] shadow-xs"
                 >
                   {loading ? (
                     <>
@@ -316,7 +319,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
                       <span>Analyser et générer la tâche</span>
                     </>
                   )}
@@ -338,10 +341,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                           setNaturalPrompt(ex);
                           handleParseTask(ex);
                         }}
-                        className="w-full text-left p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 text-xs font-medium text-slate-700 transition-colors flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-xl bg-slate-50 hover:bg-[#F7C59F]/20 border border-slate-200/80 hover:border-[#F7C59F] text-xs font-medium text-slate-700 transition-colors flex items-center justify-between group"
                       >
                         <span className="truncate pr-2">{ex}</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#BA5316] shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -350,13 +353,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
               {/* Parsed Result Preview Card */}
               {parsedTask && (
-                <div className="bg-indigo-50/70 rounded-2xl border border-indigo-200 p-4 space-y-3 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2">
-                    <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                <div className="bg-[#F7C59F]/30 rounded-2xl border border-[#F7C59F]/70 p-4 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between border-b border-[#F7C59F]/80 pb-2">
+                    <span className="text-xs font-bold text-[#59240A] flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#BA5316]" />
                       Tâche structurée avec succès
                     </span>
-                    <Badge variant="indigo" className="text-[10px]">
+                    <Badge variant="apricot" className="text-[10px] font-bold">
                       Prêt à ajouter
                     </Badge>
                   </div>
@@ -369,14 +372,14 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded-lg bg-white border border-indigo-100 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                    <div className="p-2 rounded-lg bg-white border border-[#F7C59F]/60 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[#B75217]" />
                       <span className="font-semibold text-slate-800 truncate">
                         {parsedTask.dueDate} {parsedTask.dueTime ? `@ ${parsedTask.dueTime}` : ''}
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white border border-indigo-100 flex items-center gap-1.5">
+                    <div className="p-2 rounded-lg bg-white border border-[#F7C59F]/60 flex items-center gap-1.5">
                       <Bell className="w-3.5 h-3.5 text-amber-500" />
                       <span className="font-semibold text-slate-800">
                         {parsedTask.reminderMinutesBefore === 0
@@ -387,13 +390,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   </div>
 
                   {parsedTask.subtasks && parsedTask.subtasks.length > 0 && (
-                    <div className="bg-white p-2.5 rounded-lg border border-indigo-100 space-y-1">
+                    <div className="bg-white p-2.5 rounded-lg border border-[#F7C59F]/60 space-y-1">
                       <span className="text-[11px] font-bold text-slate-500 block">
                         Sous-tâches détectées :
                       </span>
                       {parsedTask.subtasks.map((st) => (
                         <div key={st.id} className="text-xs text-slate-700 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#EE8D4B]" />
                           <span>{st.title}</span>
                         </div>
                       ))}
@@ -432,7 +435,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
               {loading && (
                 <div className="py-12 text-center text-slate-400 space-y-2">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#BA5316]" />
                   <p className="text-xs font-semibold text-slate-600">
                     L&apos;IA optimise votre ordre de travail et vos rappels...
                   </p>
@@ -442,7 +445,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               {dailyAdvice && !loading && (
                 <div className="space-y-3.5">
                   {/* Summary */}
-                  <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs text-slate-800 leading-relaxed font-medium">
+                  <div className="p-3.5 rounded-2xl bg-[#F7C59F]/30 border border-[#F7C59F]/70 text-xs text-slate-800 leading-relaxed font-medium">
                     {dailyAdvice.summary}
                   </div>
 
@@ -450,7 +453,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   {dailyAdvice.recommendedOrder && dailyAdvice.recommendedOrder.length > 0 && (
                     <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
                       <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <ListTodo className="w-4 h-4 text-indigo-600" />
+                        <ListTodo className="w-4 h-4 text-[#BA5316]" />
                         Ordre recommandé pour aujourd&apos;hui
                       </span>
                       <div className="space-y-1.5">
@@ -459,7 +462,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                             key={idx}
                             className="flex items-start gap-2 text-xs p-2 rounded-xl bg-slate-50 border border-slate-100"
                           >
-                            <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                            <span className="w-5 h-5 rounded-full bg-[#F7C59F] text-[#422006] font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                               {idx + 1}
                             </span>
                             <span className="text-slate-800 font-medium">{step}</span>

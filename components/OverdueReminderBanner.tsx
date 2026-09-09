@@ -75,16 +75,16 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
 
       {/* Daily Digest / Today Focus Banner */}
       {dueTodayTasks.length > 0 && overdueTasks.length === 0 && (
-        <div className="bg-indigo-50/80 border border-indigo-100/90 rounded-2xl px-4 py-3 text-indigo-950 flex items-center justify-between gap-3 text-xs shadow-2xs">
+        <div className="bg-[#F7C59F]/30 border border-[#F7C59F]/60 rounded-2xl px-4 py-3 text-[#422006] flex items-center justify-between gap-3 text-xs shadow-2xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 bg-indigo-100/80 rounded-lg text-indigo-700 shrink-0">
+            <div className="p-1.5 bg-[#F7C59F]/60 rounded-lg text-[#7c2d12] shrink-0">
               <Clock className="w-3.5 h-3.5" />
             </div>
             <span className="font-medium text-slate-800 truncate">
-              <strong className="text-indigo-900 font-bold">{dueTodayTasks.length} tâche{dueTodayTasks.length > 1 ? 's' : ''}</strong> à accomplir aujourd&apos;hui
+              <strong className="text-[#59240A] font-bold">{dueTodayTasks.length} tâche{dueTodayTasks.length > 1 ? 's' : ''}</strong> à accomplir aujourd&apos;hui
             </span>
           </div>
-          <Badge variant="indigo" className="hidden sm:inline-flex text-[11px] font-semibold py-0.5">
+          <Badge variant="apricot" className="hidden sm:inline-flex text-[11px] font-bold py-0.5">
             Rappels automatiques synchronisés
           </Badge>
         </div>

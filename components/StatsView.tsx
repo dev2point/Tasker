@@ -10,7 +10,6 @@ import {
   Award,
   Calendar,
   Layers,
-  Sparkles,
   Flame,
 } from 'lucide-react';
 import { Task, Category, Priority } from '@/types/task';
@@ -122,7 +121,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Aujourd&apos;hui
             </span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/40 text-[#59240A] flex items-center justify-center">
               <Clock className="w-4.5 h-4.5" />
             </div>
           </div>
@@ -210,7 +209,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-600" />
+              <Layers className="w-4 h-4 text-[#BA5316]" />
               <h3 className="font-bold text-sm text-slate-900">Répartition par Catégorie</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{categories.length} catégories</span>
@@ -253,7 +252,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <TrendingUp className="w-4 h-4 text-[#BA5316]" />
               <h3 className="font-bold text-sm text-slate-900">Distribution par Priorité</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{totalTasks} tâches au total</span>
@@ -302,7 +301,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
               <div
                 key={task.id}
                 onClick={() => onOpenTaskModal(task)}
-                className="p-3 rounded-xl border border-slate-200 hover:border-indigo-300 bg-slate-50/50 hover:bg-white transition-all cursor-pointer flex items-center justify-between gap-3"
+                className="p-3 rounded-xl border border-slate-200 hover:border-[#F7C59F] bg-slate-50/50 hover:bg-white transition-all cursor-pointer flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">

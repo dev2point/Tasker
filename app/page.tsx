@@ -535,8 +535,8 @@ export default function HomePage() {
         <div className="h-16 border-b border-slate-200/90 bg-white/95" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 w-full flex items-center justify-center flex-1">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-sm shadow-[#F7C59F]/50 font-bold">
+              <div className="w-4 h-4 border-2 border-[#422006] border-t-transparent rounded-full animate-spin" />
             </div>
             <p className="text-xs font-semibold text-slate-500">Chargement de votre planning...</p>
           </div>
@@ -546,7 +546,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-indigo-500 selection:text-white pb-12">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-12">
       {/* Global Navigation Header */}
       <Header
         currentView={currentView}
