@@ -27,6 +27,7 @@ import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PWAInstallButton } from '@/components/pwa/PWAInstallButton';
+import { MobileFloatingGlassMenu } from '@/components/MobileFloatingGlassMenu';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -607,99 +608,13 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Mobile-First Bottom Navigation Bar (Dock) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-1.5 shadow-lg">
-        <div className="max-w-md mx-auto flex items-center justify-around relative">
-          
-          {/* List Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClickSound();
-              onViewChange('list');
-            }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-              currentView === 'list'
-                ? 'text-[#933F15] font-bold'
-                : 'text-slate-500 hover:text-slate-900 font-medium'
-            }`}
-          >
-            <div className="relative">
-              <CheckSquare className="w-5 h-5" />
-              {pendingTasksCount > 0 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-[#F7C59F] text-[#422006] rounded-full text-[9px] flex items-center justify-center font-bold">
-                  {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] mt-0.5">Tâches</span>
-          </button>
-
-          {/* Calendar Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClickSound();
-              onViewChange('calendar');
-            }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-              currentView === 'calendar'
-                ? 'text-[#933F15] font-bold'
-                : 'text-slate-500 hover:text-slate-900 font-medium'
-            }`}
-          >
-            <CalendarIcon className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5">Calendrier</span>
-          </button>
-
-          {/* Centered Mobile Floating Action Button (FAB) */}
-          <div className="relative -top-3">
-            <button
-              id="mobile-fab-new-task"
-              type="button"
-              onClick={onOpenNewTaskModal}
-              className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] text-[#422006] flex items-center justify-center shadow-md shadow-[#F7C59F]/60 active:scale-95 transition-transform"
-              title="Ajouter une tâche"
-            >
-              <Plus className="w-6 h-6 stroke-[2.5]" />
-            </button>
-          </div>
-
-          {/* Kanban Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClickSound();
-              onViewChange('kanban');
-            }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-              currentView === 'kanban'
-                ? 'text-[#933F15] font-bold'
-                : 'text-slate-500 hover:text-slate-900 font-medium'
-            }`}
-          >
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5">Tableau</span>
-          </button>
-
-          {/* Stats Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClickSound();
-              onViewChange('stats');
-            }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-              currentView === 'stats'
-                ? 'text-[#933F15] font-bold'
-                : 'text-slate-500 hover:text-slate-900 font-medium'
-            }`}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5">Stats</span>
-          </button>
-        </div>
-      </div>
+      {/* Mobile Floating Glass Speed-Dial Menu (Inspired by Amanga Store & Supabase) */}
+      <MobileFloatingGlassMenu
+        currentView={currentView}
+        onViewChange={onViewChange}
+        onOpenNewTaskModal={onOpenNewTaskModal}
+        pendingTasksCount={pendingTasksCount}
+      />
     </>
   );
 };
