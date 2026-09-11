@@ -18,6 +18,7 @@ import {
   Lock,
   SlidersHorizontal,
   X,
+  FolderPlus,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -35,6 +36,7 @@ interface HeaderProps {
   onOpenNotifications: () => void;
   onOpenPostgresModal?: () => void;
   onOpenAuthModal?: () => void;
+  onOpenCategoryTagManager?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -52,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenPostgresModal,
   onOpenAuthModal,
+  onOpenCategoryTagManager,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -264,6 +267,20 @@ export const Header: React.FC<HeaderProps> = ({
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </Button>
 
+              {/* Category & Tag Manager Button (Desktop sm+) */}
+              {onOpenCategoryTagManager && (
+                <Button
+                  id="open-categories-modal-btn"
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={onOpenCategoryTagManager}
+                  title="Gérer les Catégories et Étiquettes"
+                  className="hidden sm:inline-flex h-9 w-9 text-slate-700 hover:text-[#59240A] hover:bg-[#F7C59F]/20"
+                >
+                  <FolderPlus className="w-4 h-4 text-[#BA5316]" />
+                </Button>
+              )}
+
               {/* Export / iCal Button (Desktop sm+) */}
               <Button
                 id="open-export-btn"
@@ -387,6 +404,26 @@ export const Header: React.FC<HeaderProps> = ({
                             {soundEnabled ? 'Activé' : 'Coupé'}
                           </span>
                         </button>
+
+                        {/* Categories & Tags Management */}
+                        {onOpenCategoryTagManager && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenCategoryTagManager();
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#F7C59F]/15 transition-colors text-xs font-semibold text-slate-700"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
+                                <FolderPlus className="w-3.5 h-3.5" />
+                              </div>
+                              <span>Catégories & Tags</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-bold">Gérer</span>
+                          </button>
+                        )}
 
                         {/* Export iCal */}
                         <button

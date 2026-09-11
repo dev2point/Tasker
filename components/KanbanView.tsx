@@ -12,11 +12,13 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowLeft,
+  Hash,
 } from 'lucide-react';
 import { Task, Category, Priority } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';
 import { isTaskOverdue, formatDueDateFrench } from '@/lib/reminders';
 import { soundManager } from '@/lib/sound';
+import { CategoryIcon, getTagColor } from '@/components/CategoryIcon';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -188,13 +190,15 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <span
-                              className="px-2 py-0.5 rounded text-[10px] font-bold"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border"
                               style={{
                                 backgroundColor: `${cat.color}15`,
                                 color: cat.color,
+                                borderColor: `${cat.color}30`,
                               }}
                             >
-                              {cat.name}
+                              <CategoryIcon name={cat.iconName} className="w-2.5 h-2.5" />
+                              <span>{cat.name}</span>
                             </span>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${priority.badge}`}>
                               {priority.label}
@@ -214,6 +218,29 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                             <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                               {task.description}
                             </p>
+                          )}
+
+                          {/* Tags */}
+                          {task.tags && task.tags.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                              {task.tags.map((t) => {
+                                const style = getTagColor(t);
+                                return (
+                                  <span
+                                    key={t}
+                                    className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.2 rounded font-bold border"
+                                    style={{
+                                      backgroundColor: style.bg,
+                                      color: style.text,
+                                      borderColor: style.border,
+                                    }}
+                                  >
+                                    <Hash className="w-2 h-2 opacity-70" />
+                                    <span>{t}</span>
+                                  </span>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
 

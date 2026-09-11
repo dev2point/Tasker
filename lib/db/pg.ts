@@ -307,6 +307,12 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_insert_policy') THEN
           CREATE POLICY categories_insert_policy ON categories FOR INSERT TO public WITH CHECK (true);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_update_policy') THEN
+          CREATE POLICY categories_update_policy ON categories FOR UPDATE TO public USING (true) WITH CHECK (true);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_delete_policy') THEN
+          CREATE POLICY categories_delete_policy ON categories FOR DELETE TO public USING (true);
+        END IF;
 
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'workspace_members' AND policyname = 'workspace_members_select_policy') THEN
           CREATE POLICY workspace_members_select_policy ON workspace_members FOR SELECT TO public USING (true);

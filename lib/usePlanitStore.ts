@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore, useCallback, useMemo, useEffect } from 'react';
 import { Task, Category, TaskNotification, ViewMode } from '@/types/task';
-import { DEFAULT_CATEGORIES, getInitialSampleTasks } from '@/lib/constants';
+import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import {
   dbPutAllTasks,
   dbPutAllCategories,
@@ -169,6 +169,13 @@ export function usePlanitStore() {
             notify();
           }
         }
+        if (data.categories.length > 0) {
+          const currentLocalCats = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+          if (!currentLocalCats) {
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data.categories));
+            notify();
+          }
+        }
       })
       .catch((err) => {
         console.warn('IndexedDB sync skipped:', err);
@@ -199,6 +206,108 @@ export function usePlanitStore() {
       dbPutAllCategories(resolved).catch(console.error);
     } catch {}
   }, []);
+
+  // Save or update a single category
+  const saveCategory = useCallback(
+    (categoryToSave: Category) => {
+      setCategories((prev) => {
+        const index = prev.findIndex((c) => c.id === categoryToSave.id);
+        let updated: Category[];
+        if (index >= 0) {
+          updated = [...prev];
+          updated[index] = categoryToSave;
+        } else {
+          updated = [...prev, categoryToSave];
+        }
+        return updated;
+      });
+
+      // Background sync to server API
+      fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryToSave),
+      }).catch((e) => console.warn('Category sync skipped:', e));
+    },
+    [setCategories]
+  );
+
+  // Delete category and reassign orphan tasks
+  const deleteCategory = useCallback(
+    (categoryIdToDelete: string, fallbackId: string = 'travail') => {
+      setCategories((prev) => {
+        const filtered = prev.filter((c) => c.id !== categoryIdToDelete);
+        return filtered.length > 0 ? filtered : DEFAULT_CATEGORIES;
+      });
+
+      // Reassign any task using this category to fallback category
+      setTasks((prev) =>
+        prev.map((t) => (t.category === categoryIdToDelete ? { ...t, category: fallbackId } : t))
+      );
+
+      // Background sync to server API
+      fetch(`/api/categories?id=${encodeURIComponent(categoryIdToDelete)}&fallback=${encodeURIComponent(fallbackId)}`, {
+        method: 'DELETE',
+      }).catch((e) => console.warn('Category delete sync skipped:', e));
+    },
+    [setCategories, setTasks]
+  );
+
+  // Reset to default categories
+  const resetCategories = useCallback(() => {
+    setCategories(DEFAULT_CATEGORIES);
+  }, [setCategories]);
+
+  // Rename a tag across all tasks
+  const renameTag = useCallback(
+    (oldTag: string, newTag: string) => {
+      const normalizedOld = oldTag.trim().toLowerCase();
+      const normalizedNew = newTag.trim().toLowerCase();
+      if (!normalizedNew || normalizedOld === normalizedNew) return;
+
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (!t.tags || !Array.isArray(t.tags)) return t;
+          const hasOld = t.tags.some((tag) => tag.toLowerCase() === normalizedOld);
+          if (!hasOld) return t;
+
+          const updatedTags = t.tags.map((tag) =>
+            tag.toLowerCase() === normalizedOld ? normalizedNew : tag
+          );
+          // Deduplicate
+          const uniqueTags = Array.from(new Set(updatedTags));
+          return {
+            ...t,
+            tags: uniqueTags,
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
+    },
+    [setTasks]
+  );
+
+  // Delete a tag from all tasks
+  const deleteTag = useCallback(
+    (tagToDelete: string) => {
+      const normalized = tagToDelete.trim().toLowerCase();
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (!t.tags || !Array.isArray(t.tags)) return t;
+          const hasTag = t.tags.some((tag) => tag.toLowerCase() === normalized);
+          if (!hasTag) return t;
+
+          const filteredTags = t.tags.filter((tag) => tag.toLowerCase() !== normalized);
+          return {
+            ...t,
+            tags: filteredTags,
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
+    },
+    [setTasks]
+  );
 
   const setNotifications = useCallback(
     (newNotifs: TaskNotification[] | ((prev: TaskNotification[]) => TaskNotification[])) => {
@@ -241,6 +350,11 @@ export function usePlanitStore() {
     soundEnabled,
     setTasks,
     setCategories,
+    saveCategory,
+    deleteCategory,
+    resetCategories,
+    renameTag,
+    deleteTag,
     setNotifications,
     setCurrentView,
     setSoundEnabled,

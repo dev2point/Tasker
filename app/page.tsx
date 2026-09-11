@@ -14,6 +14,7 @@ import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
 import { AuthModal } from '@/components/AuthModal';
+import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { useSession } from '@/lib/auth-client';
@@ -42,6 +43,11 @@ export default function HomePage() {
     setNotifications,
     setCurrentView,
     setSoundEnabled,
+    saveCategory,
+    deleteCategory,
+    resetCategories,
+    renameTag,
+    deleteTag,
   } = usePlanitStore();
 
   // Modals state
@@ -54,6 +60,13 @@ export default function HomePage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isPostgresModalOpen, setIsPostgresModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
+  const [categoryTagModalInitialTab, setCategoryTagModalInitialTab] = useState<'categories' | 'tags'>('categories');
+
+  const handleOpenCategoryTagManager = useCallback((initialTab: 'categories' | 'tags' = 'categories') => {
+    setCategoryTagModalInitialTab(initialTab);
+    setIsCategoryTagModalOpen(true);
+  }, []);
 
   // Better Auth session hook
   const { data: authSession } = useSession();
@@ -591,6 +604,7 @@ export default function HomePage() {
           currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
         }
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -621,6 +635,7 @@ export default function HomePage() {
             onQuickAdd={handleQuickAdd}
             onToggleSubtask={handleToggleSubtask}
             onPostponeTask={handlePostponeTask}
+            onOpenCategoryTagManager={handleOpenCategoryTagManager}
           />
         )}
 
@@ -662,6 +677,7 @@ export default function HomePage() {
         categories={categories}
         teamUsers={teamUsers}
         defaultDate={defaultDateForModal}
+        onQuickCreateCategory={saveCategory}
       />
 
       {/* 2. Active Reminder Ringing Popup */}
@@ -732,6 +748,20 @@ export default function HomePage() {
         onAuthSuccess={() => {
           refreshUsers();
         }}
+      />
+
+      {/* 8. Category and Tag Manager Modal */}
+      <CategoryTagManagerModal
+        isOpen={isCategoryTagModalOpen}
+        onClose={() => setIsCategoryTagModalOpen(false)}
+        initialTab={categoryTagModalInitialTab}
+        categories={categories}
+        tasks={tasks}
+        onSaveCategory={saveCategory}
+        onDeleteCategory={deleteCategory}
+        onResetDefaultCategories={resetCategories}
+        onRenameTag={renameTag}
+        onDeleteTag={deleteTag}
       />
 
       {/* PWA Background Services & Offline Connectivity Indicator */}

@@ -45,6 +45,15 @@ export interface Category {
   color: string;
   bgLight: string;
   iconName: string;
+  isDefault?: boolean;
+}
+
+export interface TagItem {
+  id: string;
+  name: string;
+  color?: string;
+  bgLight?: string;
+  createdAt?: string;
 }
 
 export interface TaskNotification {
@@ -62,4 +71,5 @@ export interface TaskNotification {
 export type ViewMode = 'list' | 'calendar' | 'kanban' | 'stats';
 export type CalendarViewType = 'month' | 'week' | 'day';
 export type FilterType = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed' | 'urgent';
-export type GroupByType = 'none' | 'dueDate' | 'priority' | 'category' | 'status';
+export type GroupByType = 'none' | 'dueDate' | 'priority' | 'category' | 'status' | 'tag';
+
