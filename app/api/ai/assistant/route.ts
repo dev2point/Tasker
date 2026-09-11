@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { isDatabaseConfigured } from '@/lib/db/pg';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -19,9 +20,11 @@ function getGeminiClient(): GoogleGenAI | null {
 export async function POST(req: NextRequest) {
   try {
     // Verify authentication: Better Auth session cookie or authenticated user header
-    const session = await auth.api.getSession({
-      headers: await req.headers,
-    }).catch(() => null);
+    const session = isDatabaseConfigured()
+      ? await auth.api.getSession({
+          headers: await req.headers,
+        }).catch(() => null)
+      : null;
 
     const customUserHeader = req.headers.get('x-user-id');
 
