@@ -14,3 +14,70 @@
   --color-apricot-800: #933F15;
   --color-apricot-900: #59240A;
 }
+
+/* Custom Attractive Scrollbar Rules */
+@layer utilities {
+  /* Hide scrollbar completely for horizontal pill bars and carousels */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+    width: 0px;
+    height: 0px;
+  }
+
+  /* Sleek translucent custom scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(183, 82, 23, 0.3) transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(183, 82, 23, 0.25);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(183, 82, 23, 0.5);
+  }
+}
+
+/* Global scrollbar design */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(183, 82, 23, 0.3) transparent;
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(183, 82, 23, 0.25);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(183, 82, 23, 0.55);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+

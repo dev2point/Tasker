@@ -196,7 +196,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+        <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-4">
           {/* Status Banners */}
           {errorMessage && (
             <div

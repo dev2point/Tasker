@@ -311,7 +311,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
         </div>
 
         {/* Modal Scrollable Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
+        <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
           {/* ======================================================== */}
           {/* TAB 1: CATEGORIES */}
           {/* ======================================================== */}

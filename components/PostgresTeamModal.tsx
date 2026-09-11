@@ -272,7 +272,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
           {/* TAB 1: PostgreSQL Supabase Status */}
           {activeTab === 'db' && (
             <div className="space-y-4">

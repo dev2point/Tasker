@@ -78,7 +78,7 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
         {/* Task Details Content */}
         <div className="p-5 sm:p-6 space-y-4">
           {task.description && (
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 text-xs text-slate-700 leading-relaxed max-h-32 overflow-y-auto">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 text-xs text-slate-700 leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">
               {task.description}
             </div>
           )}
