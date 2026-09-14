@@ -152,14 +152,14 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-8 relative bg-slate-950 text-slate-100 overflow-hidden select-none">
+    <div className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-8 relative bg-slate-50 text-slate-900 overflow-hidden select-none">
       {/* Dynamic Animated Dotted Ambient Background */}
       <DottedGlowBackground
-        className="pointer-events-none absolute inset-0 opacity-40 overflow-hidden"
+        className="pointer-events-none absolute inset-0 opacity-60 overflow-hidden"
         gap={16}
         radius={1.5}
-        color="rgba(148, 163, 184, 0.3)"
-        glowColor="rgba(238, 141, 75, 0.8)"
+        color="rgba(148, 163, 184, 0.25)"
+        glowColor="rgba(238, 141, 75, 0.4)"
         speedMin={0.3}
         speedMax={1.2}
       />
@@ -171,22 +171,24 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             <CalendarIcon className="w-7 h-7 stroke-[2.3]" />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-white">Planit</h1>
-            <Badge variant="outline" className="border-emerald-500/40 bg-emerald-950/60 text-emerald-400 text-[10px] font-bold py-0.5 gap-1">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Planit</h1>
+            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-bold py-0.5 gap-1">
               <ShieldCheck className="w-3 h-3" />
               Espace Confidentiel
             </Badge>
           </div>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+          <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
             Application privée réservée aux membres autorisés. Veuillez vous identifier pour accéder à vos tâches, agendas et données.
           </p>
         </div>
 
         {/* Security Access Card */}
-        <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl p-6 shadow-2xl shadow-slate-900/15 relative overflow-hidden text-slate-800">
+          {/* Glass Inner Reflection Highlight */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/70 via-transparent to-black/5 pointer-events-none" />
           <BorderBeam size={250} duration={10} colorFrom="#F7C59F" colorTo="#EE8D4B" borderWidth={1.5} />
           {/* Top Tabs Switcher */}
-          <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800 mb-6">
+          <div className="flex bg-slate-100/90 p-1 rounded-xl border border-slate-200/90 mb-6 relative z-10">
             <button
               type="button"
               onClick={() => {
@@ -196,8 +198,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signin'
-                  ? 'bg-[#F7C59F] text-[#422006] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] text-[#422006] shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Se connecter
@@ -211,8 +213,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signup'
-                  ? 'bg-[#F7C59F] text-[#422006] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] text-[#422006] shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Créer un compte
@@ -221,15 +223,15 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
           {/* Feedback Alerts */}
           {errorMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-950/70 border border-rose-800/80 text-rose-200 text-xs flex items-start gap-2 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-emerald-950/70 border border-emerald-800/80 text-emerald-200 text-xs flex items-center gap-2 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>{successMessage}</span>
             </div>
           )}
@@ -238,40 +240,40 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
           {mode === 'signin' ? (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Adresse email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="email"
                     required
                     value={signInEmail}
                     onChange={(e) => setSignInEmail(e.target.value)}
                     placeholder="nom@entreprise.com"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F] focus:ring-1 focus:ring-[#F7C59F]"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white/80 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B] focus:ring-1 focus:ring-[#EE8D4B]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Mot de passe
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type={showSignInPassword ? 'text' : 'password'}
                     required
                     value={signInPassword}
                     onChange={(e) => setSignInPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F] focus:ring-1 focus:ring-[#F7C59F]"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white/80 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B] focus:ring-1 focus:ring-[#EE8D4B]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSignInPassword(!showSignInPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showSignInPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -285,7 +287,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2 cursor-pointer"
+                className="w-full h-10 font-bold bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] hover:opacity-95 text-[#422006] transition-all shadow-md shadow-[#F7C59F]/20 gap-2 mt-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -304,57 +306,57 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             /* Sign Up Form */
             <form onSubmit={handleSignUp} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Nom complet
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     value={signUpName}
                     onChange={(e) => setSignUpName(e.target.value)}
                     placeholder="ex. Marie Curie"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F] focus:ring-1 focus:ring-[#F7C59F]"
+                    className="w-full pl-9 pr-3 py-2 bg-white/80 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B] focus:ring-1 focus:ring-[#EE8D4B]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Adresse email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="email"
                     required
                     value={signUpEmail}
                     onChange={(e) => setSignUpEmail(e.target.value)}
                     placeholder="nom@entreprise.com"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F] focus:ring-1 focus:ring-[#F7C59F]"
+                    className="w-full pl-9 pr-3 py-2 bg-white/80 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B] focus:ring-1 focus:ring-[#EE8D4B]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Mot de passe (min. 6 caractères)
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type={showSignUpPassword ? 'text' : 'password'}
                     required
                     value={signUpPassword}
                     onChange={(e) => setSignUpPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F] focus:ring-1 focus:ring-[#F7C59F]"
+                    className="w-full pl-9 pr-10 py-2 bg-white/80 border border-slate-200/90 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B] focus:ring-1 focus:ring-[#EE8D4B]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showSignUpPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -366,7 +368,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Département ou équipe (optionnel)
                 </label>
                 <input
@@ -374,14 +376,14 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                   value={signUpDepartment}
                   onChange={(e) => setSignUpDepartment(e.target.value)}
                   placeholder="ex. Marketing, Finance, Technique..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[#F7C59F]"
+                  className="w-full px-3 py-2 bg-white/80 border border-slate-200/90 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#EE8D4B]"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2 cursor-pointer"
+                className="w-full h-10 font-bold bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] hover:opacity-95 text-[#422006] transition-all shadow-md shadow-[#F7C59F]/20 gap-2 mt-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

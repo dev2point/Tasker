@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { tasks } from '@/src/db/schema';
+import { tasks, users } from '@/src/db/schema';
+import { eq } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 
@@ -28,8 +29,47 @@ export async function POST(req: NextRequest) {
     await ensureDatabaseTables();
     const clientTasks: Task[] = await req.json();
 
+    // Ensure authenticated user exists in the users table to satisfy foreign key constraints
+    await db
+      .insert(users)
+      .values({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: (user.role as any) || 'member',
+        department: user.department || null,
+        status: user.status || 'active',
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: user.email,
+          name: user.name,
+          role: (user.role as any) || 'member',
+          department: user.department || null,
+          status: user.status || 'active',
+          updatedAt: new Date(),
+        },
+      });
+
     if (Array.isArray(clientTasks) && clientTasks.length > 0) {
       for (const t of clientTasks) {
+        let validCreatorId = t.creatorId || user.id;
+        if (validCreatorId) {
+          const creatorExists = await db.select().from(users).where(eq(users.id, validCreatorId)).limit(1);
+          if (creatorExists.length === 0) {
+            validCreatorId = user.id;
+          }
+        }
+
+        let validAssigneeId = t.assigneeId || null;
+        if (validAssigneeId) {
+          const assigneeExists = await db.select().from(users).where(eq(users.id, validAssigneeId)).limit(1);
+          if (assigneeExists.length === 0) {
+            validAssigneeId = null;
+          }
+        }
+
         await db
           .insert(tasks)
           .values({
@@ -44,8 +84,8 @@ export async function POST(req: NextRequest) {
             completed: t.completed,
             completedAt: t.completedAt ? new Date(t.completedAt) : null,
             workspaceId: t.workspaceId || null,
-            creatorId: t.creatorId || user.id,
-            assigneeId: t.assigneeId || null,
+            creatorId: validCreatorId,
+            assigneeId: validAssigneeId,
             reminderMinutesBefore: t.reminderMinutesBefore ?? 15,
             reminderTriggered: t.reminderTriggered || false,
             reminderDismissed: t.reminderDismissed || false,
@@ -68,7 +108,7 @@ export async function POST(req: NextRequest) {
               category: t.category,
               completed: t.completed,
               completedAt: t.completedAt ? new Date(t.completedAt) : null,
-              assigneeId: t.assigneeId || null,
+              assigneeId: validAssigneeId,
               subtasks: t.subtasks || [],
               tags: t.tags || [],
               updatedAt: new Date(),

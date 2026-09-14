@@ -199,9 +199,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     >
       <div
         id="auth-modal-dialog"
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 relative overflow-hidden"
+        className="bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/90 w-full max-w-md overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Glass Inner Reflection Highlight */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/70 via-transparent to-black/5 pointer-events-none z-10" />
         <BorderBeam size={220} duration={10} colorFrom="#F7C59F" colorTo="#EE8D4B" borderWidth={1.5} />
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/70">
