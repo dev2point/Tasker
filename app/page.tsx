@@ -746,6 +746,10 @@ export default function HomePage() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        currentUser={currentUser}
+        onSignOut={() => {
+          setSelectedFallbackUser(null);
+        }}
         onAuthSuccess={() => {
           refreshUsers();
         }}

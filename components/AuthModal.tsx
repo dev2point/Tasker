@@ -17,18 +17,22 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { authClient, signIn, signUp, signOut, useSession } from '@/lib/auth-client';
-import { UserRole } from '@/types/user';
+import { User, UserRole } from '@/types/user';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthSuccess?: () => void;
+  currentUser?: User | null;
+  onSignOut?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   onAuthSuccess,
+  currentUser: propCurrentUser,
+  onSignOut,
 }) => {
   const { data: session, isPending: isSessionLoading } = useSession();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -141,7 +145,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await signOut();
+      if (session?.user) {
+        await signOut();
+      }
+      onSignOut?.();
       setSuccessMessage('Déconnexion réussie.');
       setTimeout(() => {
         onAuthSuccess?.();
@@ -156,7 +163,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const currentUser = session?.user as any;
+  const currentUser = propCurrentUser || (session?.user as any);
 
   return (
     <div
