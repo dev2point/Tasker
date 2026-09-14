@@ -15,6 +15,13 @@
       "when": 1788518338645,
       "tag": "0001_odd_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789382493780,
+      "tag": "0002_cuddly_clint_barton",
+      "breakpoints": true
     }
   ]
 }

@@ -43,7 +43,7 @@ jobs:
             npm install --no-audit --no-fund
           fi
 
-      - name: 🚀 Run Drizzle Migrations on PostgreSQL
+      - name: 🚀 Run PostgreSQL Schema Migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -53,15 +53,10 @@ jobs:
             exit 1
           fi
 
-          if [ "${{ github.event.inputs.command }}" = "push" ]; then
-            echo "⚡ Exécution directe de 'drizzle-kit push'..."
-            npx drizzle-kit push
-          else
-            echo "📦 Exécution des migrations versionnées 'drizzle-kit migrate'..."
-            npx drizzle-kit migrate
-          fi
+          echo "📦 Exécution de la synchronisation sécurisée et idempotente de la base de données..."
+          node scripts/migrate.mjs
 
-          echo "🔍 Vérification des tables créées dans la base de données..."
+          echo "🔍 Vérification des tables et politiques RLS créées..."
           node scripts/verify-db.mjs
 
       - name: ✅ Migration Summary
