@@ -92,20 +92,30 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
     }
 
     try {
+    // 0. Define PostgreSQL Enum Type for Roles
+    await sql.unsafe(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+          CREATE TYPE user_role AS ENUM ('admin', 'manager', 'member', 'guest');
+        END IF;
+      END$$;
+    `);
+
     // 1. Users
-    await sql`
+    await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(64) PRIMARY KEY,
         email VARCHAR(255) NOT NULL UNIQUE,
         name VARCHAR(255) NOT NULL,
         avatar_url TEXT,
-        role VARCHAR(32) NOT NULL DEFAULT 'member',
+        role user_role NOT NULL DEFAULT 'member',
         department VARCHAR(128),
         status VARCHAR(32) DEFAULT 'active',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
-    `;
+    `);
 
     // 2. Workspaces
     await sql`
@@ -120,15 +130,15 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
     `;
 
     // 3. Workspace Members
-    await sql`
+    await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS workspace_members (
         id VARCHAR(64) PRIMARY KEY,
         workspace_id VARCHAR(64) NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
         user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        role VARCHAR(32) NOT NULL DEFAULT 'member',
+        role user_role NOT NULL DEFAULT 'member',
         joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
-    `;
+    `);
 
     // 4. Categories
     await sql`
@@ -196,7 +206,7 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         image TEXT,
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        role VARCHAR(32) NOT NULL DEFAULT 'member',
+        role user_role NOT NULL DEFAULT 'member',
         department VARCHAR(128),
         status VARCHAR(32) DEFAULT 'active'
       );
@@ -323,6 +333,49 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         END IF;
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activity_logs' AND policyname = 'activity_logs_insert_policy') THEN
           CREATE POLICY activity_logs_insert_policy ON activity_logs FOR INSERT TO public WITH CHECK (true);
+        END IF;
+
+        -- Safe automatic column migration to user_role ENUM
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'users' AND column_name = 'role' AND udt_name != 'user_role'
+        ) THEN
+          ALTER TABLE users ALTER COLUMN role DROP DEFAULT;
+          ALTER TABLE users ALTER COLUMN role TYPE user_role USING (
+            CASE 
+              WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role 
+              ELSE 'member'::user_role 
+            END
+          );
+          ALTER TABLE users ALTER COLUMN role SET DEFAULT 'member'::user_role;
+        END IF;
+
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'user' AND column_name = 'role' AND udt_name != 'user_role'
+        ) THEN
+          ALTER TABLE "user" ALTER COLUMN role DROP DEFAULT;
+          ALTER TABLE "user" ALTER COLUMN role TYPE user_role USING (
+            CASE 
+              WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role 
+              ELSE 'member'::user_role 
+            END
+          );
+          ALTER TABLE "user" ALTER COLUMN role SET DEFAULT 'member'::user_role;
+        END IF;
+
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'workspace_members' AND column_name = 'role' AND udt_name != 'user_role'
+        ) THEN
+          ALTER TABLE workspace_members ALTER COLUMN role DROP DEFAULT;
+          ALTER TABLE workspace_members ALTER COLUMN role TYPE user_role USING (
+            CASE 
+              WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role 
+              ELSE 'member'::user_role 
+            END
+          );
+          ALTER TABLE workspace_members ALTER COLUMN role SET DEFAULT 'member'::user_role;
         END IF;
       END
       $$;

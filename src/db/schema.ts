@@ -1,5 +1,8 @@
-import { pgTable, varchar, text, timestamp, boolean, integer, jsonb, pgPolicy } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, varchar, text, timestamp, boolean, integer, jsonb, pgPolicy } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
+
+// PostgreSQL Enum for User Roles (provides strict validation & native dropdowns in Supabase Studio)
+export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'member', 'guest']);
 
 // 1. Users Table (with RLS policies)
 export const users = pgTable('users', {
@@ -7,7 +10,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 255 }).notNull(),
   avatarUrl: text('avatar_url'),
-  role: varchar('role', { length: 32 }).notNull().default('member'), // 'admin' | 'manager' | 'member' | 'guest'
+  role: userRoleEnum('role').notNull().default('member'),
   department: varchar('department', { length: 128 }),
   status: varchar('status', { length: 32 }).default('active'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -77,7 +80,7 @@ export const workspaceMembers = pgTable('workspace_members', {
   userId: varchar('userId', { length: 64 })
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  role: varchar('role', { length: 32 }).notNull().default('member'), // 'admin' | 'manager' | 'member'
+  role: userRoleEnum('role').notNull().default('member'),
   joinedAt: timestamp('joined_at').defaultNow().notNull(),
 }, () => [
   pgPolicy('workspace_members_select_policy', {
@@ -274,7 +277,7 @@ export const user = pgTable('user', {
   image: text('image'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  role: text('role').default('member'),
+  role: userRoleEnum('role').default('member'),
   department: text('department'),
   status: text('status').default('active'),
 });
