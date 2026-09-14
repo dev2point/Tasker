@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { authClient, signIn, signUp, signOut, useSession } from '@/lib/auth-client';
 import { User, UserRole } from '@/types/user';
+import { BorderBeam } from '@/components/magicui/border-beam';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -69,16 +70,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
     try {
+      console.log('AuthModal sign in attempt:', signInEmail.trim());
       const res = await signIn.email({
         email: signInEmail.trim(),
         password: signInPassword,
       });
 
-      if (res.error) {
-        setErrorMessage(
-          res.error.message ||
-            'Identifiants incorrects. Vérifiez votre adresse email et votre mot de passe.'
-        );
+      console.log('AuthModal sign in response:', res);
+
+      if (res?.error) {
+        const errDetail = res.error.message || JSON.stringify(res.error);
+        setErrorMessage(`Erreur connexion (${res.error.status || 'API'}): ${errDetail}`);
       } else {
         setSuccessMessage('Connexion réussie !');
         setIsSignedOut(false);
@@ -88,10 +90,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           window.location.reload();
         }, 500);
       }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Une erreur inattendue est survenue.'
-      );
+    } catch (err: any) {
+      console.error('AuthModal sign in exception:', err);
+      const msg = err?.message || err?.toString() || 'Erreur réseau';
+      setErrorMessage(`Échec connexion: ${msg} (URL: ${window.location.origin})`);
     } finally {
       setIsLoading(false);
     }
@@ -114,6 +116,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
     try {
+      console.log('AuthModal sign up attempt:', signUpEmail.trim());
       const res = await signUp.email({
         name: signUpName.trim(),
         email: signUpEmail.trim(),
@@ -122,11 +125,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         department: signUpDepartment.trim() || undefined,
       } as any);
 
-      if (res.error) {
-        setErrorMessage(
-          res.error.message ||
-            'Impossible de créer le compte. Cette adresse email est peut-être déjà utilisée.'
-        );
+      console.log('AuthModal sign up response:', res);
+
+      if (res?.error) {
+        const errDetail = res.error.message || JSON.stringify(res.error);
+        setErrorMessage(`Erreur inscription (${res.error.status || 'API'}): ${errDetail}`);
       } else {
         setSuccessMessage('Compte créé avec succès et connecté !');
         setIsSignedOut(false);
@@ -136,10 +139,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           window.location.reload();
         }, 600);
       }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Une erreur inattendue est survenue.'
-      );
+    } catch (err: any) {
+      console.error('AuthModal sign up exception:', err);
+      const msg = err?.message || err?.toString() || 'Erreur réseau';
+      setErrorMessage(`Échec inscription: ${msg} (URL: ${window.location.origin})`);
     } finally {
       setIsLoading(false);
     }
@@ -196,9 +199,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     >
       <div
         id="auth-modal-dialog"
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
+        className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        <BorderBeam size={220} duration={10} colorFrom="#F7C59F" colorTo="#EE8D4B" borderWidth={1.5} />
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/70">
           <div className="flex items-center gap-2.5">

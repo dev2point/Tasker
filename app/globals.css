@@ -81,3 +81,28 @@ html, body {
   background: transparent;
 }
 
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@utility animate-border-beam {
+  animation: border-beam var(--duration, 15s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes border-beam-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@utility animate-border-beam-spin {
+  animation: border-beam-spin var(--duration, 8s) linear infinite;
+}
+
+

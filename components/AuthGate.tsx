@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { signIn, signUp } from '@/lib/auth-client';
 import { UserRole } from '@/types/user';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
+import { BorderBeam } from '@/components/magicui/border-beam';
 
 interface AuthGateProps {
   onAuthSuccess?: (user?: any) => void;
@@ -62,16 +63,17 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
     setIsLoading(true);
     try {
+      console.log('Attempting sign in for:', email, 'baseURL:', window.location.origin);
       const res = await signIn.email({
         email,
         password,
       });
 
+      console.log('Sign in response:', res);
+
       if (res?.error) {
-        setErrorMessage(
-          res.error.message ||
-            'Identifiants non reconnus. Vérifiez votre adresse email et votre mot de passe.'
-        );
+        const errDetail = res.error.message || JSON.stringify(res.error);
+        setErrorMessage(`Erreur de connexion (${res.error.status || 'API'}): ${errDetail}`);
       } else {
         setSuccessMessage('Connexion réussie ! Chargement de votre espace...');
         const user = res?.data?.user;
@@ -84,10 +86,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
           onAuthSuccess?.(user);
         }, 150);
       }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Une erreur inattendue est survenue lors de la connexion.'
-      );
+    } catch (err: any) {
+      console.error('Sign in exception:', err);
+      const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
+      setErrorMessage(`Échec de la requête de connexion: ${msg} (URL: ${window.location.origin})`);
     } finally {
       setIsLoading(false);
     }
@@ -114,6 +116,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
     setIsLoading(true);
     try {
+      console.log('Attempting sign up for:', email, 'baseURL:', window.location.origin);
       const res = await signUp.email({
         name,
         email,
@@ -121,11 +124,11 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
         department: signUpDepartment.trim() || undefined,
       } as any);
 
+      console.log('Sign up response:', res);
+
       if (res?.error) {
-        setErrorMessage(
-          res.error.message ||
-            'Impossible de créer le compte. Cette adresse email est peut-être déjà enregistrée.'
-        );
+        const errDetail = res.error.message || JSON.stringify(res.error);
+        setErrorMessage(`Erreur de création de compte (${res.error.status || 'API'}): ${errDetail}`);
         return;
       }
 
@@ -139,10 +142,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
       setTimeout(() => {
         onAuthSuccess?.(user);
       }, 200);
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Une erreur inattendue est survenue lors de la création.'
-      );
+    } catch (err: any) {
+      console.error('Sign up exception:', err);
+      const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
+      setErrorMessage(`Échec de la requête d'inscription: ${msg} (URL: ${window.location.origin})`);
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +184,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
         {/* Security Access Card */}
         <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+          <BorderBeam size={250} duration={10} colorFrom="#F7C59F" colorTo="#EE8D4B" borderWidth={1.5} />
           {/* Top Tabs Switcher */}
           <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800 mb-6">
             <button
