@@ -24,7 +24,7 @@ import { UserRole } from '@/types/user';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 
 interface AuthGateProps {
-  onAuthSuccess?: () => void;
+  onAuthSuccess?: (user?: any) => void;
 }
 
 export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
@@ -52,7 +52,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!signInEmail.trim() || !signInPassword) {
+    const email = signInEmail.trim();
+    const password = signInPassword;
+
+    if (!email || !password) {
       setErrorMessage('Veuillez renseigner votre email et mot de passe.');
       return;
     }
@@ -60,8 +63,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     setIsLoading(true);
     try {
       const res = await signIn.email({
-        email: signInEmail.trim(),
-        password: signInPassword,
+        email,
+        password,
       });
 
       if (res?.error) {
@@ -70,11 +73,16 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             'Identifiants non reconnus. Vérifiez votre adresse email et votre mot de passe.'
         );
       } else {
-        setSuccessMessage('Authentification réussie. Chargement de votre espace...');
+        setSuccessMessage('Connexion réussie ! Chargement de votre espace...');
+        const user = res?.data?.user;
+        if (typeof window !== 'undefined' && res?.data?.token) {
+          try {
+            localStorage.setItem('planit_auth_token', res.data.token);
+          } catch {}
+        }
         setTimeout(() => {
-          onAuthSuccess?.();
-          window.location.reload();
-        }, 400);
+          onAuthSuccess?.(user);
+        }, 150);
       }
     } catch (err) {
       setErrorMessage(
@@ -90,12 +98,16 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!signUpName.trim() || !signUpEmail.trim() || !signUpPassword) {
+    const name = signUpName.trim();
+    const email = signUpEmail.trim();
+    const password = signUpPassword;
+
+    if (!name || !email || !password) {
       setErrorMessage('Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
-    if (signUpPassword.length < 6) {
+    if (password.length < 6) {
       setErrorMessage('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
@@ -103,10 +115,9 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     setIsLoading(true);
     try {
       const res = await signUp.email({
-        name: signUpName.trim(),
-        email: signUpEmail.trim(),
-        password: signUpPassword,
-        role: 'member',
+        name,
+        email,
+        password,
         department: signUpDepartment.trim() || undefined,
       } as any);
 
@@ -118,23 +129,16 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
         return;
       }
 
-      // Automatically sign in the newly registered user
-      const loginRes = await signIn.email({
-        email: signUpEmail.trim(),
-        password: signUpPassword,
-      });
-
-      if (loginRes?.error) {
-        setSuccessMessage('Compte créé ! Veuillez vous identifier avec votre mot de passe.');
-        setMode('signin');
-        setSignInEmail(signUpEmail.trim());
-      } else {
-        setSuccessMessage('Compte créé et session initialisée. Accès en cours...');
-        setTimeout(() => {
-          onAuthSuccess?.();
-          window.location.reload();
-        }, 500);
+      setSuccessMessage('Compte créé avec succès ! Bienvenue.');
+      const user = res?.data?.user;
+      if (typeof window !== 'undefined' && res?.data?.token) {
+        try {
+          localStorage.setItem('planit_auth_token', res.data.token);
+        } catch {}
       }
+      setTimeout(() => {
+        onAuthSuccess?.(user);
+      }, 200);
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Une erreur inattendue est survenue lors de la création.'
@@ -186,13 +190,13 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signin'
                   ? 'bg-[#F7C59F] text-[#422006] shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Connexion Sécurisée
+              Se connecter
             </button>
             <button
               type="button"
@@ -201,13 +205,13 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signup'
                   ? 'bg-[#F7C59F] text-[#422006] shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Créer un Compte
+              Créer un compte
             </button>
           </div>
 
@@ -263,7 +267,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                   <button
                     type="button"
                     onClick={() => setShowSignInPassword(!showSignInPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
                   >
                     {showSignInPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -277,17 +281,17 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2"
+                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-[#422006] border-t-transparent rounded-full animate-spin" />
-                    Authentification...
+                    Connexion en cours...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <Lock className="w-4 h-4" />
-                    Déverrouiller l’application
+                    Se connecter
                   </span>
                 )}
               </Button>
@@ -346,7 +350,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                   <button
                     type="button"
                     onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
                   >
                     {showSignUpPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -373,7 +377,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2"
+                className="w-full h-10 font-bold bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] transition-all shadow-md shadow-[#F7C59F]/10 gap-2 mt-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -383,7 +387,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                 ) : (
                   <span className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
-                    Créer mon compte & Accéder
+                    Créer mon compte
                   </span>
                 )}
               </Button>

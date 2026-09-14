@@ -40,10 +40,80 @@ function subscribe(callback: () => void) {
 
 let isDBInitialized = false;
 
+const defaultCategoriesJson = JSON.stringify(DEFAULT_CATEGORIES);
+
+function getTasksSnapshot(): string {
+  if (typeof window === 'undefined') return '[]';
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.TASKS);
+    return raw || '[]';
+  } catch {
+    return '[]';
+  }
+}
+
+function getCategoriesSnapshot(): string {
+  if (typeof window === 'undefined') return defaultCategoriesJson;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    return raw || defaultCategoriesJson;
+  } catch {
+    return defaultCategoriesJson;
+  }
+}
+
+function getNotificationsSnapshot(): string {
+  if (typeof window === 'undefined') return '[]';
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    return raw || '[]';
+  } catch {
+    return '[]';
+  }
+}
+
+function getViewModeSnapshot(): ViewMode {
+  if (typeof window === 'undefined') return 'list';
+  try {
+    const mode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
+    if (mode === 'list' || mode === 'calendar' || mode === 'kanban' || mode === 'stats') {
+      return mode;
+    }
+    return 'list';
+  } catch {
+    return 'list';
+  }
+}
+
+function getSoundEnabledSnapshot(): string {
+  if (typeof window === 'undefined') return 'true';
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED);
+    return raw !== null ? raw : 'true';
+  } catch {
+    return 'true';
+  }
+}
+
+let hasMounted = false;
+const mountListeners = new Set<() => void>();
+
+function subscribeMounted(callback: () => void) {
+  mountListeners.add(callback);
+  if (!hasMounted && typeof window !== 'undefined') {
+    hasMounted = true;
+    queueMicrotask(() => {
+      mountListeners.forEach((cb) => cb());
+    });
+  }
+  return () => {
+    mountListeners.delete(callback);
+  };
+}
+
 export function usePlanitStore() {
-  // Check mounted status safely via useSyncExternalStore
   const isMounted = useSyncExternalStore(
-    subscribe,
+    subscribeMounted,
     () => true,
     () => false
   );
@@ -51,79 +121,35 @@ export function usePlanitStore() {
   // 1. Tasks Raw String
   const tasksRaw = useSyncExternalStore(
     subscribe,
-    () => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEYS.TASKS);
-        if (raw) {
-          if (raw.includes('"sample-')) {
-            localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
-            return '[]';
-          }
-          return raw;
-        }
-        localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
-        return '[]';
-      } catch {
-        return '[]';
-      }
-    },
+    getTasksSnapshot,
     () => '[]'
   );
 
   // 2. Categories Raw String
   const categoriesRaw = useSyncExternalStore(
     subscribe,
-    () => {
-      try {
-        return localStorage.getItem(STORAGE_KEYS.CATEGORIES) || JSON.stringify(DEFAULT_CATEGORIES);
-      } catch {
-        return JSON.stringify(DEFAULT_CATEGORIES);
-      }
-    },
-    () => JSON.stringify(DEFAULT_CATEGORIES)
+    getCategoriesSnapshot,
+    () => defaultCategoriesJson
   );
 
   // 3. Notifications Raw String
   const notificationsRaw = useSyncExternalStore(
     subscribe,
-    () => {
-      try {
-        return localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) || '[]';
-      } catch {
-        return '[]';
-      }
-    },
+    getNotificationsSnapshot,
     () => '[]'
   );
 
   // 4. View Mode
   const currentView = useSyncExternalStore<ViewMode>(
     subscribe,
-    () => {
-      try {
-        const mode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
-        if (mode === 'list' || mode === 'calendar' || mode === 'kanban' || mode === 'stats') {
-          return mode;
-        }
-        return 'list';
-      } catch {
-        return 'list';
-      }
-    },
+    getViewModeSnapshot,
     () => 'list'
   );
 
   // 5. Sound Enabled
   const soundEnabledRaw = useSyncExternalStore(
     subscribe,
-    () => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED);
-        return raw !== null ? raw : 'true';
-      } catch {
-        return 'true';
-      }
-    },
+    getSoundEnabledSnapshot,
     () => 'true'
   );
 

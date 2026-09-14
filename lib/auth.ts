@@ -108,6 +108,9 @@ export const auth = betterAuth({
     'https://*.google.com',
     'https://*.aistudio.google.com',
     'https://ai.studio',
+    'https://*.europe-west2.run.app',
+    'https://*.europe-west1.run.app',
+    'https://*.us-central1.run.app',
   ],
   advanced: {
     useSecureCookies: false, // Allows session cookies in HTTP dev/preview and iframe

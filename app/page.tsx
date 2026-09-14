@@ -21,7 +21,8 @@ import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard';
-import { useSession } from '@/lib/auth-client';
+import { useSession, getSession } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
 import { User, UserRole } from '@/types/user';
@@ -73,8 +74,51 @@ export default function HomePage() {
     setIsCategoryTagModalOpen(true);
   }, []);
 
-  // Better Auth session hook
-  const { data: authSession, isPending: isSessionLoading } = useSession();
+  // Better Auth session hook & fast direct resolution
+  const { data: hookSession, isPending: isHookPending } = useSession();
+  const [directSession, setDirectSession] = useState<any>(null);
+  const [isDirectSessionResolved, setIsDirectSessionResolved] = useState<boolean>(false);
+  const [isAuthTimeoutPassed, setIsAuthTimeoutPassed] = useState<boolean>(false);
+
+  // Active session derived from either Better Auth hook or direct fetch
+  const authSession = hookSession || directSession;
+
+  // Safety timer and active direct query to guarantee immediate resolution
+  useEffect(() => {
+    let isCancelled = false;
+
+    // Safety timeout: after 800ms max, release splash screen to AuthGate if still pending
+    const timeout = setTimeout(() => {
+      if (!isCancelled) {
+        setIsAuthTimeoutPassed(true);
+      }
+    }, 800);
+
+    // Parallel direct session check
+    getSession()
+      .then((res) => {
+        if (!isCancelled && res?.data) {
+          setDirectSession(res.data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Direct session resolution skipped:', err);
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsDirectSessionResolved(true);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  const isSessionLoading =
+    !isAuthTimeoutPassed &&
+    (isHookPending && !isDirectSessionResolved && !authSession?.user);
 
   // User & Team State (RBAC) - Strictly loaded from PostgreSQL & Better Auth (starts empty, real data only)
   const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(null);
@@ -93,6 +137,23 @@ export default function HomePage() {
       console.warn('Notice: Users database synchronization deferred:', err);
     }
   }, []);
+
+  const handleAuthSuccess = useCallback(
+    (user?: any) => {
+      if (user) {
+        setDirectSession({ user });
+      }
+      getSession()
+        .then((res) => {
+          if (res?.data) {
+            setDirectSession(res.data);
+          }
+        })
+        .catch(() => {});
+      refreshUsers();
+    },
+    [refreshUsers]
+  );
 
   // Derived active user: Better Auth authenticated session takes precedence
   const currentUser: User | null = useMemo(() => {
@@ -569,22 +630,9 @@ export default function HomePage() {
     [tasks]
   );
 
-  if (!isMounted || isSessionLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-lg shadow-[#F7C59F]/20 font-bold">
-            <div className="w-5 h-5 border-2 border-[#422006] border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-xs font-semibold text-slate-400">Vérification des accès sécurisés...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Strict Confidentiality Wall: No visitor state. Authentication is mandatory.
+  // Strict Confidentiality Wall: Render authentication gate immediately when no authenticated user
   if (!authSession?.user) {
-    return <AuthGate onAuthSuccess={refreshUsers} />;
+    return <AuthGate onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
