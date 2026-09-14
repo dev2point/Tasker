@@ -85,6 +85,7 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         defaultValue: 'member',
+        input: false, // Prevents client from injecting or overriding their role during sign-up
       },
       department: {
         type: 'string',

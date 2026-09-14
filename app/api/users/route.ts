@@ -80,6 +80,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const ALLOWED_ROLES: UserRole[] = ['admin', 'manager', 'member', 'guest'];
+
 export async function POST(req: NextRequest) {
   const authSessionUser = await getAuthenticatedUser(req);
   if (!authSessionUser) {
@@ -107,11 +109,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const validatedRole: UserRole = role && ALLOWED_ROLES.includes(role) ? role : 'member';
+
     const newUser: User = {
       id: `usr_${Date.now()}`,
       name,
       email,
-      role: (role as UserRole) || 'member',
+      role: validatedRole,
       department: department || 'Équipe',
       status: 'active',
       createdAt: new Date().toISOString(),
@@ -171,6 +175,10 @@ export async function PUT(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 });
+    }
+
+    if (role && !ALLOWED_ROLES.includes(role)) {
+      return NextResponse.json({ error: 'Rôle invalide spécifié.' }, { status: 400 });
     }
 
     const db = getDrizzleDb();
