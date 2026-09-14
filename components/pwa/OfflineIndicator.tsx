@@ -13,7 +13,7 @@ export const OfflineIndicator: React.FC = () => {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-20 md:bottom-5 left-4 z-40 flex items-center gap-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-white shadow-lg border border-slate-700/80 animate-in slide-in-from-bottom-2 duration-200"
+      className="fixed top-16 sm:top-18 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-full bg-slate-900/95 backdrop-blur-md px-4 py-1.5 text-xs font-semibold text-white shadow-xl border border-slate-700/80 animate-in slide-in-from-top-2 duration-200"
     >
       <span className="flex h-2 w-2 relative">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />

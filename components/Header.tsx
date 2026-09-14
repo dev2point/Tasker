@@ -26,7 +26,6 @@ import { User } from '@/types/user';
 import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PWAInstallButton } from '@/components/pwa/PWAInstallButton';
 import { MobileFloatingGlassMenu } from '@/components/MobileFloatingGlassMenu';
 
 interface HeaderProps {
@@ -314,23 +313,6 @@ export const Header: React.FC<HeaderProps> = ({
                   <Download className="w-3.5 h-3.5" />
                 </Button>
 
-                {/* PostgreSQL Status Button (Admin only) */}
-                {onOpenPostgresModal && currentUser?.role === 'admin' && (
-                  <Button
-                    id="open-postgres-modal-btn"
-                    variant="outline"
-                    size="sm"
-                    onClick={onOpenPostgresModal}
-                    title="Administration PostgreSQL & Rôles (Réservé Admin)"
-                    className="h-9 border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold px-2 text-xs gap-1 shadow-2xs"
-                  >
-                    <Database className="w-3.5 h-3.5 text-amber-700" />
-                    <span>BDD</span>
-                  </Button>
-                )}
-
-                {/* PWA Install Button */}
-                <PWAInstallButton size="sm" />
               </div>
 
               {/* Desktop Adaptive Tools Dropdown Popover (For md to xl screens to prevent header overflow) */}
@@ -410,32 +392,6 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Exporter (.ics)</span>
                       </button>
 
-                      {/* PostgreSQL DB Admin */}
-                      {onOpenPostgresModal && currentUser?.role === 'admin' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsDesktopToolsOpen(false);
-                            onOpenPostgresModal();
-                          }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-amber-900 transition-colors font-semibold"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                              <Database className="w-3.5 h-3.5" />
-                            </div>
-                            <span>Base de données</span>
-                          </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 uppercase">
-                            Admin
-                          </span>
-                        </button>
-                      )}
-
-                      {/* PWA Install in popover */}
-                      <div className="pt-1 border-t border-slate-100">
-                        <PWAInstallButton className="w-full justify-start text-xs font-semibold rounded-xl" showText={true} />
-                      </div>
                     </div>
                   </div>
                 )}
@@ -569,13 +525,6 @@ export const Header: React.FC<HeaderProps> = ({
                           </Badge>
                         </button>
 
-                        {/* PWA Install */}
-                        <div className="pt-0.5">
-                          <PWAInstallButton
-                            className="w-full justify-start text-xs font-semibold rounded-xl"
-                            showText={true}
-                          />
-                        </div>
 
                         {/* PostgreSQL Admin Option */}
                         {onOpenPostgresModal && currentUser?.role === 'admin' && (

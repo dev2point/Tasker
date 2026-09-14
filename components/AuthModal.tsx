@@ -6,7 +6,6 @@ import {
   Lock,
   Mail,
   User as UserIcon,
-  Shield,
   Briefcase,
   Eye,
   EyeOff,
@@ -180,9 +179,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <h3 className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
                 {currentUser ? 'Mon Compte' : mode === 'signin' ? 'Connexion' : 'Créer un compte'}
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                Authentification Better Auth • PostgreSQL
-              </p>
             </div>
           </div>
           <button
@@ -253,9 +249,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-600">
-                  <span className="flex items-center gap-1 text-emerald-700 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Session active (Cookie HttpOnly)
+                  <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    Connecté
                   </span>
                 </div>
               </div>
@@ -434,7 +430,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       htmlFor="signup-password-input"
                       className="block text-xs font-semibold text-slate-700 mb-1"
                     >
-                      Mot de passe (min. 6 caractères)
+                      Mot de passe
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -513,17 +509,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* Security & Infrastructure Notice */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] text-slate-500 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-slate-700">
-              <Shield className="w-3.5 h-3.5 text-[#BA5316]" />
-              <span>100% Autonome & Sécurisé</span>
-            </div>
-            <p>
-              Better Auth gère les mots de passe hachés et les sessions sécurisées (cookies HttpOnly)
-              directement dans votre base PostgreSQL sans service tiers externe.
-            </p>
-          </div>
+          {/* End of content */}
         </div>
       </div>
     </div>

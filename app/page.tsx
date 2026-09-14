@@ -17,6 +17,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
+import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard';
 import { useSession } from '@/lib/auth-client';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
@@ -764,9 +765,10 @@ export default function HomePage() {
         onDeleteTag={deleteTag}
       />
 
-      {/* PWA Background Services & Offline Connectivity Indicator */}
+      {/* PWA Background Services, Offline Connectivity & Floating Install Card */}
       <ServiceWorkerRegister />
       <OfflineIndicator />
+      <PWAFloatingInstallCard />
     </div>
   );
 }

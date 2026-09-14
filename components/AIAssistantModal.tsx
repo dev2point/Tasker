@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   Bot,
-  BrainCircuit,
   Wand2,
   Zap,
   X,
@@ -209,16 +208,12 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               <Lock className="w-7 h-7 stroke-[2.2]" />
             </div>
             
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-800 text-[11px] font-bold uppercase tracking-wide border border-orange-200">
-                <BrainCircuit className="w-3 h-3" />
-                Accès Protégé
-              </div>
-              <h3 className="font-bold text-slate-900 text-lg tracking-tight">
-                Connexion requise pour l&apos;Assistant IA
+            <div className="space-y-1">
+              <h3 className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
+                Connexion requise
               </h3>
-              <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
-                L&apos;utilisation de l&apos;intelligence artificielle Gemini pour la création intelligente de tâches et l&apos;optimisation de planning nécessite d&apos;être connecté à votre compte.
+              <p className="text-xs text-slate-500 leading-relaxed max-w-sm">
+                Connectez-vous à votre compte pour utiliser l&apos;Assistant IA.
               </p>
             </div>
 

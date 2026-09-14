@@ -18,11 +18,11 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   size = 'sm',
   showText = true,
 }) => {
-  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isIOS, isCompatible, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
-  // If already installed in standalone PWA window, don't show
-  if (isInstalled) {
+  // If already installed or browser/OS not compatible, don't show
+  if (isInstalled || !isCompatible) {
     return null;
   }
 
