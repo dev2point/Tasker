@@ -38,3 +38,43 @@ export interface ActivityLog {
   details: string;
   createdAt: string;
 }
+
+export const DEFAULT_TEAM_USERS: User[] = [
+  {
+    id: 'usr_admin_1',
+    name: 'Alexandre Dupont',
+    email: 'alexandre.dupont@planit.io',
+    role: 'admin',
+    department: 'Direction & Produit',
+    status: 'active',
+    createdAt: '2025-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr_manager_1',
+    name: 'Sophie Martin',
+    email: 'sophie.martin@planit.io',
+    role: 'manager',
+    department: 'Ingénierie',
+    status: 'active',
+    createdAt: '2025-01-02T00:00:00.000Z',
+  },
+  {
+    id: 'usr_member_1',
+    name: 'Thomas Bernard',
+    email: 'thomas.bernard@planit.io',
+    role: 'member',
+    department: 'Design',
+    status: 'active',
+    createdAt: '2025-01-03T00:00:00.000Z',
+  },
+  {
+    id: 'usr_member_2',
+    name: 'Camille Leroy',
+    email: 'camille.leroy@planit.io',
+    role: 'member',
+    department: 'Marketing',
+    status: 'away',
+    createdAt: '2025-01-04T00:00:00.000Z',
+  },
+];
+

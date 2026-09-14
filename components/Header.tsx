@@ -20,6 +20,7 @@ import {
   X,
   FolderPlus,
   ChevronDown,
+  Shield,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -106,11 +107,14 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDesktopToolsOpen]);
 
-  const navItems: { id: ViewMode; label: string; icon: React.ReactNode; badge?: number }[] = [
+  const navItems: { id: ViewMode; label: string; icon: React.ReactNode; badge?: number; special?: boolean }[] = [
     { id: 'list', label: 'Tâches', icon: <CheckSquare className="w-4 h-4 shrink-0" />, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined },
     { id: 'calendar', label: 'Calendrier', icon: <CalendarIcon className="w-4 h-4 shrink-0" /> },
     { id: 'kanban', label: 'Tableau', icon: <LayoutGrid className="w-4 h-4 shrink-0" /> },
     { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4 shrink-0" /> },
+    ...(currentUser?.role === 'admin'
+      ? [{ id: 'admin' as ViewMode, label: 'Admin', icon: <Shield className="w-4 h-4 shrink-0 text-purple-600" />, special: true }]
+      : []),
   ];
 
   return (
@@ -402,6 +406,28 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Exporter (.ics)</span>
                       </button>
 
+                      {/* Administration (Admin only) */}
+                      {currentUser?.role === 'admin' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsDesktopToolsOpen(false);
+                            onViewChange('admin');
+                          }}
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 transition-colors font-semibold text-purple-900 border-t border-slate-100 mt-1"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                              <Shield className="w-3.5 h-3.5" />
+                            </div>
+                            <span>Administration</span>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900 uppercase">
+                            Admin
+                          </span>
+                        </button>
+                      )}
+
                     </div>
                   </div>
                 )}
@@ -536,23 +562,23 @@ export const Header: React.FC<HeaderProps> = ({
                         </button>
 
 
-                        {/* PostgreSQL Admin Option */}
-                        {onOpenPostgresModal && currentUser?.role === 'admin' && (
+                        {/* Dedicated Admin Interface Option */}
+                        {currentUser?.role === 'admin' && (
                           <button
                             type="button"
                             onClick={() => {
                               setIsMobileMenuOpen(false);
-                              onOpenPostgresModal();
+                              onViewChange('admin');
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-amber-900 transition-colors text-xs font-semibold"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 transition-colors text-xs font-semibold border-t border-slate-100 mt-1"
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                                <Database className="w-3.5 h-3.5" />
+                              <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
+                                <Shield className="w-3.5 h-3.5" />
                               </div>
-                              <span>Administration BDD</span>
+                              <span>Administration</span>
                             </div>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 uppercase">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-200 text-purple-900 uppercase">
                               Admin
                             </span>
                           </button>
@@ -573,6 +599,7 @@ export const Header: React.FC<HeaderProps> = ({
         onViewChange={onViewChange}
         onOpenNewTaskModal={onOpenNewTaskModal}
         pendingTasksCount={pendingTasksCount}
+        currentUser={currentUser}
       />
     </>
   );

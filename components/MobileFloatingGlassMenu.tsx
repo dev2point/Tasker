@@ -7,10 +7,12 @@ import {
   CheckSquare,
   LayoutGrid,
   BarChart3,
+  Shield,
   Plus,
   X,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
+import { User } from '@/types/user';
 import { soundManager } from '@/lib/sound';
 
 interface MobileFloatingGlassMenuProps {
@@ -18,6 +20,7 @@ interface MobileFloatingGlassMenuProps {
   onViewChange: (view: ViewMode) => void;
   onOpenNewTaskModal: () => void;
   pendingTasksCount?: number;
+  currentUser?: User | null;
 }
 
 export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = ({
@@ -25,6 +28,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
   onViewChange,
   onOpenNewTaskModal,
   pendingTasksCount = 0,
+  currentUser,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -196,6 +200,29 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 </div>
                 <span className="whitespace-nowrap text-slate-900 font-semibold">Stats</span>
               </motion.button>
+
+              {/* Item 6: Administration (Admins only) */}
+              {currentUser?.role === 'admin' && (
+                <motion.button
+                  type="button"
+                  onClick={() => handleSelectView('admin')}
+                  whileTap={{ scale: 0.96 }}
+                  className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                    currentView === 'admin'
+                      ? 'bg-white text-purple-900 border-purple-400 ring-2 ring-purple-300 shadow-purple-500/20'
+                      : 'bg-[#E5ECE7]/95 text-purple-900 border-white/90 hover:bg-white'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                    currentView === 'admin'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-white text-purple-700 shadow-xs'
+                  }`}>
+                    <Shield className="w-4 h-4 stroke-[2.3]" />
+                  </div>
+                  <span className="whitespace-nowrap text-purple-950 font-bold">Admin</span>
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

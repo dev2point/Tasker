@@ -123,6 +123,39 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, role, department, status, name } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 });
+    }
+
+    const db = getDrizzleDb();
+    if (db && isDatabaseConfigured()) {
+      await ensureDatabaseTables();
+      const updateData: Record<string, any> = {};
+      if (role) updateData.role = role;
+      if (department !== undefined) updateData.department = department;
+      if (status) updateData.status = status;
+      if (name) updateData.name = name;
+
+      await Promise.all([
+        db.update(users).set(updateData).where(eq(users.id, id)).catch(() => {}),
+        db.update(authUser).set(updateData).where(eq(authUser.id, id)).catch(() => {}),
+      ]);
+    }
+
+    return NextResponse.json({ success: true, updated: { id, role, department, status, name } });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

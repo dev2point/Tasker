@@ -68,7 +68,7 @@ export interface TaskNotification {
   snoozedUntil?: string;
 }
 
-export type ViewMode = 'list' | 'calendar' | 'kanban' | 'stats';
+export type ViewMode = 'list' | 'calendar' | 'kanban' | 'stats' | 'admin';
 export type CalendarViewType = 'month' | 'week' | 'day';
 export type FilterType = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed' | 'urgent';
 export type GroupByType = 'none' | 'dueDate' | 'priority' | 'category' | 'status' | 'tag';

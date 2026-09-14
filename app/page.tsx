@@ -13,6 +13,7 @@ import { AIAssistantModal } from '@/components/AIAssistantModal';
 import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
+import { AdminView } from '@/components/AdminView';
 import { AuthModal } from '@/components/AuthModal';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
@@ -22,7 +23,7 @@ import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard'
 import { useSession } from '@/lib/auth-client';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
-import { User, UserRole } from '@/types/user';
+import { User, UserRole, DEFAULT_TEAM_USERS } from '@/types/user';
 import {
   evaluateReminders,
   isTaskOverdue,
@@ -74,8 +75,8 @@ export default function HomePage() {
   const { data: authSession } = useSession();
 
   // User & Team State (RBAC) - Strictly loaded from PostgreSQL & Better Auth
-  const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(null);
-  const [teamUsers, setTeamUsers] = useState<User[]>([]);
+  const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(DEFAULT_TEAM_USERS[0]);
+  const [teamUsers, setTeamUsers] = useState<User[]>(DEFAULT_TEAM_USERS);
 
   // Function to refresh users list from API
   const refreshUsers = useCallback(async () => {
@@ -83,11 +84,9 @@ export default function HomePage() {
       const res = await fetch('/api/users');
       if (!res.ok) return;
       const data = await res.json();
-      if (data?.users && Array.isArray(data.users)) {
+      if (data?.users && Array.isArray(data.users) && data.users.length > 0) {
         setTeamUsers(data.users);
-        if (data.users.length > 0) {
-          setSelectedFallbackUser((prev) => prev || data.users[0]);
-        }
+        setSelectedFallbackUser((prev) => prev || data.users[0]);
       }
     } catch (err) {
       console.warn('Notice: Users database synchronization deferred (offline or server initializing):', err);
@@ -679,6 +678,25 @@ export default function HomePage() {
             tasks={tasks}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
+          />
+        )}
+
+        {currentView === 'admin' && (
+          <AdminView
+            currentUser={currentUser}
+            tasks={tasks}
+            categories={categories}
+            teamUsers={teamUsers}
+            onRefreshUsers={refreshUsers}
+            onSelectUser={(user) => {
+              setSelectedFallbackUser(user);
+              soundManager.playClickSound();
+            }}
+            onTasksSynced={(syncedTasks) => {
+              setTasks(syncedTasks);
+            }}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
           />
         )}
       </main>
