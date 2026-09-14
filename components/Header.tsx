@@ -116,9 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       {/* Top Application Bar - Designed for fluid desktop responsiveness without overflow */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full overflow-hidden relative">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full relative">
         <DottedGlowBackground
-          className="pointer-events-none absolute inset-0 opacity-35"
+          className="pointer-events-none absolute inset-0 opacity-35 overflow-hidden"
           gap={12}
           radius={1.2}
           color="rgba(148, 163, 184, 0.4)"
