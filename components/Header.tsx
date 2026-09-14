@@ -26,6 +26,7 @@ import { User } from '@/types/user';
 import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { MobileFloatingGlassMenu } from '@/components/MobileFloatingGlassMenu';
 
 interface HeaderProps {
@@ -115,8 +116,17 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       {/* Top Application Bar - Designed for fluid desktop responsiveness without overflow */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full overflow-hidden">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full overflow-hidden relative">
+        <DottedGlowBackground
+          className="pointer-events-none absolute inset-0 opacity-35"
+          gap={12}
+          radius={1.2}
+          color="rgba(148, 163, 184, 0.4)"
+          glowColor="rgba(238, 141, 75, 0.9)"
+          speedMin={0.4}
+          speedMax={1.4}
+        />
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16 gap-1.5 sm:gap-2 lg:gap-4 min-w-0">
             
             {/* 1. Brand Logo & Live Clock */}

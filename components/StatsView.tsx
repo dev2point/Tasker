@@ -18,6 +18,7 @@ import { isTaskOverdue, formatDueDateFrench, getReminderTriggerTime } from '@/li
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 
 interface StatsViewProps {
   tasks: Task[];
@@ -91,6 +92,49 @@ export const StatsView: React.FC<StatsViewProps> = ({
   return (
     <div className="space-y-5 pb-16 md:pb-6">
       
+      {/* Productivity Intelligence Ambient Banner with Dotted Glow Background */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 p-5 sm:p-6 text-white shadow-md border border-slate-700/50">
+        <DottedGlowBackground
+          className="pointer-events-none absolute inset-0 opacity-40"
+          gap={14}
+          radius={1.8}
+          color="rgba(255, 255, 255, 0.4)"
+          glowColor="rgba(247, 197, 159, 0.9)"
+          speedMin={0.4}
+          speedMax={1.5}
+        />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F7C59F]/20 text-[#F7C59F] border border-[#F7C59F]/30 uppercase tracking-wide">
+                Tableau de bord & IA
+              </span>
+              <span className="text-xs text-slate-400 font-medium">Synthèse en temps réel</span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Performances & Rythme de Travail
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+              {completionRate >= 70
+                ? "Excellente cadence ! La majorité de vos objectifs sont atteints avec succès."
+                : totalTasks === 0
+                ? "Créez vos premières tâches pour activer l'analyse d'activité."
+                : `${totalTasks - completedTasks} tâche(s) restent à finaliser pour optimiser votre flux.`}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+              <div className="text-xl font-extrabold text-[#F7C59F]">{completionRate}%</div>
+              <div className="text-[10px] font-medium text-slate-300">Succès global</div>
+            </div>
+            <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+              <div className="text-xl font-extrabold text-amber-300">{todayCompleted} / {todayTasks.length}</div>
+              <div className="text-[10px] font-medium text-slate-300">Aujourd&apos;hui</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Top High-Level KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         

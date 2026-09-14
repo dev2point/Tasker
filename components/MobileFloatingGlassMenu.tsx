@@ -83,46 +83,56 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
               transition={{ type: 'spring', damping: 25, stiffness: 350, staggerChildren: 0.04 }}
               className="flex flex-col items-end gap-2.5 mb-3 pointer-events-auto"
             >
-              {/* Item 1: Nouvelle Tâche (Highlight Primary CTA) */}
-              <motion.button
-                type="button"
-                onClick={handleNewTask}
-                whileTap={{ scale: 0.96 }}
-                className="flex items-center gap-3 pl-2 pr-5 py-2 rounded-full bg-[#E5ECE7]/95 backdrop-blur-xl border border-white/90 shadow-lg shadow-slate-900/10 text-sm font-bold text-[#59240A] hover:bg-white active:scale-95 transition-all"
-              >
-                <div className="w-8 h-8 rounded-full bg-[#F7C59F] text-[#422006] flex items-center justify-center shrink-0 shadow-xs">
-                  <Plus className="w-4 h-4 stroke-[2.8]" />
-                </div>
-                <span className="whitespace-nowrap font-bold">Nouvelle tâche</span>
-              </motion.button>
-
-              {/* Item 2: Tâches (Liste) */}
-              <motion.button
-                type="button"
-                onClick={() => handleSelectView('list')}
-                whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+              {/* Single Unified Tâches Button (Navigate & Create) */}
+              <motion.div
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-center justify-between rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all ${
                   currentView === 'list'
                     ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
                     : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
-                  currentView === 'list'
-                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                    : 'bg-white text-slate-700 shadow-xs'
-                }`}>
-                  <CheckSquare className="w-4 h-4 stroke-[2.3]" />
-                </div>
-                <div className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="text-slate-900 font-semibold">Tâches</span>
-                  {pendingTasksCount > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F7C59F] text-[#422006] font-bold">
-                      {pendingTasksCount}
-                    </span>
-                  )}
-                </div>
-              </motion.button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentView === 'list') {
+                      handleNewTask();
+                    } else {
+                      handleSelectView('list');
+                    }
+                  }}
+                  className="flex items-center gap-2.5 pl-2 pr-2 py-2 active:scale-95 transition-transform"
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                    currentView === 'list'
+                      ? 'bg-[#F7C59F]/40 text-[#59240A]'
+                      : 'bg-white text-slate-700 shadow-xs'
+                  }`}>
+                    <CheckSquare className="w-4 h-4 stroke-[2.3]" />
+                  </div>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-slate-900 font-semibold">Tâches</span>
+                    {pendingTasksCount > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F7C59F] text-[#422006] font-bold">
+                        {pendingTasksCount}
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                {/* Inline Quick Add button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNewTask();
+                  }}
+                  title="Ajouter une nouvelle tâche"
+                  className="mr-2 w-7 h-7 rounded-full bg-[#F7C59F] hover:bg-[#F7C59F]/80 text-[#422006] flex items-center justify-center shrink-0 shadow-xs active:scale-90 transition-transform"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.8]" />
+                </button>
+              </motion.div>
 
               {/* Item 3: Calendrier */}
               <motion.button

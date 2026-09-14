@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 type DottedGlowBackgroundProps = {
   className?: string;
+  style?: React.CSSProperties;
   /** distance between dot centers in pixels */
   gap?: number;
   /** base radius of each dot in CSS px */
@@ -59,6 +60,7 @@ export const DottedGlowBackground = ({
   speedMin = 0.4,
   speedMax = 1.3,
   speedScale = 1,
+  style,
 }: DottedGlowBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -310,7 +312,7 @@ export const DottedGlowBackground = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ position: "absolute", inset: 0 }}
+      style={{ position: "absolute", inset: 0, ...style }}
     >
       <canvas
         ref={canvasRef}

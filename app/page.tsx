@@ -15,6 +15,7 @@ import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
 import { AuthModal } from '@/components/AuthModal';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
+import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard';
@@ -586,9 +587,24 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-24 md:pb-12">
-      {/* Global Navigation Header */}
-      <Header
+    <div className="relative min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-24 md:pb-12 overflow-x-hidden">
+      {/* Ambient Dotted Glow Canvas Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <DottedGlowBackground
+          className="pointer-events-none w-full h-full"
+          gap={18}
+          radius={1.6}
+          color="rgba(148, 163, 184, 0.45)"
+          glowColor="rgba(238, 141, 75, 0.85)"
+          opacity={0.45}
+          speedMin={0.3}
+          speedMax={1.3}
+        />
+      </div>
+
+      <div className="relative z-10 flex flex-col flex-1">
+        {/* Global Navigation Header */}
+        <Header
         currentView={currentView}
         onViewChange={handleViewChange}
         onOpenNewTaskModal={() => handleOpenTaskModal()}
@@ -773,6 +789,7 @@ export default function HomePage() {
       <ServiceWorkerRegister />
       <OfflineIndicator />
       <PWAFloatingInstallCard />
+      </div>
     </div>
   );
 }
