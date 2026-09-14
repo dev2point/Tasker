@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
 import { tasks } from '@/src/db/schema';
 import { Task } from '@/types/task';
+import { getAuthenticatedUser } from '@/lib/auth-server';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier pour synchroniser vos tâches.' },
+      { status: 401 }
+    );
+  }
+
   const db = getDrizzleDb();
 
   if (!db || !isDatabaseConfigured()) {
@@ -33,7 +44,7 @@ export async function POST(req: NextRequest) {
             completed: t.completed,
             completedAt: t.completedAt ? new Date(t.completedAt) : null,
             workspaceId: t.workspaceId || null,
-            creatorId: t.creatorId || null,
+            creatorId: t.creatorId || user.id,
             assigneeId: t.assigneeId || null,
             reminderMinutesBefore: t.reminderMinutesBefore ?? 15,
             reminderTriggered: t.reminderTriggered || false,

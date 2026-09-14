@@ -15,6 +15,7 @@ import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
 import { AdminView } from '@/components/AdminView';
 import { AuthModal } from '@/components/AuthModal';
+import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
@@ -23,7 +24,7 @@ import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard'
 import { useSession } from '@/lib/auth-client';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
-import { User, UserRole, DEFAULT_TEAM_USERS } from '@/types/user';
+import { User, UserRole } from '@/types/user';
 import {
   evaluateReminders,
   isTaskOverdue,
@@ -51,6 +52,7 @@ export default function HomePage() {
     resetCategories,
     renameTag,
     deleteTag,
+    clearStore,
   } = usePlanitStore();
 
   // Modals state
@@ -72,11 +74,11 @@ export default function HomePage() {
   }, []);
 
   // Better Auth session hook
-  const { data: authSession } = useSession();
+  const { data: authSession, isPending: isSessionLoading } = useSession();
 
-  // User & Team State (RBAC) - Strictly loaded from PostgreSQL & Better Auth
-  const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(DEFAULT_TEAM_USERS[0]);
-  const [teamUsers, setTeamUsers] = useState<User[]>(DEFAULT_TEAM_USERS);
+  // User & Team State (RBAC) - Strictly loaded from PostgreSQL & Better Auth (starts empty, real data only)
+  const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(null);
+  const [teamUsers, setTeamUsers] = useState<User[]>([]);
 
   // Function to refresh users list from API
   const refreshUsers = useCallback(async () => {
@@ -84,12 +86,11 @@ export default function HomePage() {
       const res = await fetch('/api/users');
       if (!res.ok) return;
       const data = await res.json();
-      if (data?.users && Array.isArray(data.users) && data.users.length > 0) {
+      if (data?.users && Array.isArray(data.users)) {
         setTeamUsers(data.users);
-        setSelectedFallbackUser((prev) => prev || data.users[0]);
       }
     } catch (err) {
-      console.warn('Notice: Users database synchronization deferred (offline or server initializing):', err);
+      console.warn('Notice: Users database synchronization deferred:', err);
     }
   }, []);
 
@@ -99,9 +100,9 @@ export default function HomePage() {
       const u = authSession.user as any;
       return {
         id: u.id,
-        name: u.name,
+        name: u.name || u.email?.split('@')[0] || 'Utilisateur',
         email: u.email,
-        role: (u.role as UserRole) || 'member',
+        role: (u.role as UserRole) || 'admin',
         department: u.department || undefined,
         status: (u.status as any) || 'active',
         avatarUrl: u.image || undefined,
@@ -111,9 +112,9 @@ export default function HomePage() {
     return selectedFallbackUser;
   }, [authSession?.user, selectedFallbackUser]);
 
-  // Load tasks and team users strictly from PostgreSQL API
+  // Load tasks and team users strictly when user is authenticated
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || !authSession?.user) return;
 
     let isCancelled = false;
 
@@ -128,15 +129,14 @@ export default function HomePage() {
 
         if (usersRes && usersRes.ok) {
           const usersData = await usersRes.json().catch(() => null);
-          if (usersData?.users && Array.isArray(usersData.users) && usersData.users.length > 0) {
+          if (usersData?.users && Array.isArray(usersData.users)) {
             setTeamUsers(usersData.users);
-            setSelectedFallbackUser((prev) => prev || usersData.users[0]);
           }
         }
 
         if (tasksRes && tasksRes.ok) {
           const tasksData = await tasksRes.json().catch(() => null);
-          if (tasksData?.tasks && Array.isArray(tasksData.tasks) && tasksData.tasks.length > 0) {
+          if (tasksData?.tasks && Array.isArray(tasksData.tasks)) {
             setTasks(tasksData.tasks);
           }
         }
@@ -150,7 +150,7 @@ export default function HomePage() {
     return () => {
       isCancelled = true;
     };
-  }, [isMounted, setTasks]);
+  }, [isMounted, authSession?.user, setTasks]);
 
   // Update sound manager & permissions on change after mount
   useEffect(() => {
@@ -569,20 +569,22 @@ export default function HomePage() {
     [tasks]
   );
 
-  if (!isMounted) {
+  if (!isMounted || isSessionLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <div className="h-16 border-b border-slate-200/90 bg-white/95" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 w-full flex items-center justify-center flex-1">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-sm shadow-[#F7C59F]/50 font-bold">
-              <div className="w-4 h-4 border-2 border-[#422006] border-t-transparent rounded-full animate-spin" />
-            </div>
-            <p className="text-xs font-semibold text-slate-500">Chargement de votre planning...</p>
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-lg shadow-[#F7C59F]/20 font-bold">
+            <div className="w-5 h-5 border-2 border-[#422006] border-t-transparent rounded-full animate-spin" />
           </div>
+          <p className="text-xs font-semibold text-slate-400">Vérification des accès sécurisés...</p>
         </div>
       </div>
     );
+  }
+
+  // Strict Confidentiality Wall: No visitor state. Authentication is mandatory.
+  if (!authSession?.user) {
+    return <AuthGate onAuthSuccess={refreshUsers} />;
   }
 
   return (
@@ -782,6 +784,7 @@ export default function HomePage() {
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
         onSignOut={() => {
+          clearStore();
           setSelectedFallbackUser(null);
         }}
         onAuthSuccess={() => {

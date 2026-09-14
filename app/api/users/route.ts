@@ -3,8 +3,19 @@ import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/
 import { users, user as authUser } from '@/src/db/schema';
 import { eq } from 'drizzle-orm';
 import { User, UserRole } from '@/types/user';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
+  const authSessionUser = await getAuthenticatedUser(req);
+  if (!authSessionUser) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier pour consulter les utilisateurs.' },
+      { status: 401 }
+    );
+  }
+
   const db = getDrizzleDb();
 
   if (!db || !isDatabaseConfigured()) {
@@ -70,6 +81,21 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const authSessionUser = await getAuthenticatedUser(req);
+  if (!authSessionUser) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier.' },
+      { status: 401 }
+    );
+  }
+
+  if (authSessionUser.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Accès interdit. Seul un administrateur peut créer des utilisateurs directement.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { name, email, role, department } = body;
@@ -124,6 +150,21 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const authSessionUser = await getAuthenticatedUser(req);
+  if (!authSessionUser) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier.' },
+      { status: 401 }
+    );
+  }
+
+  if (authSessionUser.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Accès interdit. Seul un administrateur peut modifier les rôles et permissions des utilisateurs.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { id, role, department, status, name } = body;
@@ -157,6 +198,21 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const authSessionUser = await getAuthenticatedUser(req);
+  if (!authSessionUser) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier.' },
+      { status: 401 }
+    );
+  }
+
+  if (authSessionUser.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Accès interdit. Seul un administrateur peut supprimer des utilisateurs.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -182,4 +238,3 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
-

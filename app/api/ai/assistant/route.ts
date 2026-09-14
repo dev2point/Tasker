@@ -17,12 +17,14 @@ function getGeminiClient(): GoogleGenAI | null {
   });
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     // Verify authentication: Better Auth session cookie or authenticated user header
     const session = isDatabaseConfigured()
       ? await auth.api.getSession({
-          headers: await req.headers,
+          headers: req.headers,
         }).catch(() => null)
       : null;
 

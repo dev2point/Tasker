@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { bearer } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getDrizzleDb, isDatabaseConfigured } from '@/lib/db/pg';
 import * as schema from '@/src/db/schema';
@@ -28,7 +29,7 @@ function sanitizeAuthUrl(rawUrl?: string | null): string {
     return 'http://localhost:3000';
   }
 
-  // Correct common user typos like "localhost://3000" or missing "http://"
+  // Correct common user typos
   if (url.startsWith('localhost://')) {
     url = url.replace(/^localhost:\/\//, 'http://localhost:');
   } else if (url.startsWith('localhost:')) {
@@ -57,7 +58,7 @@ function sanitizeAuthUrl(rawUrl?: string | null): string {
   }
 }
 
-// Clean any malformed environment variable in process.env so internal Better Auth checks never fail
+// Clean any malformed environment variable in process.env
 if (typeof process !== 'undefined' && process.env) {
   if (process.env.BETTER_AUTH_URL) {
     process.env.BETTER_AUTH_URL = sanitizeAuthUrl(process.env.BETTER_AUTH_URL);
@@ -73,9 +74,11 @@ const safeBaseURL = sanitizeAuthUrl(
 
 export const auth = betterAuth({
   database: getAuthDatabase(),
+  plugins: [bearer()],
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
+    autoSignIn: true,
   },
   user: {
     additionalFields: {
@@ -97,4 +100,21 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_SECRET ||
     'planit-better-auth-secret-key-production-safe-default-2026',
   baseURL: safeBaseURL,
+  trustedOrigins: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://*.run.app',
+    'https://*.google.com',
+    'https://*.aistudio.google.com',
+    'https://ai.studio',
+  ],
+  advanced: {
+    useSecureCookies: false, // Allows session cookies in HTTP dev/preview and iframe
+    defaultCookieAttributes: {
+      sameSite: 'none',
+      secure: true,
+      partitioned: true,
+      httpOnly: true,
+    },
+  },
 });

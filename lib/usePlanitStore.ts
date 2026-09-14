@@ -341,6 +341,16 @@ export function usePlanitStore() {
     } catch {}
   }, []);
 
+  const clearStore = useCallback(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, '[]');
+      notify();
+      dbPutAllTasks([]).catch(console.error);
+      dbPutAllNotifications([]).catch(console.error);
+    } catch {}
+  }, []);
+
   return {
     isMounted,
     tasks,
@@ -358,5 +368,6 @@ export function usePlanitStore() {
     setNotifications,
     setCurrentView,
     setSoundEnabled,
+    clearStore,
   };
 }

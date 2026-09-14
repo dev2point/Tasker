@@ -4,8 +4,19 @@ import { categories, tasks } from '@/src/db/schema';
 import { eq } from 'drizzle-orm';
 import { Category } from '@/types/task';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier pour accéder aux catégories.' },
+      { status: 401 }
+    );
+  }
+
   const db = getDrizzleDb();
 
   if (!db || !isDatabaseConfigured()) {
@@ -64,6 +75,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier.' },
+      { status: 401 }
+    );
+  }
+
   const db = getDrizzleDb();
   if (!db || !isDatabaseConfigured()) {
     return NextResponse.json(
@@ -109,6 +128,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Non autorisé. Veuillez vous authentifier.' },
+      { status: 401 }
+    );
+  }
+
   const db = getDrizzleDb();
   if (!db || !isDatabaseConfigured()) {
     return NextResponse.json({ success: true });

@@ -33,6 +33,9 @@ if (typeof process !== 'undefined' && process.env) {
 
 export const authClient = createAuthClient({
   baseURL: getClientBaseURL(),
+  fetchOptions: {
+    credentials: 'include',
+  },
 });
 
-export const { signIn, signUp, signOut, useSession } = authClient;
+export const { signIn, signUp, signOut, useSession, getSession } = authClient;

@@ -47,13 +47,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
-  const [signUpRole, setSignUpRole] = useState<UserRole>('member');
-  const [signUpDepartment, setSignUpDepartment] = useState('Tech');
+  const [signUpDepartment, setSignUpDepartment] = useState('');
 
   // Status feedback
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSignedOut, setIsSignedOut] = useState(false);
 
   if (!isOpen) return null;
 
@@ -81,10 +81,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         );
       } else {
         setSuccessMessage('Connexion réussie !');
+        setIsSignedOut(false);
         setTimeout(() => {
           onAuthSuccess?.();
           onClose();
-        }, 600);
+          window.location.reload();
+        }, 500);
       }
     } catch (err) {
       setErrorMessage(
@@ -116,8 +118,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         name: signUpName.trim(),
         email: signUpEmail.trim(),
         password: signUpPassword,
-        role: signUpRole,
-        department: signUpDepartment,
+        role: 'member',
+        department: signUpDepartment.trim() || undefined,
       } as any);
 
       if (res.error) {
@@ -127,10 +129,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         );
       } else {
         setSuccessMessage('Compte créé avec succès et connecté !');
+        setIsSignedOut(false);
         setTimeout(() => {
           onAuthSuccess?.();
           onClose();
-        }, 700);
+          window.location.reload();
+        }, 600);
       }
     } catch (err) {
       setErrorMessage(
@@ -144,26 +148,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleSignOut = async () => {
     setIsLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
     try {
-      if (session?.user) {
-        await signOut();
+      // 1. Better Auth client sign out
+      try {
+        await authClient.signOut();
+      } catch (err) {
+        console.warn('authClient.signOut error:', err);
       }
+
+      // 2. Direct POST to sign-out endpoint to clear cookies
+      try {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch {}
+
+      // 3. Clear local storage traces if any
+      try {
+        localStorage.removeItem('better-auth.session_token');
+      } catch {}
+
+      setIsSignedOut(true);
+      setSuccessMessage('Déconnexion réussie. Redirection...');
       onSignOut?.();
-      setSuccessMessage('Déconnexion réussie.');
+
       setTimeout(() => {
-        onAuthSuccess?.();
         onClose();
-      }, 500);
+        window.location.reload();
+      }, 400);
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Erreur lors de la déconnexion.'
       );
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const currentUser = propCurrentUser || (session?.user as any);
+  const currentUser = isSignedOut ? null : (propCurrentUser || (session?.user as any));
 
   return (
     <div
@@ -465,42 +488,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
-                    <div>
-                      <label
-                        htmlFor="signup-role-select"
-                        className="block text-xs font-semibold text-slate-700 mb-1"
-                      >
-                        Rôle
-                      </label>
-                      <select
-                        id="signup-role-select"
-                        value={signUpRole}
-                        onChange={(e) => setSignUpRole(e.target.value as UserRole)}
-                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F]"
-                      >
-                        <option value="member">Membre</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Administrateur</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="signup-dept-input"
-                        className="block text-xs font-semibold text-slate-700 mb-1"
-                      >
-                        Département
-                      </label>
-                      <input
-                        id="signup-dept-input"
-                        type="text"
-                        value={signUpDepartment}
-                        onChange={(e) => setSignUpDepartment(e.target.value)}
-                        placeholder="Ex: Produit"
-                        className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F]"
-                      />
-                    </div>
+                  <div className="pt-1">
+                    <label
+                      htmlFor="signup-dept-input"
+                      className="block text-xs font-semibold text-slate-700 mb-1"
+                    >
+                      Département ou équipe (optionnel)
+                    </label>
+                    <input
+                      id="signup-dept-input"
+                      type="text"
+                      value={signUpDepartment}
+                      onChange={(e) => setSignUpDepartment(e.target.value)}
+                      placeholder="Ex: Marketing, Finance, Technique..."
+                      className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F]"
+                    />
                   </div>
 
                   <Button
