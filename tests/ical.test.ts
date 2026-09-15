@@ -14,6 +14,8 @@ describe('iCalendar RFC 5545 Generation', () => {
       priority: 'urgent',
       category: 'Comptabilité',
       reminderMinutesBefore: 60,
+      recurrence: 'none',
+      tags: ['Clôture'],
       subtasks: [
         { id: 'sub-1', title: 'Rapprochement bancaire', completed: true },
         { id: 'sub-2', title: 'Inventaire des stocks', completed: false },
@@ -29,6 +31,9 @@ describe('iCalendar RFC 5545 Generation', () => {
       priority: 'medium',
       category: 'Juridique',
       reminderMinutesBefore: -1, // No reminder
+      recurrence: 'none',
+      tags: [],
+      subtasks: [],
       createdAt: '2026-09-01T08:00:00.000Z',
       updatedAt: '2026-09-01T08:00:00.000Z',
     },

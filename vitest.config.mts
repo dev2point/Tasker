@@ -5,11 +5,12 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    isolate: false,
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './'),
+      '@': path.resolve(process.cwd(), './'),
     },
   },
 });

@@ -105,7 +105,7 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
 
       expect(res.success).toBe(true);
       expect(res.dossier.status).toBe('en_revision');
-      expect(res.dossier.checker.id).toBe(mockChecker.id);
+      expect(res.dossier.checker?.id).toBe(mockChecker.id);
       expect(res.dossier.auditTrail[0].action).toBe('prise_en_charge');
     });
 

@@ -20,6 +20,7 @@ describe('Reminders & Recurrence Engine', () => {
     priority: 'high',
     category: 'Finance',
     reminderMinutesBefore: 30,
+    recurrence: 'none',
     tags: ['TVA', 'Fiscal'],
     subtasks: [
       { id: 'sub-1', title: 'Export balance', completed: true },
@@ -160,8 +161,8 @@ describe('Reminders & Recurrence Engine', () => {
       expect(next).toBe('2027-09-15');
     });
 
-    it('returns same date if recurrence is undefined or none', () => {
-      const next = getNextRecurrenceDate('2026-09-15', undefined);
+    it('returns same date if recurrence is none', () => {
+      const next = getNextRecurrenceDate('2026-09-15', 'none');
       expect(next).toBe('2026-09-15');
     });
   });
