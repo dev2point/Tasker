@@ -173,8 +173,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      {/* Top Application Bar - Designed for fluid desktop responsiveness without overflow */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full">
+      {/* Top Application Bar - Visible only on mobile (< md), while desktop and tablet use the Left Sidebar */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full">
         <DottedGlowBackground
           className="pointer-events-none absolute inset-0 opacity-35 overflow-hidden"
           gap={12}

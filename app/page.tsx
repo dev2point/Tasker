@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Header } from '@/components/Header';
+import { Sidebar } from '@/components/Sidebar';
 import { ListView } from '@/components/ListView';
 import { CalendarView } from '@/components/CalendarView';
 import { KanbanView } from '@/components/KanbanView';
@@ -69,6 +70,7 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
   const [categoryTagModalInitialTab, setCategoryTagModalInitialTab] = useState<'categories' | 'tags'>('categories');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const handleOpenCategoryTagManager = useCallback((initialTab: 'categories' | 'tags' = 'categories') => {
     setCategoryTagModalInitialTab(initialTab);
@@ -653,9 +655,8 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col flex-1 pt-16 sm:pt-20">
-        {/* Global Navigation Header */}
-        <Header
+      {/* Desktop and Tablet Left Sidebar */}
+      <Sidebar
         currentView={currentView}
         onViewChange={handleViewChange}
         onOpenNewTaskModal={() => handleOpenTaskModal()}
@@ -678,10 +679,45 @@ export default function HomePage() {
         activeRemindersCount={activeRemindersCount}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
+        pendingTasksCount={tasks.filter((t) => !t.completed).length}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 w-full">
+      {/* Global Navigation Header for Mobile Devices */}
+      <Header
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        onOpenNewTaskModal={() => handleOpenTaskModal()}
+        onOpenAIModal={() => {
+          if (!currentUser) {
+            setIsAuthModalOpen(true);
+          } else {
+            setIsAIModalOpen(true);
+          }
+        }}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenPostgresModal={
+          currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
+        }
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
+        currentUser={currentUser}
+        unreadNotificationsCount={unreadNotificationsCount}
+        activeRemindersCount={activeRemindersCount}
+        soundEnabled={soundEnabled}
+        onToggleSound={handleToggleSound}
+        pendingTasksCount={tasks.filter((t) => !t.completed).length}
+      />
+
+      {/* Main Content Area: dynamically offset by the Left Sidebar on desktop/tablet */}
+      <div
+        className={`relative z-10 flex flex-col flex-1 pt-14 md:pt-6 transition-all duration-200 min-w-0 ${
+          isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+        }`}
+      >
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 flex-1 w-full min-w-0">
         {/* Overdue and Daily Focus Banner */}
         <OverdueReminderBanner
           overdueTasks={overdueTasks}

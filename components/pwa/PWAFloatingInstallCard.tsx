@@ -93,7 +93,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
     <>
       <div
         id="pwa-floating-container"
-        className="fixed bottom-6 left-5 sm:left-6 z-40 pointer-events-none"
+        className="fixed bottom-22 left-4 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6 md:left-auto md:right-8 md:bottom-8 z-40 pointer-events-none flex flex-col items-start md:items-end"
       >
         <AnimatePresence mode="wait">
           {isMinimized ? (
