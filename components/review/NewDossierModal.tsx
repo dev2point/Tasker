@@ -53,18 +53,9 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   const [estimatedDate, setEstimatedDate] = useState(() =>
     new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]
   );
-  const [metricLabel, setMetricLabel] = useState("Chiffre d'Affaires");
-  const [metricAmount, setMetricAmount] = useState<number>(1500000);
-  const [initialDraft, setInitialDraft] = useState(
-    `1. Exposé des motifs
-Le présent dossier a été préparé en conformité avec les diligences professionnelles requises.
-
-2. Données clés
-Les états financiers et pièces justificatives ont été collectés.
-
-3. Recommandations
-À soumettre au superviseur pour examen contradictoire.`
-  );
+  const [metricLabel, setMetricLabel] = useState('');
+  const [metricAmount, setMetricAmount] = useState<number | ''>('');
+  const [initialDraft, setInitialDraft] = useState('');
 
   const handleDeptChange = (newDept: Department) => {
     setDepartment(newDept);
@@ -99,28 +90,36 @@ Les états financiers et pièces justificatives ont été collectés.
       estimatedDeliverableDate: estimatedDate,
       createdAt: now,
       updatedAt: now,
-      dataFields: [
-        {
-          id: `df-${Date.now()}-1`,
-          label: metricLabel || "Montant d'opération",
-          category: department === 'Fiscalité' ? 'fiscal' : department === 'Comptabilité' ? 'finance' : 'juridique',
-          previousValue: metricAmount,
-          currentValue: metricAmount,
-          unit: '€',
-          notes: 'Valeur déclarée au stade brouillon',
-        },
-      ],
+      dataFields:
+        metricLabel.trim() && metricAmount !== ''
+          ? [
+              {
+                id: `df-${Date.now()}-1`,
+                label: metricLabel.trim(),
+                category:
+                  department === 'Fiscalité'
+                    ? 'fiscal'
+                    : department === 'Comptabilité'
+                      ? 'finance'
+                      : 'juridique',
+                previousValue: Number(metricAmount),
+                currentValue: Number(metricAmount),
+                unit: '€',
+                notes: 'Valeur déclarée au stade brouillon',
+              },
+            ]
+          : [],
       textDocument: {
         documentId: `doc-${Date.now()}`,
-        title: `Projet de synthèse - ${title.trim()}`,
+        title: `Note de synthèse - ${title.trim()}`,
         type:
           department === 'Fiscalité'
             ? 'conclusions_fiscales'
             : department === 'Comptabilité'
               ? 'rapport_cloture'
               : 'acte_juridique',
-        previousContent: initialDraft,
-        currentContent: initialDraft,
+        previousContent: initialDraft.trim(),
+        currentContent: initialDraft.trim(),
         lastAmendedBy: currentUser.name,
         lastAmendedAt: now,
         amendmentNotes: 'Création initiale du projet',
@@ -150,15 +149,17 @@ Les états financiers et pièces justificatives ont été collectés.
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto">
-        <div className="flex items-center justify-between px-5 py-4 bg-slate-900 text-white">
+        <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-slate-200 text-slate-900">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#EE8D4B]" />
-            <h3 className="text-base font-bold">Nouveau Dossier Métier &amp; Circuit de Revue</h3>
+            <span className="p-1.5 rounded-lg bg-[#EE8D4B]/15 text-[#BA5316]">
+              <Sparkles className="w-4 h-4" />
+            </span>
+            <h3 className="text-base font-bold text-slate-900">Nouveau Dossier Métier &amp; Circuit de Revue</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-white rounded-lg"
+            className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -269,7 +270,8 @@ Les états financiers et pièces justificatives ont été collectés.
                   type="text"
                   value={metricLabel}
                   onChange={(e) => setMetricLabel(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white"
+                  placeholder="Ex: Chiffre d'Affaires HT ou Résultat Fiscal"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
                 />
               </div>
               <div>
@@ -277,8 +279,9 @@ Les états financiers et pièces justificatives ont été collectés.
                 <input
                   type="number"
                   value={metricAmount}
-                  onChange={(e) => setMetricAmount(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white"
+                  onChange={(e) => setMetricAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Ex: 1500000"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
                 />
               </div>
             </div>
@@ -292,6 +295,7 @@ Les états financiers et pièces justificatives ont été collectés.
             <textarea
               value={initialDraft}
               onChange={(e) => setInitialDraft(e.target.value)}
+              placeholder="Rédigez ici le projet d'acte, la note de cadrage ou le projet d'avis initial..."
               rows={4}
               className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
             />

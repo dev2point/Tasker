@@ -65,10 +65,13 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
   // Construct current actor
   const actor: WorkflowActor = useMemo(() => {
+    const fallbackName = currentUser?.email
+      ? currentUser.email.split('@')[0]
+      : 'Collaborateur';
     return {
       id: currentUser?.id || 'usr-current',
-      name: currentUser?.name || 'Moi (Collaborateur)',
-      email: currentUser?.email || 'user@cabinet.fr',
+      name: currentUser?.name || fallbackName,
+      email: currentUser?.email || '',
       department: (currentUser?.department as Department) || 'Fiscalité',
       role: (currentUser?.role as any) || 'manager',
     };
@@ -194,22 +197,22 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
   return (
     <div className="flex flex-col gap-6 w-full pb-16">
-      {/* 1. Header Banner & Title */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-7 shadow-lg border border-slate-700/50">
+      {/* 1. Header Banner & Title (Light Theme) */}
+      <div className="relative overflow-hidden rounded-2xl bg-white p-5 sm:p-7 shadow-xs border border-slate-200/90">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col gap-1.5 max-w-2xl">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-[#EE8D4B]/20 text-[#EE8D4B] border border-[#EE8D4B]/30">
-                <GitPullRequest className="w-5 h-5" />
+              <span className="p-2 rounded-xl bg-[#EE8D4B]/15 text-[#BA5316] border border-[#EE8D4B]/30">
+                <GitPullRequest className="w-5 h-5 stroke-[2.2]" />
               </span>
-              <span className="text-xs font-mono uppercase tracking-wider text-[#F7C59F] font-bold">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#BA5316] font-bold">
                 Plateforme Collaborative &amp; Circuit de Revue Métier
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
               Revue Maker-Checker, Diff &amp; Traçabilité Interdépartements
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Décloisonnez et sécurisez le travail entre <strong>Fiscalité</strong>,{' '}
               <strong>Comptabilité</strong> et <strong>Juridique</strong>. Validation hiérarchique
               stricte, comparateur de versions et journal d&apos;audit légal immuable pour conformité
@@ -221,7 +224,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
             <Button
               type="button"
               onClick={() => setIsNewModalOpen(true)}
-              className="bg-[#EE8D4B] hover:bg-[#BA5316] text-[#422006] hover:text-white font-bold text-xs gap-1.5 shadow-md"
+              className="bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold text-xs gap-1.5 shadow-xs transition-colors"
             >
               <Plus className="w-4 h-4" />
               Nouveau Dossier Métier
@@ -229,36 +232,48 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           </div>
         </div>
 
-        {/* Real-time Phoenix Presence Live Bar */}
-        <div className="relative z-10 mt-5 pt-4 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Real-time Phoenix Presence Live Bar (Light Theme) */}
+        <div className="relative z-10 mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            <span className="font-bold text-slate-200">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="font-bold text-slate-700">
               Membres actifs en direct (Phoenix Presence) :
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {presenceMembers.map((m) => (
-              <div
-                key={m.userId}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-slate-200 text-[11px]"
-                title={`${m.userName} (${m.role}) - Statut: ${m.status}`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    m.status === 'editing'
-                      ? 'bg-amber-400 animate-pulse'
-                      : 'bg-emerald-400'
-                  }`}
-                />
-                <strong className="text-white">{m.userName.split(' ')[0]}</strong>
-                <span className="text-slate-400">({m.department})</span>
-                {m.status === 'editing' && (
-                  <span className="text-[10px] text-amber-300 font-mono">Modifie</span>
-                )}
+            {presenceMembers.length === 0 ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                <span>En attente d&apos;activité</span>
               </div>
-            ))}
+            ) : (
+              presenceMembers.map((m) => (
+                <div
+                  key={m.userId}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200/90 text-slate-700 text-[11px]"
+                  title={`${m.userName} (${m.role}) - Statut: ${m.status}`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      m.status === 'editing'
+                        ? 'bg-amber-500 animate-pulse'
+                        : 'bg-emerald-500'
+                    }`}
+                  />
+                  <strong className="text-slate-900">{m.userName.split(' ')[0]}</strong>
+                  <span className="text-slate-500">({m.department})</span>
+                  {m.status === 'editing' && (
+                    <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded font-mono font-bold">
+                      Modifie
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -408,12 +423,32 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       {/* 5. Dossiers Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredDossiers.length === 0 ? (
-          <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
-            <GitPullRequest className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-            <h4 className="text-sm font-bold text-slate-700">Aucun dossier trouvé</h4>
-            <p className="text-xs text-slate-500 mt-1">
-              Modifiez vos critères de recherche ou créez un nouveau dossier métier.
+          <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 text-slate-500 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-[#EE8D4B]/10 text-[#BA5316] flex items-center justify-center mx-auto mb-3 border border-[#EE8D4B]/20">
+              <GitPullRequest className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800">
+              {dossiers.length === 0
+                ? 'Aucun dossier métier pour le moment'
+                : 'Aucun dossier correspondant aux filtres'}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1.5 max-w-md mx-auto leading-relaxed">
+              {dossiers.length === 0
+                ? 'Initiez votre premier dossier pour activer le circuit de validation Maker-Checker, le comparateur de versions et la traçabilité interdépartements.'
+                : 'Modifiez vos critères de recherche ou réinitialisez les filtres pour afficher vos dossiers.'}
             </p>
+            {dossiers.length === 0 && (
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  onClick={() => setIsNewModalOpen(true)}
+                  className="bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold text-xs gap-1.5 shadow-xs transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Créer un premier dossier
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           filteredDossiers.map((dossier) => {

@@ -56,14 +56,14 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditTrail, 
   return (
     <div className="flex flex-col gap-3">
       {/* Top Banner with Certifications */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border border-slate-200/90 text-slate-900 rounded-xl shadow-xs">
         <div className="flex items-center gap-2.5">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
           <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight">
+            <span className="text-sm font-bold tracking-tight text-slate-900">
               Journal d&apos;Audit Immuable &amp; Traçabilité Légale
             </span>
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-slate-500">
               Chaque modification est horodatée à la seconde avec IP source et rôle certifié.
             </span>
           </div>
@@ -74,7 +74,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditTrail, 
           size="sm"
           variant="outline"
           onClick={handleExportAudit}
-          className="h-8 bg-slate-800 border-slate-700 hover:bg-slate-700 text-white text-xs gap-1.5"
+          className="h-8 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 text-xs gap-1.5"
         >
           <Download className="w-3.5 h-3.5" />
           Exporter le PV d&apos;Audit (.JSON)

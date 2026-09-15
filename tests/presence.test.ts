@@ -10,10 +10,9 @@ describe('Real-Time Collaboration Presence Service', () => {
     localStorage.clear();
   });
 
-  it('retrieves default active presence when storage is empty', () => {
+  it('retrieves empty active presence when storage is empty and no one has pinged', () => {
     const list = getActivePresence();
-    expect(list.length).toBeGreaterThan(0);
-    expect(list.some((m) => m.userName === 'Claire Bernard')).toBe(true);
+    expect(list).toHaveLength(0);
   });
 
   it('updates current user status and timestamp upon ping', () => {
@@ -46,6 +45,8 @@ describe('Real-Time Collaboration Presence Service', () => {
       'dossier-fis-001',
       'viewing'
     );
+
+    expect(capturedCount).toBe(1);
 
     // Clean up subscription
     unsubscribe();

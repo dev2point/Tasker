@@ -71,10 +71,9 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
   });
 
   describe('Storage persistence', () => {
-    it('initializes with seed dossiers when storage is empty', () => {
+    it('returns empty array when storage is empty (no mock data)', () => {
       const loaded = getStoredDossiers();
-      expect(loaded.length).toBeGreaterThanOrEqual(INITIAL_DOSSIERS.length);
-      expect(loaded[0].ref).toBe(INITIAL_DOSSIERS[0].ref);
+      expect(loaded).toHaveLength(0);
     });
 
     it('persists and retrieves updated dossiers', () => {

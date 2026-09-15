@@ -3,35 +3,10 @@ import { Department, PresenceMember } from '@/types/review';
 const PRESENCE_STORAGE_KEY = 'planit_presence_members_v1';
 const BROADCAST_CHANNEL_NAME = 'planit_presence_channel';
 
-const INITIAL_PRESENCE: PresenceMember[] = [
-  {
-    userId: 'usr-claire',
-    userName: 'Claire Bernard',
-    department: 'Fiscalité',
-    role: 'Manager Fiscalité',
-    dossierId: 'dossier-fis-001',
-    status: 'viewing',
-    lastSeen: new Date().toISOString(),
-  },
-  {
-    userId: 'usr-marc',
-    userName: 'Marc Duval',
-    department: 'Comptabilité',
-    role: 'Manager Audit & Bilan',
-    dossierId: 'dossier-cpt-014',
-    status: 'editing',
-    lastSeen: new Date().toISOString(),
-  },
-  {
-    userId: 'usr-antoine',
-    userName: 'Antoine Girard',
-    department: 'Juridique',
-    role: 'Associé Juridique & M&A',
-    dossierId: 'dossier-jur-089',
-    status: 'viewing',
-    lastSeen: new Date().toISOString(),
-  },
-];
+// No sample or mock presence members by default
+const INITIAL_PRESENCE: PresenceMember[] = [];
+
+const LEGACY_MOCK_USER_IDS = new Set(['usr-claire', 'usr-marc', 'usr-antoine']);
 
 let broadcastChannel: BroadcastChannel | null = null;
 if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -43,23 +18,28 @@ if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
 }
 
 export function getActivePresence(): PresenceMember[] {
-  if (typeof window === 'undefined') return INITIAL_PRESENCE;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(PRESENCE_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(INITIAL_PRESENCE));
-      return INITIAL_PRESENCE;
-    }
+    if (!raw) return [];
     const members: PresenceMember[] = JSON.parse(raw);
+    if (!Array.isArray(members)) return [];
+
     const now = Date.now();
-    // Keep members active within 5 minutes or initial seed peers
+    // Keep only real members active within 5 minutes, filtering out any legacy mock accounts
     const active = members.filter((m) => {
+      if (LEGACY_MOCK_USER_IDS.has(m.userId)) return false;
       const diff = now - new Date(m.lastSeen).getTime();
-      return diff < 5 * 60 * 1000 || m.userId.startsWith('usr-');
+      return diff < 5 * 60 * 1000;
     });
-    return active.length > 0 ? active : INITIAL_PRESENCE;
+
+    if (active.length !== members.length) {
+      localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(active));
+    }
+
+    return active;
   } catch {
-    return INITIAL_PRESENCE;
+    return [];
   }
 }
 
@@ -68,7 +48,7 @@ export function pingPresence(
   dossierId?: string,
   status: 'viewing' | 'editing' | 'idle' = 'viewing'
 ): PresenceMember[] {
-  if (typeof window === 'undefined') return INITIAL_PRESENCE;
+  if (typeof window === 'undefined') return [];
   try {
     const list = getActivePresence();
     const dept = (user.department as Department) || 'Fiscalité';
@@ -102,7 +82,7 @@ export function pingPresence(
 
     return updatedList;
   } catch {
-    return INITIAL_PRESENCE;
+    return [];
   }
 }
 
