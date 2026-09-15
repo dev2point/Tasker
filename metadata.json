@@ -1,6 +1,6 @@
 {
   "name": "Gestionnaire de Tâches & Calendrier",
-  "description": "Application PWA complète de gestion de tâches et calendrier avec authentification Better Auth, base de données PostgreSQL, persistance hors-ligne et rappels automatiques.",
+  "description": "Application PWA complète de gestion de tâches, calendrier et plateforme collaborative de revue métier (Maker-Checker, Diff Viewer, journal d'audit légal et passerelles inter-pôles Fiscalité, Comptabilité, Juridique).",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

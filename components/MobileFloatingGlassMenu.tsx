@@ -10,6 +10,7 @@ import {
   Shield,
   Plus,
   X,
+  GitPullRequest,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -137,6 +138,27 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                   <Plus className="w-3.5 h-3.5 stroke-[2.8]" />
                 </button>
               </motion.div>
+
+              {/* Item 2: Revue Métier */}
+              <motion.button
+                type="button"
+                onClick={() => handleSelectView('review')}
+                whileTap={{ scale: 0.96 }}
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                  currentView === 'review'
+                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
+                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                  currentView === 'review'
+                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
+                    : 'bg-white text-[#EE8D4B] shadow-xs'
+                }`}>
+                  <GitPullRequest className="w-4 h-4 stroke-[2.3]" />
+                </div>
+                <span className="whitespace-nowrap text-slate-900 font-semibold">Revue Métier</span>
+              </motion.button>
 
               {/* Item 3: Calendrier */}
               <motion.button

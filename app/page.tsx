@@ -14,6 +14,7 @@ import { ExportModal } from '@/components/ExportModal';
 import { OverdueReminderBanner } from '@/components/OverdueReminderBanner';
 import { PostgresTeamModal } from '@/components/PostgresTeamModal';
 import { AdminView } from '@/components/AdminView';
+import { CollaborativeReviewPlatform } from '@/components/review/CollaborativeReviewPlatform';
 import { AuthModal } from '@/components/AuthModal';
 import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
@@ -704,6 +705,10 @@ export default function HomePage() {
             onPostponeTask={handlePostponeTask}
             onOpenCategoryTagManager={handleOpenCategoryTagManager}
           />
+        )}
+
+        {currentView === 'review' && (
+          <CollaborativeReviewPlatform currentUser={currentUser} />
         )}
 
         {currentView === 'calendar' && (

@@ -21,6 +21,7 @@ import {
   FolderPlus,
   ChevronDown,
   Shield,
+  GitPullRequest,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -109,6 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems: { id: ViewMode; label: string; icon: React.ReactNode; badge?: number; special?: boolean }[] = [
     { id: 'list', label: 'Tâches', icon: <CheckSquare className="w-4 h-4 shrink-0" />, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined },
+    { id: 'review' as ViewMode, label: 'Revue Métier', icon: <GitPullRequest className="w-4 h-4 shrink-0 text-[#EE8D4B]" /> },
     { id: 'calendar', label: 'Calendrier', icon: <CalendarIcon className="w-4 h-4 shrink-0" /> },
     { id: 'kanban', label: 'Tableau', icon: <LayoutGrid className="w-4 h-4 shrink-0" /> },
     { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4 shrink-0" /> },
