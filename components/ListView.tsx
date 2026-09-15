@@ -520,7 +520,7 @@ export const ListView: React.FC<ListViewProps> = ({
             onClick={() => setSelectedCategory('all')}
             className={`px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap border ${
               selectedCategory === 'all'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                ? 'bg-[#BA5316] text-white border-[#BA5316] shadow-2xs'
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
           >

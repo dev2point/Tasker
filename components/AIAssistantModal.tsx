@@ -179,23 +179,23 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="bg-slate-900 p-4 sm:p-5 text-white flex items-center justify-between">
+        <div className="bg-slate-50 border-b border-slate-100 p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500/20 to-amber-500/20 border border-orange-400/40 flex items-center justify-center text-orange-400 shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-100 to-amber-100 border border-orange-200/80 flex items-center justify-center text-orange-700 shadow-2xs shrink-0">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight">
+              <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight text-slate-900">
                 Assistant IA & Planification
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 font-medium">
                 Créez des tâches en langage naturel ou optimisez votre journée avec Gemini
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

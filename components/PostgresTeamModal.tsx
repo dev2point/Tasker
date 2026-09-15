@@ -186,26 +186,26 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
     >
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
+        <div className="bg-slate-50/90 border-b border-slate-200/80 p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F7C59F]/20 border border-[#F7C59F]/40 flex items-center justify-center text-[#F7C59F]">
+            <div className="w-10 h-10 rounded-xl bg-[#F7C59F]/30 border border-[#F7C59F]/60 flex items-center justify-center text-[#BA5316] shrink-0">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-base sm:text-lg">PostgreSQL (Supabase) & Équipe</h2>
+                <h2 className="font-bold text-base sm:text-lg text-slate-900">PostgreSQL (Supabase) & Équipe</h2>
                 <Badge
                   variant={dbStatus.connected ? 'success' : 'outline'}
                   className={`text-[10px] font-bold ${
                     dbStatus.connected
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-amber-100 text-amber-800 border-amber-300'
                   }`}
                 >
                   {dbStatus.connected ? 'Connecté (Drizzle)' : 'Mode Hybride / Local'}
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 font-medium">
                 Gestion des rôles (RBAC), schéma Drizzle ORM et synchronisation cloud
               </p>
             </div>
@@ -213,7 +213,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -345,16 +345,16 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
               </div>
 
               {/* Setup Guide */}
-              <div className="p-4 rounded-xl bg-slate-900 text-slate-200 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-bold text-white">
-                  <Key className="w-4 h-4 text-amber-400" />
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-slate-900">
+                  <Key className="w-4 h-4 text-amber-600" />
                   <span>Configuration de la variable DATABASE_URL</span>
                 </div>
-                <p className="text-slate-400 text-[11px]">
+                <p className="text-slate-500 text-[11px]">
                   Pour brancher votre projet Supabase, définissez <code>DATABASE_URL</code> dans vos variables
                   d&apos;environnement :
                 </p>
-                <pre className="bg-black/50 p-2.5 rounded-lg text-emerald-400 text-[11px] overflow-x-auto font-mono">
+                <pre className="bg-slate-100 border border-slate-200 p-2.5 rounded-lg text-amber-900 text-[11px] overflow-x-auto font-mono">
                   DATABASE_URL=&quot;postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres&quot;
                 </pre>
               </div>
@@ -465,7 +465,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs uppercase">
+                          <div className="w-9 h-9 rounded-full bg-[#F7C59F]/40 border border-[#F7C59F]/70 text-[#59240A] font-black flex items-center justify-center text-xs uppercase">
                             {u.name.substring(0, 2)}
                           </div>
                           <div>

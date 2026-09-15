@@ -575,7 +575,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   {teamUsers.slice(0, 4).map((u) => (
                     <div key={u.id} className="py-2.5 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center uppercase">
+                        <div className="w-8 h-8 rounded-full bg-[#F7C59F]/40 border border-[#F7C59F]/70 text-[#59240A] font-black text-xs flex items-center justify-center uppercase">
                           {u.name.slice(0, 2)}
                         </div>
                         <div>
@@ -833,7 +833,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                         {/* User Identity */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center uppercase shrink-0 shadow-2xs">
+                            <div className="w-9 h-9 rounded-full bg-[#F7C59F]/40 border border-[#F7C59F]/70 text-[#59240A] font-black text-xs flex items-center justify-center uppercase shrink-0 shadow-2xs">
                               {user.name.slice(0, 2)}
                             </div>
                             <div>
@@ -1169,20 +1169,20 @@ export const AdminView: React.FC<AdminViewProps> = ({
           aria-modal="true"
         >
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+            <div className="bg-slate-50 border-b border-slate-100 p-4 sm:p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/20 flex items-center justify-center text-[#F7C59F]">
+                <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/30 border border-[#F7C59F]/60 flex items-center justify-center text-[#BA5316] shrink-0">
                   <Users className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">Ajouter un nouveau membre</h3>
-                  <p className="text-[11px] text-slate-400">Enregistrement dans l’annuaire d’équipe</p>
+                  <h3 className="font-bold text-sm text-slate-900">Ajouter un nouveau membre</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Enregistrement dans l’annuaire d’équipe</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddUserModal(false)}
-                className="p-1 rounded-md text-slate-400 hover:text-white"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
               >
                 ✕
               </button>

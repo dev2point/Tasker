@@ -54,23 +54,23 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
         className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-150"
       >
         {/* Modal Header */}
-        <div className="bg-slate-900 p-5 sm:p-6 text-white text-center relative">
+        <div className="bg-gradient-to-b from-amber-50 to-orange-50/40 border-b border-amber-100/80 p-5 sm:p-6 text-center relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-amber-100/60 transition-colors"
             title="Fermer"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-400 flex items-center justify-center mb-3 shadow-inner">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center mb-3 shadow-xs">
             <BellRing className="w-6 h-6 animate-pulse" />
           </div>
 
-          <Badge variant="amber" className="text-[10px] font-bold uppercase tracking-wide mb-1.5">
+          <Badge variant="amber" className="text-[10px] font-bold uppercase tracking-wide mb-1.5 bg-amber-200/80 text-amber-900 border-amber-300">
             Rappel automatique
           </Badge>
-          <h2 id="reminder-title" className="text-lg sm:text-xl font-bold tracking-tight text-white line-clamp-2 px-2">
+          <h2 id="reminder-title" className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 line-clamp-2 px-2">
             {task.title}
           </h2>
         </div>

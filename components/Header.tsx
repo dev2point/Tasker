@@ -274,21 +274,23 @@ export const Header: React.FC<HeaderProps> = ({
               </Button>
 
               {/* Notification Bell */}
-              <Button
-                id="open-notifications-btn"
-                variant="outline"
-                size="icon-sm"
-                onClick={onOpenNotifications}
-                title="Centre de rappels & alertes"
-                className="relative h-8.5 w-8.5 sm:h-9 sm:w-9 text-slate-700 shrink-0"
-              >
-                <Bell className="w-3.5 h-3.5" />
+              <div className="relative inline-flex shrink-0">
+                <Button
+                  id="open-notifications-btn"
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={onOpenNotifications}
+                  title="Centre de rappels & alertes"
+                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-slate-700 shrink-0 overflow-visible"
+                >
+                  <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700" />
+                </Button>
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs animate-pulse">
-                    {unreadNotificationsCount}
+                  <span className="absolute -top-1.5 -right-1.5 z-20 flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-sm shadow-rose-500/30 ring-2 ring-white animate-pulse pointer-events-none whitespace-nowrap">
+                    {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
                   </span>
                 )}
-              </Button>
+              </div>
 
               {/* Desktop Direct Action Icons (Visible on xl+ screens where ample horizontal room exists) */}
               <div className="hidden xl:flex items-center gap-1.5">

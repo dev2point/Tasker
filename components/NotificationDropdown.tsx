@@ -49,13 +49,20 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center shrink-0">
               <Bell className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900">Centre de Rappels</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-slate-900">Centre de Rappels</h3>
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="text-[10px] py-0 px-1.5 font-black h-4.5 flex items-center shadow-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                {unreadCount > 0 ? `${unreadCount} nouveau(x) rappel(s)` : 'Tous les rappels sont lus'}
+                {unreadCount > 0 ? `${unreadCount} non lu(s)` : 'Tous les rappels sont lus'}
               </p>
             </div>
           </div>

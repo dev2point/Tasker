@@ -374,7 +374,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowManualHelp(false)}
-                className="w-full py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors"
+                className="w-full py-2 rounded-xl bg-[#BA5316] text-white font-bold text-xs hover:bg-[#933F15] transition-colors"
               >
                 Fermer
               </button>
