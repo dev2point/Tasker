@@ -9,7 +9,7 @@ import {
   Smartphone,
   Share2,
   PlusSquare,
-  Sparkles,
+  Zap,
   Info,
   CheckCircle2,
 } from 'lucide-react';
@@ -186,7 +186,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
               {/* Feature Highlights Pills */}
               <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 flex-wrap">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                  <Sparkles className="w-2.5 h-2.5 text-[#BA5316]" />
+                  <Zap className="w-2.5 h-2.5 text-[#BA5316]" />
                   Accès instantané
                 </span>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">

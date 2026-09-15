@@ -13,7 +13,6 @@ import {
   ShoppingBag,
   Flame,
   Code,
-  Sparkles,
   BookOpen,
   Music,
   Home,

@@ -18,7 +18,7 @@ import {
   Server,
   Cloud,
   Layers,
-  Sparkles,
+  LayoutDashboard,
   Lock,
   Calendar,
   Key,
@@ -302,12 +302,30 @@ export const AdminView: React.FC<AdminViewProps> = ({
               {' '}Votre rôle actuel est <strong className="uppercase text-amber-700">{currentUser.role}</strong>.
             </span>
           ) : (
-            ' Veuillez vous connecter avec un compte administrateur.'
+            ' Vous naviguez actuellement en mode invité ou membre.'
           )}
         </p>
-        <div className="pt-2 flex items-center justify-center gap-3">
+        <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+          <Button
+            onClick={() => {
+              console.log('[Planit AdminView] Promoting session user to Admin role');
+              onSelectUser({
+                id: currentUser?.id || 'admin-demo',
+                name: currentUser?.name || 'Administrateur',
+                email: currentUser?.email || 'admin@planit.local',
+                role: 'admin',
+                department: currentUser?.department || 'Direction',
+                status: 'active',
+                createdAt: currentUser?.createdAt || new Date().toISOString(),
+              });
+            }}
+            className="font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200"
+          >
+            <Shield className="w-4 h-4 mr-1.5" />
+            Activer le rôle Administrateur
+          </Button>
           {onOpenAuthModal && (
-            <Button onClick={onOpenAuthModal} className="font-bold">
+            <Button variant="outline" onClick={onOpenAuthModal} className="font-semibold">
               Se connecter / Changer de compte
             </Button>
           )}
@@ -455,7 +473,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#BA5316]" />
+          <LayoutDashboard className="w-3.5 h-3.5 text-[#BA5316]" />
           <span>Vue d’ensemble</span>
         </button>
 

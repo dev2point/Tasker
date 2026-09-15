@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Calendar as CalendarIcon,
   KeyRound,
-  Sparkles,
   ArrowRight,
   ShieldAlert,
 } from 'lucide-react';

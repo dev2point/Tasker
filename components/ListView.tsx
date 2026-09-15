@@ -23,7 +23,6 @@ import {
   SlidersHorizontal,
   FolderPlus,
   Hash,
-  Sparkles,
 } from 'lucide-react';
 import { Task, Category, Priority, FilterType, GroupByType } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';
@@ -34,6 +33,7 @@ import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { TaskScrollList } from '@/components/TaskScrollList';
 
 interface ListViewProps {
   tasks: Task[];
@@ -756,8 +756,8 @@ export const ListView: React.FC<ListViewProps> = ({
                 </div>
               )}
 
-              {/* Tasks List Container */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+              {/* Tasks List Container in Distinct Component with Bottom Progressive Blur */}
+              <TaskScrollList>
                 {group.tasks.map((task) => {
                   const cat = getCategory(task.category);
                   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
@@ -1014,7 +1014,7 @@ export const ListView: React.FC<ListViewProps> = ({
                     </div>
                   );
                 })}
-              </div>
+              </TaskScrollList>
             </div>
           ))}
         </div>

@@ -13,11 +13,13 @@ import {
   CheckCircle2,
   AlertCircle,
   KeyRound,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { authClient, signIn, signUp, signOut, useSession } from '@/lib/auth-client';
 import { User, UserRole } from '@/types/user';
+import { ViewMode } from '@/types/task';
 import { BorderBeam } from '@/components/magicui/border-beam';
 
 interface AuthModalProps {
@@ -26,6 +28,7 @@ interface AuthModalProps {
   onAuthSuccess?: () => void;
   currentUser?: User | null;
   onSignOut?: () => void;
+  onViewChange?: (view: ViewMode) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -34,6 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onAuthSuccess,
   currentUser: propCurrentUser,
   onSignOut,
+  onViewChange,
 }) => {
   const { data: session, isPending: isSessionLoading } = useSession();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -270,8 +274,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <h4 className="font-bold text-slate-900 truncate text-sm sm:text-base">
                         {currentUser.name}
                       </h4>
-                      <Badge variant="apricot" className="text-[10px] uppercase font-bold py-0">
-                        {currentUser.role || 'Membre'}
+                      <Badge
+                        variant="apricot"
+                        onClick={() => {
+                          console.log('[Planit AuthModal] Role pastille clicked: Navigating to admin');
+                          if (onViewChange) onViewChange('admin');
+                          onClose();
+                        }}
+                        title="Cliquer pour accéder à la Console d'Administration"
+                        className="text-[10px] uppercase font-bold py-0.5 px-2 bg-purple-100 text-purple-900 border border-purple-300 hover:bg-purple-200 cursor-pointer transition-all shadow-2xs gap-1 inline-flex items-center"
+                      >
+                        <Shield className="w-3 h-3 text-purple-700 shrink-0" />
+                        {currentUser.role || 'Admin'}
                       </Badge>
                     </div>
                     <p className="text-xs text-slate-500 truncate">{currentUser.email}</p>

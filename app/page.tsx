@@ -263,6 +263,7 @@ export default function HomePage() {
 
   // Switch View Mode
   const handleViewChange = (view: ViewMode) => {
+    console.log(`[Planit Page] Switching view mode to: "${view}"`);
     setCurrentView(view);
   };
 
@@ -651,7 +652,7 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col flex-1">
+      <div className="relative z-10 flex flex-col flex-1 pt-16 sm:pt-20">
         {/* Global Navigation Header */}
         <Header
         currentView={currentView}
@@ -831,6 +832,7 @@ export default function HomePage() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
+        onViewChange={handleViewChange}
         onSignOut={() => {
           clearStore();
           setSelectedFallbackUser(null);

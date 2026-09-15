@@ -112,15 +112,13 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'calendar', label: 'Calendrier', icon: <CalendarIcon className="w-4 h-4 shrink-0" /> },
     { id: 'kanban', label: 'Tableau', icon: <LayoutGrid className="w-4 h-4 shrink-0" /> },
     { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4 shrink-0" /> },
-    ...(currentUser?.role === 'admin'
-      ? [{ id: 'admin' as ViewMode, label: 'Admin', icon: <Shield className="w-4 h-4 shrink-0 text-purple-600" />, special: true }]
-      : []),
+    { id: 'admin' as ViewMode, label: 'Admin', icon: <Shield className="w-4 h-4 shrink-0 text-purple-600" />, special: true },
   ];
 
   return (
     <>
       {/* Top Application Bar - Designed for fluid desktop responsiveness without overflow */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full relative">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full">
         <DottedGlowBackground
           className="pointer-events-none absolute inset-0 opacity-35 overflow-hidden"
           gap={12}
@@ -222,7 +220,16 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="truncate">Connexion</span>
                   )}
                   {currentUser && (
-                    <span className="hidden 2xl:inline text-[9px] px-1 py-0.2 rounded bg-[#F7C59F]/40 text-[#7c2d12] font-bold uppercase shrink-0">
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('[Planit Header] User pastille clicked: Navigating to admin view');
+                        soundManager.playClickSound();
+                        onViewChange('admin');
+                      }}
+                      title="Accéder à l'Espace Administration"
+                      className="hidden sm:inline-flex text-[9px] px-1.5 py-0.5 rounded bg-[#F7C59F]/40 text-[#7c2d12] font-bold uppercase shrink-0 hover:bg-purple-200 hover:text-purple-900 cursor-pointer transition-colors"
+                    >
                       {currentUser.role}
                     </span>
                   )}
@@ -406,27 +413,27 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Exporter (.ics)</span>
                       </button>
 
-                      {/* Administration (Admin only) */}
-                      {currentUser?.role === 'admin' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsDesktopToolsOpen(false);
-                            onViewChange('admin');
-                          }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 transition-colors font-semibold text-purple-900 border-t border-slate-100 mt-1"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
-                              <Shield className="w-3.5 h-3.5" />
-                            </div>
-                            <span>Administration</span>
+                      {/* Administration */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('[Planit Header] Desktop tools: Navigating to admin view');
+                          soundManager.playClickSound();
+                          setIsDesktopToolsOpen(false);
+                          onViewChange('admin');
+                        }}
+                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 transition-colors font-semibold text-purple-900 border-t border-slate-100 mt-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                            <Shield className="w-3.5 h-3.5" />
                           </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900 uppercase">
-                            Admin
-                          </span>
-                        </button>
-                      )}
+                          <span>Administration</span>
+                        </div>
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900 uppercase">
+                          {currentUser?.role || 'Admin'}
+                        </span>
+                      </button>
 
                     </div>
                   </div>
@@ -563,26 +570,26 @@ export const Header: React.FC<HeaderProps> = ({
 
 
                         {/* Dedicated Admin Interface Option */}
-                        {currentUser?.role === 'admin' && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              onViewChange('admin');
-                            }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 transition-colors text-xs font-semibold border-t border-slate-100 mt-1"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
-                                <Shield className="w-3.5 h-3.5" />
-                              </div>
-                              <span>Administration</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log('[Planit Header] Mobile menu: Navigating to admin view');
+                            soundManager.playClickSound();
+                            setIsMobileMenuOpen(false);
+                            onViewChange('admin');
+                          }}
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 transition-colors text-xs font-semibold border-t border-slate-100 mt-1"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
+                              <Shield className="w-3.5 h-3.5" />
                             </div>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-200 text-purple-900 uppercase">
-                              Admin
-                            </span>
-                          </button>
-                        )}
+                            <span>Administration</span>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-200 text-purple-900 uppercase">
+                            {currentUser?.role || 'Admin'}
+                          </span>
+                        </button>
                       </div>
                     </div>
                   </>

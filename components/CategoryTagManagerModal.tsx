@@ -10,7 +10,6 @@ import {
   FolderPlus,
   Check,
   RotateCcw,
-  Sparkles,
   Layers,
   Palette,
   Hash,

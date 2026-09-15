@@ -76,7 +76,7 @@ function getViewModeSnapshot(): ViewMode {
   if (typeof window === 'undefined') return 'list';
   try {
     const mode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
-    if (mode === 'list' || mode === 'calendar' || mode === 'kanban' || mode === 'stats') {
+    if (mode === 'list' || mode === 'calendar' || mode === 'kanban' || mode === 'stats' || mode === 'admin') {
       return mode;
     }
     return 'list';
