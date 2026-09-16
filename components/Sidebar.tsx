@@ -75,8 +75,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Support either controlled or local collapse state
   const [localCollapsed, setLocalCollapsed] = useState<boolean>(false);
   const isCollapsed = controlledCollapsed !== undefined ? controlledCollapsed : localCollapsed;
+
+  // Hover expansion state for collapsed sidebar ("animation limpide" on hover)
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // The sidebar is visually collapsed only when it is collapsed AND not hovered
+  const isVisuallyCollapsed = isCollapsed && !isHovered;
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    if (isCollapsed) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    if (isCollapsed) {
+      // Small graceful buffer (150ms) to ensure smooth user experience
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHovered(false);
+      }, 150);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const toggleCollapse = () => {
     soundManager.playClickSound();
+    setIsHovered(false);
     if (onToggleCollapse) {
       onToggleCollapse();
     } else {
@@ -174,54 +213,83 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="main-desktop-sidebar"
-      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 z-40 bg-white/95 backdrop-blur-md border-r border-slate-200/90 shadow-sm transition-all duration-200 select-none ${
-        isCollapsed ? 'w-20' : 'w-64'
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-white/95 backdrop-blur-md border-r border-slate-200/90 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden ${
+        isVisuallyCollapsed ? 'w-20 shadow-sm' : 'w-64'
+      } ${
+        isCollapsed && isHovered
+          ? 'z-50 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5'
+          : 'z-40 shadow-sm'
       }`}
     >
       {/* 1. Header: Brand Logo & Collapse Toggle */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-100/90 shrink-0">
-        {!isCollapsed ? (
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 shrink-0 font-bold">
-              <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-lg font-black tracking-tight text-slate-900 leading-none">
-                Planit
-              </span>
-              <span className="text-[11px] font-medium text-slate-400 truncate mt-0.5">
-                Productivité & Agenda
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="mx-auto">
+      <div className="h-16 px-3.5 flex items-center justify-between border-b border-slate-100/90 shrink-0">
+        {isVisuallyCollapsed ? (
+          <div className="w-full flex items-center justify-between">
             <div
-              className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 font-bold cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
               onClick={toggleCollapse}
               title="Agrandir la barre latérale"
             >
               <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
             </div>
+            <button
+              id="expand-sidebar-btn"
+              type="button"
+              onClick={toggleCollapse}
+              title="Déplier la barre latérale"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 hover:text-[#59240A] hover:bg-[#F7C59F]/20 active:scale-95 transition-all shrink-0 border border-slate-200/80 hover:border-[#F7C59F]/60"
+            >
+              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
           </div>
-        )}
+        ) : (
+          <div className="flex items-center justify-between w-full min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 shrink-0 font-bold">
+                <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-lg font-black tracking-tight text-slate-900 leading-none whitespace-nowrap">
+                  Planit
+                </span>
+                <span className="text-[11px] font-medium text-slate-400 truncate mt-0.5 whitespace-nowrap">
+                  Productivité & Agenda
+                </span>
+              </div>
+            </div>
 
-        {/* Collapse / Expand Button */}
-        {!isCollapsed && (
-          <button
-            type="button"
-            onClick={toggleCollapse}
-            title="Réduire la barre latérale"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+            {/* Collapse / Pin Toggle Button */}
+            {isCollapsed ? (
+              <button
+                id="pin-sidebar-btn"
+                type="button"
+                onClick={toggleCollapse}
+                title="Verrouiller la barre latérale dépliée"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-[#59240A] bg-[#F7C59F]/30 hover:bg-[#F7C59F]/50 border border-[#F7C59F]/60 transition-all active:scale-95 shrink-0"
+              >
+                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="whitespace-nowrap">Fixer</span>
+              </button>
+            ) : (
+              <button
+                id="collapse-sidebar-btn"
+                type="button"
+                onClick={toggleCollapse}
+                title="Réduire la barre latérale"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       {/* 2. Top Banner / Live Clock (Expanded Only) */}
-      {!isCollapsed && (
-        <div className="px-4 py-2.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-xs text-slate-600 font-mono">
+      {!isVisuallyCollapsed && (
+        <div className="px-4 py-2.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-xs text-slate-600 font-mono whitespace-nowrap animate-in fade-in duration-200">
           <span className="truncate text-slate-500 font-medium">{currentDateStr}</span>
           <div className="flex items-center gap-1 font-semibold text-[#BA5316] shrink-0">
             <Clock className="w-3 h-3" />
@@ -232,11 +300,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* 3. Primary CTA: + Nouvelle tâche */}
       <div className="p-3 shrink-0">
-        {!isCollapsed ? (
+        {!isVisuallyCollapsed ? (
           <Button
             id="open-new-task-btn"
             onClick={onOpenNewTaskModal}
-            className="w-full bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold shadow-sm shadow-[#EE8D4B]/30 h-10 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            className="w-full bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold shadow-sm shadow-[#EE8D4B]/30 h-10 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] whitespace-nowrap animate-in fade-in duration-200"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nouvelle tâche</span>
@@ -259,8 +327,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
         {/* Navigation Group */}
         <div>
-          {!isCollapsed && (
-            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          {!isVisuallyCollapsed && (
+            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap animate-in fade-in duration-200">
               Espace de travail
             </div>
           )}
@@ -276,7 +344,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     soundManager.playClickSound();
                     onViewChange(item.id);
                   }}
-                  title={isCollapsed ? item.label : undefined}
+                  title={isVisuallyCollapsed ? item.label : undefined}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
                     active
                       ? item.special
@@ -285,7 +353,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : item.special
                         ? 'text-purple-700 hover:text-purple-900 hover:bg-purple-50/60'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                  } ${isCollapsed ? 'justify-center px-2' : ''}`}
+                  } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
                 >
                   <div
                     className={`transition-colors shrink-0 ${
@@ -299,13 +367,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {item.icon}
                   </div>
 
-                  {!isCollapsed && (
-                    <span className="truncate flex-1 text-left">{item.label}</span>
+                  {!isVisuallyCollapsed && (
+                    <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">{item.label}</span>
                   )}
 
-                  {!isCollapsed && item.badge !== undefined && (
+                  {!isVisuallyCollapsed && item.badge !== undefined && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ${
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 animate-in fade-in duration-200 ${
                         active
                           ? 'bg-[#EE8D4B] text-white'
                           : 'bg-slate-200 text-slate-700 group-hover:bg-slate-300'
@@ -322,13 +390,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* AI Assistant Banner / Button */}
         <div>
-          {!isCollapsed ? (
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white border border-orange-200/70 shadow-2xs">
+          {!isVisuallyCollapsed ? (
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white border border-orange-200/70 shadow-2xs animate-in fade-in duration-200">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-6 h-6 rounded-lg bg-[#EE8D4B]/20 text-[#BA5316] flex items-center justify-center">
                   <Bot className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-bold text-orange-950">Assistant IA</span>
+                <span className="text-xs font-bold text-orange-950 whitespace-nowrap">Assistant IA</span>
                 <Sparkles className="w-3 h-3 text-amber-500 ml-auto" />
               </div>
               <p className="text-[11px] text-slate-600 leading-tight mb-2.5">
@@ -345,7 +413,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onOpenAIModal();
                   }
                 }}
-                className="w-full h-8 text-xs font-bold border-orange-200 bg-white hover:bg-orange-100/50 text-orange-900 rounded-lg shadow-2xs gap-1.5"
+                className="w-full h-8 text-xs font-bold border-orange-200 bg-white hover:bg-orange-100/50 text-orange-900 rounded-lg shadow-2xs gap-1.5 whitespace-nowrap"
               >
                 <span>Ouvrir l&apos;assistant</span>
                 {!currentUser && <Lock className="w-2.5 h-2.5 text-slate-400" />}
@@ -372,8 +440,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Organisation & Tools */}
         <div>
-          {!isCollapsed && (
-            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          {!isVisuallyCollapsed && (
+            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap animate-in fade-in duration-200">
               Organisation & Outils
             </div>
           )}
@@ -384,13 +452,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 id="open-categories-modal-btn"
                 type="button"
                 onClick={onOpenCategoryTagManager}
-                title={isCollapsed ? 'Catégories & Tags' : undefined}
+                title={isVisuallyCollapsed ? 'Catégories & Tags' : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
-                  isCollapsed ? 'justify-center px-2' : ''
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
                 <FolderPlus className="w-4 h-4 text-slate-400 group-hover:text-[#BA5316] shrink-0" />
-                {!isCollapsed && <span className="truncate flex-1 text-left">Catégories & Tags</span>}
+                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Catégories & Tags</span>}
               </button>
             )}
 
@@ -399,13 +467,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id="open-export-btn"
               type="button"
               onClick={onOpenExportModal}
-              title={isCollapsed ? 'Exporter (.ics)' : undefined}
+              title={isVisuallyCollapsed ? 'Exporter (.ics)' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
-                isCollapsed ? 'justify-center px-2' : ''
+                isVisuallyCollapsed ? 'justify-center px-2' : ''
               }`}
             >
               <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-600 shrink-0" />
-              {!isCollapsed && <span className="truncate flex-1 text-left">Exporter (.ics)</span>}
+              {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Exporter (.ics)</span>}
             </button>
 
             {/* Sound Toggle */}
@@ -416,9 +484,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onToggleSound();
                 soundManager.playClickSound();
               }}
-              title={isCollapsed ? (soundEnabled ? 'Alertes sonores activées' : 'Alertes sonores coupées') : undefined}
+              title={isVisuallyCollapsed ? (soundEnabled ? 'Alertes sonores activées' : 'Alertes sonores coupées') : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
-                isCollapsed ? 'justify-center px-2' : ''
+                isVisuallyCollapsed ? 'justify-center px-2' : ''
               }`}
             >
               {soundEnabled ? (
@@ -426,11 +494,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ) : (
                 <VolumeX className="w-4 h-4 text-slate-400 shrink-0" />
               )}
-              {!isCollapsed && (
+              {!isVisuallyCollapsed && (
                 <>
-                  <span className="truncate flex-1 text-left">Alertes sonores</span>
+                  <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Alertes sonores</span>
                   <span
-                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full whitespace-nowrap animate-in fade-in duration-200 ${
                       soundEnabled
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-slate-100 text-slate-500'
@@ -451,16 +519,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   soundManager.playClickSound();
                   await install();
                 }}
-                title={isCollapsed ? "Installer l'application PlanIt" : undefined}
+                title={isVisuallyCollapsed ? "Installer l'application PlanIt" : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#59240A] bg-[#F7C59F]/20 hover:bg-[#F7C59F]/35 border border-[#F7C59F]/50 transition-colors group ${
-                  isCollapsed ? 'justify-center px-2' : ''
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
                 <Download className="w-4 h-4 text-[#BA5316] shrink-0" />
-                {!isCollapsed && (
+                {!isVisuallyCollapsed && (
                   <>
-                    <span className="truncate flex-1 text-left font-bold">Installer l&apos;app</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#BA5316] text-white">
+                    <span className="truncate flex-1 text-left font-bold whitespace-nowrap animate-in fade-in duration-200">Installer l&apos;app</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#BA5316] text-white whitespace-nowrap animate-in fade-in duration-200">
                       PWA
                     </span>
                   </>
@@ -473,13 +541,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={onOpenPostgresModal}
-                title={isCollapsed ? 'Diagnostic Base SQL' : undefined}
+                title={isVisuallyCollapsed ? 'Diagnostic Base SQL' : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors group ${
-                  isCollapsed ? 'justify-center px-2' : ''
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
                 <Database className="w-4 h-4 text-blue-500 shrink-0" />
-                {!isCollapsed && <span className="truncate flex-1 text-left">Diagnostic Base SQL</span>}
+                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Diagnostic Base SQL</span>}
               </button>
             )}
           </div>
@@ -496,7 +564,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenNotifications}
           title="Centre de notifications et rappels"
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-2xs border border-transparent hover:border-slate-200/80 transition-all ${
-            isCollapsed ? 'justify-center px-2' : ''
+            isVisuallyCollapsed ? 'justify-center px-2' : ''
           }`}
         >
           <div className="relative shrink-0">
@@ -508,11 +576,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {!isCollapsed && (
+          {!isVisuallyCollapsed && (
             <>
-              <span className="truncate flex-1 text-left">Notifications</span>
+              <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Notifications</span>
               {unreadNotificationsCount > 0 && (
-                <Badge variant="destructive" className="text-[10px] py-0 px-1.5 font-bold">
+                <Badge variant="destructive" className="text-[10px] py-0 px-1.5 font-bold animate-in fade-in duration-200">
                   {unreadNotificationsCount}
                 </Badge>
               )}
@@ -529,25 +597,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
                 title={`Connecté : ${currentUser.name} (${currentUser.role})`}
                 className={`w-full flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 cursor-pointer transition-colors ${
-                  isCollapsed ? 'justify-center p-1.5' : ''
+                  isVisuallyCollapsed ? 'justify-center p-1.5' : ''
                 }`}
               >
                 <div className="w-8 h-8 rounded-lg bg-[#EE8D4B]/20 text-[#BA5316] font-bold text-xs flex items-center justify-center shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </div>
 
-                {!isCollapsed && (
+                {!isVisuallyCollapsed && (
                   <>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-xs font-bold text-slate-900 truncate">
+                      <span className="text-xs font-bold text-slate-900 truncate whitespace-nowrap animate-in fade-in duration-200">
                         {currentUser.name}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-slate-500 truncate">
+                        <span className="text-[10px] text-slate-500 truncate whitespace-nowrap">
                           {currentUser.role}
                         </span>
                         {currentUser.role === 'admin' && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase whitespace-nowrap">
                             Admin
                           </span>
                         )}
@@ -567,12 +635,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 variant="default"
                 size="sm"
                 onClick={onOpenAuthModal}
+                title="Se connecter"
                 className={`w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-9 rounded-xl text-xs gap-1.5 shadow-2xs ${
-                  isCollapsed ? 'px-0' : ''
+                  isVisuallyCollapsed ? 'px-0' : ''
                 }`}
               >
                 <UserIcon className="w-3.5 h-3.5 shrink-0" />
-                {!isCollapsed && <span>Connexion</span>}
+                {!isVisuallyCollapsed && <span className="whitespace-nowrap animate-in fade-in duration-200">Connexion</span>}
               </Button>
             )}
 
@@ -639,12 +708,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Expand toggle at the very bottom when collapsed */}
-        {isCollapsed && (
+        {/* Expand toggle at the very bottom when collapsed and not hovered */}
+        {isVisuallyCollapsed && (
           <button
+            id="bottom-expand-sidebar-btn"
             type="button"
             onClick={toggleCollapse}
-            title="Agrandir la barre latérale"
+            title="Déplier la barre latérale"
             className="w-full py-1.5 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
