@@ -171,31 +171,31 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-assistant-title"
-        className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+        className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 text-slate-100"
       >
         {/* Header */}
-        <div className="bg-slate-50 border-b border-slate-100 p-4 sm:p-5 flex items-center justify-between">
+        <div className="bg-emerald-950/40 border-b border-emerald-500/20 p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-100 to-amber-100 border border-orange-200/80 flex items-center justify-center text-orange-700 shadow-2xs shrink-0">
-              <Bot className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-amber-500/20 border border-emerald-500/30 flex items-center justify-center text-amber-300 shadow-md shrink-0">
+              <Bot className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight text-slate-900">
+              <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight text-white">
                 Assistant IA & Planification
               </h2>
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p className="text-[11px] text-slate-300 font-medium">
                 Créez des tâches en langage naturel ou optimisez votre journée avec Gemini
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -204,15 +204,15 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {/* If User is not logged in, display Authentication Gate */}
         {!currentUser ? (
           <div className="p-6 sm:p-8 flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-5 my-auto">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-100 to-amber-100 text-orange-600 flex items-center justify-center border border-orange-200/80 shadow-xs">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-950/60 text-amber-400 flex items-center justify-center border border-emerald-500/30 shadow-lg">
               <Lock className="w-7 h-7 stroke-[2.2]" />
             </div>
             
             <div className="space-y-1">
-              <h3 className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
+              <h3 className="font-bold text-white text-base sm:text-lg tracking-tight">
                 Connexion requise
               </h3>
-              <p className="text-xs text-slate-500 leading-relaxed max-w-sm">
+              <p className="text-xs text-slate-300 leading-relaxed max-w-sm">
                 Connectez-vous à votre compte pour utiliser l&apos;Assistant IA.
               </p>
             </div>
@@ -224,7 +224,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   onClose();
                   onOpenAuthModal?.();
                 }}
-                className="w-full bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] font-bold text-xs py-2.5 shadow-sm shadow-[#F7C59F]/50"
+                className="w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-xs py-2.5 shadow-lg shadow-emerald-950/50 rounded-xl hover:opacity-95"
               >
                 Se connecter ou créer un compte
               </Button>
@@ -232,7 +232,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="text-xs text-slate-500 hover:text-slate-700"
+                className="text-xs text-slate-400 hover:text-white"
               >
                 Continuer sans IA
               </Button>
@@ -241,17 +241,17 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         ) : (
           <>
             {/* Tab Selection */}
-            <div className="flex border-b border-slate-100 bg-slate-50 px-4 pt-3 gap-2">
+            <div className="flex border-b border-emerald-500/20 bg-emerald-950/30 px-4 pt-3 gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('create')}
-            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'create'
-                ? 'border-[#BA5316] text-[#BA5316]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-emerald-400 text-emerald-300'
+                : 'border-transparent text-slate-400 hover:text-white'
             }`}
           >
-            <Wand2 className="w-3.5 h-3.5 text-orange-500" />
+            <Wand2 className="w-3.5 h-3.5 text-amber-400" />
             <span>Création Intelligente</span>
           </button>
 
@@ -263,21 +263,21 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 handleGetDailyAdvice();
               }
             }}
-            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'plan'
-                ? 'border-[#BA5316] text-[#BA5316]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-emerald-400 text-emerald-300'
+                : 'border-transparent text-slate-400 hover:text-white'
             }`}
           >
-            <Lightbulb className="w-3.5 h-3.5" />
+            <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
             <span>Conseils & Priorités</span>
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+        <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar space-y-4 flex-1 text-slate-100">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+            <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-500/40 text-xs text-rose-200 font-medium">
               {errorMsg}
             </div>
           )}
@@ -286,7 +286,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           {activeTab === 'create' && (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block">
+                <label className="text-xs font-bold text-slate-200 block">
                   Décrivez votre tâche en langage naturel :
                 </label>
                 <div className="relative">
@@ -295,7 +295,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                     value={naturalPrompt}
                     onChange={(e) => setNaturalPrompt(e.target.value)}
                     placeholder="Ex: Réviser le contrat avec Julien demain à 15h30, priorité haute avec un rappel 20 minutes avant..."
-                    className="text-xs resize-none"
+                    className="text-xs resize-none bg-emerald-950/40 border-emerald-500/30 text-white placeholder:text-slate-500 focus:border-emerald-400 focus:ring-emerald-400/40 rounded-xl"
                   />
                 </div>
               </div>
@@ -305,16 +305,16 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 <Button
                   onClick={() => handleParseTask()}
                   disabled={loading || !naturalPrompt.trim()}
-                  className="font-bold gap-2 text-xs bg-[#F7C59F] hover:bg-[#EE8D4B] text-[#422006] shadow-xs"
+                  className="font-bold gap-2 text-xs bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md shadow-emerald-950/50 rounded-xl"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
                       <span>Analyse en cours...</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      <Zap className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
                       <span>Analyser et générer la tâche</span>
                     </>
                   )}
@@ -324,7 +324,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               {/* Examples prompts */}
               {!parsedTask && (
                 <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block">
                     Exemples de commandes :
                   </span>
                   <div className="space-y-1.5">
@@ -336,10 +336,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                           setNaturalPrompt(ex);
                           handleParseTask(ex);
                         }}
-                        className="w-full text-left p-2.5 rounded-xl bg-slate-50 hover:bg-[#F7C59F]/20 border border-slate-200/80 hover:border-[#F7C59F] text-xs font-medium text-slate-700 transition-colors flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-400 text-xs font-medium text-slate-200 hover:text-white transition-colors flex items-center justify-between group cursor-pointer"
                       >
                         <span className="truncate pr-2">{ex}</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#BA5316] shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-400 group-hover:text-amber-300 shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -348,35 +348,35 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
               {/* Parsed Result Preview Card */}
               {parsedTask && (
-                <div className="bg-[#F7C59F]/30 rounded-2xl border border-[#F7C59F]/70 p-4 space-y-3 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between border-b border-[#F7C59F]/80 pb-2">
-                    <span className="text-xs font-bold text-[#59240A] flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-[#BA5316]" />
+                <div className="bg-emerald-950/60 rounded-2xl border border-emerald-500/40 p-4 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
+                    <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       Tâche structurée avec succès
                     </span>
-                    <Badge variant="apricot" className="text-[10px] font-bold">
+                    <Badge variant="apricot" className="text-[10px] font-bold bg-amber-500/20 text-amber-200 border-amber-500/40">
                       Prêt à ajouter
                     </Badge>
                   </div>
 
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-slate-900">{parsedTask.title}</h4>
+                    <h4 className="text-sm font-bold text-white">{parsedTask.title}</h4>
                     {parsedTask.description && (
-                      <p className="text-xs text-slate-600">{parsedTask.description}</p>
+                      <p className="text-xs text-slate-300">{parsedTask.description}</p>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded-lg bg-white border border-[#F7C59F]/60 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-[#B75217]" />
-                      <span className="font-semibold text-slate-800 truncate">
+                    <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/30 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="font-semibold text-slate-200 truncate">
                         {parsedTask.dueDate} {parsedTask.dueTime ? `@ ${parsedTask.dueTime}` : ''}
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white border border-[#F7C59F]/60 flex items-center gap-1.5">
-                      <Bell className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="font-semibold text-slate-800">
+                    <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/30 flex items-center gap-1.5">
+                      <Bell className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="font-semibold text-slate-200">
                         {parsedTask.reminderMinutesBefore === 0
                           ? 'À l’heure'
                           : `${parsedTask.reminderMinutesBefore}m avant`}
@@ -385,13 +385,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   </div>
 
                   {parsedTask.subtasks && parsedTask.subtasks.length > 0 && (
-                    <div className="bg-white p-2.5 rounded-lg border border-[#F7C59F]/60 space-y-1">
-                      <span className="text-[11px] font-bold text-slate-500 block">
+                    <div className="bg-emerald-950/80 p-2.5 rounded-lg border border-emerald-500/30 space-y-1">
+                      <span className="text-[11px] font-bold text-emerald-300 block">
                         Sous-tâches détectées :
                       </span>
                       {parsedTask.subtasks.map((st) => (
-                        <div key={st.id} className="text-xs text-slate-700 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#EE8D4B]" />
+                        <div key={st.id} className="text-xs text-slate-200 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                           <span>{st.title}</span>
                         </div>
                       ))}
@@ -400,7 +400,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
                   <Button
                     onClick={handleConfirmAddParsedTask}
-                    className="w-full font-bold text-xs"
+                    className="w-full font-bold text-xs bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                     size="sm"
                   >
                     Ajouter cette tâche à mon planning
@@ -414,7 +414,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           {activeTab === 'plan' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-600">
+                <span className="text-xs font-semibold text-slate-300">
                   Analyse de vos {existingTasks.length} tâches en cours
                 </span>
                 <Button
@@ -422,7 +422,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   size="xs"
                   onClick={handleGetDailyAdvice}
                   disabled={loading}
-                  className="font-bold text-xs"
+                  className="font-bold text-xs border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20"
                 >
                   {loading ? 'Analyse...' : 'Actualiser les conseils'}
                 </Button>
@@ -430,8 +430,8 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
               {loading && (
                 <div className="py-12 text-center text-slate-400 space-y-2">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#BA5316]" />
-                  <p className="text-xs font-semibold text-slate-600">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-400" />
+                  <p className="text-xs font-semibold text-slate-300">
                     L&apos;IA optimise votre ordre de travail et vos rappels...
                   </p>
                 </div>
@@ -440,27 +440,27 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               {dailyAdvice && !loading && (
                 <div className="space-y-3.5">
                   {/* Summary */}
-                  <div className="p-3.5 rounded-2xl bg-[#F7C59F]/30 border border-[#F7C59F]/70 text-xs text-slate-800 leading-relaxed font-medium">
+                  <div className="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 text-xs text-slate-200 leading-relaxed font-medium">
                     {dailyAdvice.summary}
                   </div>
 
                   {/* Recommended Order */}
                   {dailyAdvice.recommendedOrder && dailyAdvice.recommendedOrder.length > 0 && (
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
-                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <ListTodo className="w-4 h-4 text-[#BA5316]" />
+                    <div className="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 space-y-2">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <ListTodo className="w-4 h-4 text-emerald-400" />
                         Ordre recommandé pour aujourd&apos;hui
                       </span>
                       <div className="space-y-1.5">
                         {dailyAdvice.recommendedOrder.map((step, idx) => (
                           <div
                             key={idx}
-                            className="flex items-start gap-2 text-xs p-2 rounded-xl bg-slate-50 border border-slate-100"
+                            className="flex items-start gap-2 text-xs p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/20"
                           >
-                            <span className="w-5 h-5 rounded-full bg-[#F7C59F] text-[#422006] font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                            <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                               {idx + 1}
                             </span>
-                            <span className="text-slate-800 font-medium">{step}</span>
+                            <span className="text-slate-200 font-medium">{step}</span>
                           </div>
                         ))}
                       </div>
@@ -469,12 +469,12 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
                   {/* Productivity Tips */}
                   {dailyAdvice.tips && dailyAdvice.tips.length > 0 && (
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
-                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <Lightbulb className="w-4 h-4 text-amber-500" />
+                    <div className="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 space-y-2">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Lightbulb className="w-4 h-4 text-amber-400" />
                         Astuces de productivité
                       </span>
-                      <ul className="space-y-1.5 text-xs text-slate-600">
+                      <ul className="space-y-1.5 text-xs text-slate-300">
                         {dailyAdvice.tips.map((tip, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />

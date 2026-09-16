@@ -377,10 +377,10 @@ export const ListView: React.FC<ListViewProps> = ({
       {/* Mobile-First Quick Add Card */}
       <form
         onSubmit={handleQuickAddSubmit}
-        className="bg-white p-3 sm:p-4 rounded-2xl border border-[#F7C59F]/70 shadow-sm shadow-[#F7C59F]/20 transition-all focus-within:border-[#EE8D4B] focus-within:shadow-md"
+        className="bg-[#061A13]/85 backdrop-blur-2xl p-3 sm:p-4 rounded-3xl border border-emerald-500/30 shadow-xl shadow-emerald-950/50 transition-all focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400/40 text-slate-100"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/40 text-[#59240A] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
             <Plus className="w-4.5 h-4.5 stroke-[2.5]" />
           </div>
           <input
@@ -390,14 +390,14 @@ export const ListView: React.FC<ListViewProps> = ({
             onChange={(e) => setQuickTitle(e.target.value)}
             onFocus={() => setShowAdvancedQuickAdd(true)}
             placeholder="Ajouter une tâche rapidement (ex: Préparer le rapport)..."
-            className="w-full text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden bg-transparent"
+            className="w-full text-xs sm:text-sm font-medium text-white placeholder:text-slate-400 focus:outline-hidden bg-transparent"
           />
           <Button
             type="submit"
             id="quick-add-submit-btn"
             size="xs"
             disabled={!quickTitle.trim()}
-            className="shrink-0 font-bold"
+            className="shrink-0 font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md shadow-emerald-950/40"
           >
             Ajouter
           </Button>
@@ -405,34 +405,34 @@ export const ListView: React.FC<ListViewProps> = ({
 
         {/* Expandable options row */}
         {showAdvancedQuickAdd && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 mt-2.5 border-t border-slate-100 text-xs animate-in fade-in-50 duration-150">
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex flex-wrap items-center gap-2 pt-3 mt-2.5 border-t border-emerald-500/20 text-xs animate-in fade-in-50 duration-150">
+            <div className="flex items-center gap-1.5 bg-emerald-950/50 border border-emerald-500/30 rounded-xl px-2.5 py-1">
+              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
               <input
                 type="date"
                 value={quickDate}
                 onChange={(e) => setQuickDate(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-slate-700 outline-hidden"
+                className="bg-transparent text-xs font-semibold text-white outline-hidden"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <div className="flex items-center gap-1.5 bg-emerald-950/50 border border-emerald-500/30 rounded-xl px-2.5 py-1">
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
               <input
                 type="time"
                 value={quickTime}
                 onChange={(e) => setQuickTime(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-slate-700 outline-hidden"
+                className="bg-transparent text-xs font-semibold text-white outline-hidden"
               />
             </div>
 
             <select
               value={quickCategory}
               onChange={(e) => setQuickCategory(e.target.value)}
-              className="bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-hidden"
+              className="bg-emerald-950/50 border border-emerald-500/30 rounded-xl px-2.5 py-1 text-xs font-semibold text-white outline-hidden"
             >
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={c.id} value={c.id} className="bg-slate-900 text-white">
                   {c.name}
                 </option>
               ))}
@@ -441,9 +441,9 @@ export const ListView: React.FC<ListViewProps> = ({
             <button
               type="button"
               onClick={() => onOpenTaskModal()}
-              className="text-[11px] font-semibold text-[#933F15] hover:text-[#59240A] ml-auto flex items-center gap-1"
+              className="text-[11px] font-semibold text-amber-300 hover:text-amber-200 ml-auto flex items-center gap-1"
             >
-              <SlidersHorizontal className="w-3 h-3 text-[#B75217]" />
+              <SlidersHorizontal className="w-3 h-3 text-amber-400" />
               <span>Options avancées</span>
             </button>
           </div>
@@ -451,9 +451,9 @@ export const ListView: React.FC<ListViewProps> = ({
       </form>
 
       {/* Filter Chips & Navigation Toolbar */}
-      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-[#061A13]/85 backdrop-blur-2xl p-3 sm:p-4 rounded-3xl border border-emerald-500/20 shadow-xl space-y-3 text-slate-100">
         {/* Horizontal Status Chips Carousel */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+        <div className="flex items-center justify-between gap-2 border-b border-emerald-500/20 pb-2.5">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs font-semibold -mx-1 px-1 flex-1">
             {[
               { id: 'all', label: 'Toutes', count: filterCounts.all },
@@ -471,20 +471,20 @@ export const ListView: React.FC<ListViewProps> = ({
                   onClick={() => setActiveFilter(f.id as FilterType)}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all flex items-center gap-1.5 select-none ${
                     active
-                      ? 'bg-[#F7C59F] text-[#422006] shadow-xs font-bold border border-[#F3A975]/60'
+                      ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold border border-emerald-400'
                       : f.alert
-                      ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-                      : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200 hover:text-slate-900 border border-transparent'
+                      ? 'bg-rose-950/60 text-rose-200 hover:bg-rose-900/80 border border-rose-500/40'
+                      : 'bg-emerald-950/40 text-slate-300 hover:bg-emerald-500/20 hover:text-white border border-emerald-500/20'
                   }`}
                 >
                   <span>{f.label}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                       active
-                        ? 'bg-white/40 text-[#422006]'
+                        ? 'bg-slate-950/30 text-slate-950'
                         : f.alert
-                        ? 'bg-rose-200 text-rose-800'
-                        : 'bg-slate-200/90 text-slate-700'
+                        ? 'bg-rose-900 text-rose-100'
+                        : 'bg-emerald-900/70 text-emerald-200'
                     }`}
                   >
                     {f.count}
@@ -501,10 +501,10 @@ export const ListView: React.FC<ListViewProps> = ({
               variant="outline"
               size="xs"
               onClick={() => onOpenCategoryTagManager('categories')}
-              className="text-xs font-bold gap-1 shrink-0 text-slate-700 hover:text-[#59240A] hover:bg-[#F7C59F]/20 border-slate-200"
+              className="text-xs font-bold gap-1 shrink-0 text-amber-200 hover:text-white hover:bg-amber-500/20 border-amber-500/30"
               title="Gérer les catégories et étiquettes"
             >
-              <FolderPlus className="w-3.5 h-3.5 text-[#BA5316]" />
+              <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
               <span className="hidden sm:inline">Gérer Catégories</span>
             </Button>
           )}
@@ -650,22 +650,22 @@ export const ListView: React.FC<ListViewProps> = ({
         )}
 
         {/* Search, Grouping & Sort Options */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-emerald-500/20">
           {/* Search Box */}
           <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher tâche, #tag, note..."
-              className="w-full pl-8.5 pr-8 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#F7C59F]/40 focus:border-[#F7C59F] outline-hidden transition-all shadow-2xs"
+              className="w-full pl-8.5 pr-8 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs font-medium text-white placeholder:text-slate-400 focus:bg-emerald-950/70 focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 outline-hidden transition-all shadow-inner"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -674,32 +674,32 @@ export const ListView: React.FC<ListViewProps> = ({
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end text-xs">
             {/* Group By selector */}
-            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 rounded-xl px-2 py-1 shadow-2xs">
-              <Layers className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-1 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm">
+              <Layers className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupByType)}
-                className="bg-transparent text-xs font-semibold text-slate-700 outline-hidden pr-1 cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer"
               >
-                <option value="dueDate">Grouper par Date</option>
-                <option value="category">Grouper par Catégorie</option>
-                <option value="tag">Grouper par Étiquette (Tag)</option>
-                <option value="priority">Grouper par Priorité</option>
-                <option value="none">Sans groupement</option>
+                <option value="dueDate" className="bg-slate-900 text-white">Grouper par Date</option>
+                <option value="category" className="bg-slate-900 text-white">Grouper par Catégorie</option>
+                <option value="tag" className="bg-slate-900 text-white">Grouper par Étiquette (Tag)</option>
+                <option value="priority" className="bg-slate-900 text-white">Grouper par Priorité</option>
+                <option value="none" className="bg-slate-900 text-white">Sans groupement</option>
               </select>
             </div>
 
             {/* Sort By selector */}
-            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 rounded-xl px-2 py-1 shadow-2xs">
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-1 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm">
+              <ArrowUpDown className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'priority' | 'title')}
-                className="bg-transparent text-xs font-semibold text-slate-700 outline-hidden pr-1 cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer"
               >
-                <option value="dueDate">Trier par Échéance</option>
-                <option value="priority">Trier par Priorité</option>
-                <option value="title">Trier par Titre</option>
+                <option value="dueDate" className="bg-slate-900 text-white">Trier par Échéance</option>
+                <option value="priority" className="bg-slate-900 text-white">Trier par Priorité</option>
+                <option value="title" className="bg-slate-900 text-white">Trier par Titre</option>
               </select>
             </div>
           </div>

@@ -278,32 +278,32 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   return (
     <div
       id="task-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+        className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 text-slate-100 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-5 py-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="px-5 py-4 sm:px-6 border-b border-emerald-500/20 flex items-center justify-between bg-emerald-950/40">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs"
+              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md border border-emerald-500/30"
               style={{
-                backgroundColor: `${selectedCategoryObj.color}20`,
+                backgroundColor: `${selectedCategoryObj.color}25`,
                 color: selectedCategoryObj.color,
               }}
             >
               <CategoryIcon name={selectedCategoryObj.iconName} className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
                 {initialTask ? 'Modifier la tâche' : 'Nouvelle tâche'}
               </h2>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-300 font-medium">
                 {initialTask
                   ? 'Modifiez les échéances, rappels, catégories ou tags'
                   : 'Planifiez une tâche avec catégorie, étiquettes et alertes'}
@@ -314,7 +314,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -323,16 +323,16 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
         {/* Modal Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Title Input */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-              Titre de la tâche <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
+              Titre de la tâche <span className="text-rose-400">*</span>
             </label>
             <input
               type="text"
@@ -340,14 +340,14 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Préparer la réunion de projet, payer les factures..."
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#F7C59F]/50 focus:border-[#F7C59F] outline-hidden"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-sm font-semibold text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-hidden"
               autoFocus
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
               Description & Notes
             </label>
             <textarea
@@ -356,15 +356,15 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="Détails, liens, contexte ou consignes spécifiques..."
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-normal text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-[#F7C59F]/50 focus:border-[#F7C59F] outline-hidden resize-y min-h-[60px]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs font-normal text-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-hidden resize-y min-h-[60px]"
             />
           </div>
 
           {/* Due Date & Time */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+          <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#BA5316]" />
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-amber-400" />
                 Échéance & Horaires
               </span>
 
@@ -373,21 +373,21 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                 <button
                   type="button"
                   onClick={() => handleQuickDate(0)}
-                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-700"
+                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer"
                 >
                   Aujourd’hui
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickDate(1)}
-                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-700"
+                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer"
                 >
                   Demain
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickDate(7)}
-                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-700"
+                  className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer"
                 >
                   +1 Semaine
                 </button>
@@ -396,7 +396,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-500 mb-1 block">
+                <label className="text-[11px] font-medium text-slate-300 mb-1 block">
                   Date d’échéance
                 </label>
                 <input
@@ -404,21 +404,21 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   id="task-due-date-input"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs font-semibold text-white focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-medium text-slate-500">
+                  <label className="text-[11px] font-medium text-slate-300">
                     Heure
                   </label>
-                  <label className="flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer">
+                  <label className="flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={hasTime}
                       onChange={(e) => setHasTime(e.target.checked)}
-                      className="rounded accent-[#EE8D4B] focus:ring-[#F7C59F] w-3 h-3"
+                      className="rounded accent-emerald-400 focus:ring-emerald-400 w-3 h-3"
                     />
                     <span>Heure précise</span>
                   </label>
@@ -431,8 +431,8 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   onChange={(e) => setDueTime(e.target.value)}
                   className={`w-full px-3 py-1.5 rounded-xl border text-xs font-medium outline-hidden ${
                     hasTime
-                      ? 'bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-[#F7C59F]/40'
-                      : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                      ? 'bg-[#061A13] border-emerald-500/30 text-white focus:ring-2 focus:ring-emerald-400/50'
+                      : 'bg-emerald-950/20 border-emerald-500/20 text-slate-500 cursor-not-allowed'
                   }`}
                 />
               </div>
@@ -440,13 +440,13 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           </div>
 
           {/* Automated Reminder Trigger Setting */}
-          <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-2">
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                <Bell className="w-4 h-4 text-amber-600" />
+              <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <Bell className="w-4 h-4 text-amber-400" />
                 Rappel Automatique
               </span>
-              <span className="text-[11px] text-amber-700 font-medium">
+              <span className="text-[11px] text-amber-400 font-medium">
                 Notification sonore & visuelle
               </span>
             </div>
@@ -455,10 +455,10 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               id="task-reminder-select"
               value={reminderMinutesBefore}
               onChange={(e) => setReminderMinutesBefore(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-200 outline-hidden"
+              className="w-full px-3 py-2 rounded-xl border border-amber-500/30 bg-[#061A13] text-xs font-semibold text-slate-100 focus:ring-2 focus:ring-amber-400 outline-hidden"
             >
               {REMINDER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
+                <option key={opt.value} value={opt.value} className="bg-[#061A13] text-slate-100">
                   {opt.label}
                 </option>
               ))}
@@ -469,7 +469,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Priority */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1.5">
                 Priorité
               </label>
               <div className="grid grid-cols-2 gap-1.5">
@@ -481,10 +481,10 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       key={p}
                       type="button"
                       onClick={() => setPriority(p)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                         selected
-                          ? `${cfg.badge} ring-2 ring-[#F7C59F] font-bold shadow-2xs`
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          ? 'bg-emerald-500/30 border-emerald-400 text-white ring-2 ring-emerald-400/50 font-bold shadow-md'
+                          : 'bg-emerald-950/40 border-emerald-500/30 text-slate-300 hover:bg-emerald-500/20'
                       }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
@@ -498,13 +498,13 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
             {/* Category Selector + Quick Add Category */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
                   Catégorie
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowQuickCategoryCreator((prev) => !prev)}
-                  className="text-[11px] font-bold text-[#BA5316] hover:text-[#933F15] flex items-center gap-0.5"
+                  className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-0.5 cursor-pointer"
                 >
                   <Plus className="w-3 h-3 stroke-[2.5]" />
                   <span>Nouvelle</span>
@@ -513,13 +513,13 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
 
               {/* Inline Quick Category Creator Popup */}
               {showQuickCategoryCreator ? (
-                <div className="p-3 rounded-2xl bg-[#F7C59F]/20 border border-[#F7C59F] space-y-2.5 mb-2 animate-in fade-in-50">
+                <div className="p-3 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 space-y-2.5 mb-2 animate-in fade-in-50">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#59240A]">Créer une catégorie</span>
+                    <span className="text-xs font-bold text-amber-300">Créer une catégorie</span>
                     <button
                       type="button"
                       onClick={() => setShowQuickCategoryCreator(false)}
-                      className="text-slate-400 hover:text-slate-700 p-0.5"
+                      className="text-slate-400 hover:text-white p-0.5"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -529,7 +529,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                     value={newCatName}
                     onChange={(e) => setNewCatName(e.target.value)}
                     placeholder="Nom (ex: Marketing, Sport...)"
-                    className="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 bg-white"
+                    className="w-full px-2.5 py-1 text-xs rounded-lg border border-emerald-500/30 bg-[#061A13] text-white"
                     autoFocus
                   />
                   {/* Colors */}
@@ -540,7 +540,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                         type="button"
                         onClick={() => setNewCatColor(color.hex)}
                         className={`w-5 h-5 rounded-md ${
-                          newCatColor === color.hex ? 'ring-2 ring-slate-800 scale-110' : 'opacity-85'
+                          newCatColor === color.hex ? 'ring-2 ring-white scale-110' : 'opacity-85'
                         }`}
                         style={{ backgroundColor: color.hex }}
                       />
@@ -551,7 +551,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="h-7 text-xs text-slate-300 hover:text-white"
                       onClick={() => setShowQuickCategoryCreator(false)}
                     >
                       Annuler
@@ -559,7 +559,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                     <Button
                       type="button"
                       size="sm"
-                      className="h-7 text-xs font-bold"
+                      className="h-7 text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30"
                       onClick={handleCreateCategoryInline}
                     >
                       Ajouter
@@ -572,10 +572,10 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                     id="task-category-select"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs font-semibold text-slate-100 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
                   >
                     {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
+                      <option key={c.id} value={c.id} className="bg-[#061A13] text-slate-100">
                         {c.name}
                       </option>
                     ))}
@@ -587,19 +587,19 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
 
           {/* Team Member Assignee Selector */}
           {teamUsers.length > 0 && (
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <UserIcon className="w-3.5 h-3.5 text-[#BA5316]" />
+            <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30">
+              <label className="block text-xs font-bold text-emerald-300 mb-1.5 flex items-center gap-1.5">
+                <UserIcon className="w-3.5 h-3.5 text-amber-400" />
                 <span>Membre Assigné (Équipe)</span>
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs font-semibold text-slate-100 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
               >
-                <option value="">Non assigné (Libre)</option>
+                <option value="" className="bg-[#061A13] text-slate-100">Non assigné (Libre)</option>
                 {teamUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
+                  <option key={u.id} value={u.id} className="bg-[#061A13] text-slate-100">
                     {u.name} — {u.role.toUpperCase()} ({u.department || 'Équipe'})
                   </option>
                 ))}
@@ -610,45 +610,45 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           {/* Recurrence & Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1">
-                <Repeat className="w-3.5 h-3.5 text-slate-400" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1.5 flex items-center gap-1">
+                <Repeat className="w-3.5 h-3.5 text-emerald-400" />
                 Répétition
               </label>
               <select
                 value={recurrence}
                 onChange={(e) => setRecurrence(e.target.value as Recurrence)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs font-medium text-slate-100 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
               >
-                <option value="none">Ne pas répéter</option>
-                <option value="daily">Tous les jours</option>
-                <option value="weekdays">Du lundi au vendredi</option>
-                <option value="weekly">Toutes les semaines</option>
-                <option value="monthly">Tous les mois</option>
-                <option value="yearly">Tous les ans</option>
+                <option value="none" className="bg-[#061A13] text-slate-100">Ne pas répéter</option>
+                <option value="daily" className="bg-[#061A13] text-slate-100">Tous les jours</option>
+                <option value="weekdays" className="bg-[#061A13] text-slate-100">Du lundi au vendredi</option>
+                <option value="weekly" className="bg-[#061A13] text-slate-100">Toutes les semaines</option>
+                <option value="monthly" className="bg-[#061A13] text-slate-100">Tous les mois</option>
+                <option value="yearly" className="bg-[#061A13] text-slate-100">Tous les ans</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1.5">
                 Statut
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'todo' | 'in_progress' | 'completed')}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs font-semibold text-slate-100 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
               >
-                <option value="todo">À faire</option>
-                <option value="in_progress">En cours</option>
-                <option value="completed">Terminée</option>
+                <option value="todo" className="bg-[#061A13] text-slate-100">À faire</option>
+                <option value="in_progress" className="bg-[#061A13] text-slate-100">En cours</option>
+                <option value="completed" className="bg-[#061A13] text-slate-100">Terminée</option>
               </select>
             </div>
           </div>
 
           {/* Tags / Étiquettes Section (Multi-Tagging & Suggestions) */}
-          <div className="border-t border-slate-100 pt-4 space-y-2">
+          <div className="border-t border-emerald-500/20 pt-4 space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-[#BA5316]" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-amber-400" />
                 Étiquettes Multiples (Tags)
               </label>
               <span className="text-[11px] text-slate-400">
@@ -658,17 +658,17 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
 
             {/* Currently assigned tags */}
             {tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200/70">
+              <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
                 {tags.map((t) => {
                   const style = getTagColor(t);
                   return (
                     <span
                       key={t}
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border shadow-2xs animate-in zoom-in-95"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border shadow-xs animate-in zoom-in-95"
                       style={{
-                        backgroundColor: style.bg,
+                        backgroundColor: `${style.bg}25`,
                         color: style.text,
-                        borderColor: style.border,
+                        borderColor: `${style.border}50`,
                       }}
                     >
                       <Hash className="w-3 h-3 opacity-70" />
@@ -676,7 +676,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(t)}
-                        className="p-0.5 rounded-full hover:bg-black/10 transition-colors ml-0.5"
+                        className="p-0.5 rounded-full hover:bg-white/20 transition-colors ml-0.5"
                         title="Retirer ce tag"
                       >
                         <X className="w-3 h-3" />
@@ -702,7 +702,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                     }
                   }}
                   placeholder="Tapez un tag et appuyez sur Entrée ou virgule..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs font-medium text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
                 />
               </div>
               <Button
@@ -710,7 +710,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleAddTagFromInput}
-                className="font-bold text-xs"
+                className="font-bold text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20"
               >
                 + Ajouter
               </Button>
@@ -731,15 +731,15 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                         key={st}
                         type="button"
                         onClick={() => toggleSuggestedTag(st)}
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border transition-all ${
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
                           isSelected
                             ? 'font-bold ring-1'
-                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                            : 'bg-emerald-950/40 text-slate-300 border-emerald-500/30 hover:bg-emerald-500/20'
                         }`}
                         style={
                           isSelected
                             ? {
-                                backgroundColor: style.bg,
+                                backgroundColor: `${style.bg}30`,
                                 color: style.text,
                                 borderColor: style.text,
                               }
@@ -757,22 +757,22 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           </div>
 
           {/* Subtasks / Checklist */}
-          <div className="border-t border-slate-100 pt-4">
+          <div className="border-t border-emerald-500/20 pt-4">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <label className="text-xs font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 Sous-tâches ({subtasks.filter((s) => s.completed).length}/{subtasks.length})
               </label>
               <button
                 type="button"
                 onClick={handleGenerateAISubtasks}
                 disabled={isGeneratingSubtasks}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isGeneratingSubtasks ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-600" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                 ) : (
-                  <Wand2 className="w-3.5 h-3.5 text-orange-600" />
+                  <Wand2 className="w-3.5 h-3.5 text-amber-400" />
                 )}
                 <span>Suggérer sous-tâches</span>
               </button>
@@ -783,23 +783,23 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               {subtasks.map((st) => (
                 <div
                   key={st.id}
-                  className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 group"
+                  className="flex items-center justify-between p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 group"
                 >
-                  <label className="flex items-center gap-2 text-xs font-medium text-slate-700 flex-1 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs font-medium text-slate-200 flex-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={st.completed}
                       onChange={() => handleToggleSubtask(st.id)}
-                      className="rounded accent-[#EE8D4B] focus:ring-[#F7C59F] w-4 h-4 cursor-pointer"
+                      className="rounded accent-emerald-400 focus:ring-emerald-400 w-4 h-4 cursor-pointer"
                     />
-                    <span className={st.completed ? 'line-through text-slate-400' : ''}>
+                    <span className={st.completed ? 'line-through text-slate-500' : ''}>
                       {st.title}
                     </span>
                   </label>
                   <button
                     type="button"
                     onClick={() => handleDeleteSubtask(st.id)}
-                    className="text-slate-300 hover:text-red-500 p-1 transition-colors"
+                    className="text-slate-400 hover:text-rose-400 p-1 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -820,14 +820,14 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                   }
                 }}
                 placeholder="Ajouter une étape..."
-                className="flex-1 px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-[#F7C59F]/40 outline-hidden"
+                className="flex-1 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleAddSubtask}
-                className="font-bold text-xs"
+                className="font-bold text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20"
               >
                 Ajouter
               </Button>
@@ -835,15 +835,15 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 flex items-center justify-end gap-3 sticky bottom-0">
-            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+          <div className="p-4 bg-emerald-950/80 border-t border-emerald-500/20 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 flex items-center justify-end gap-3 sticky bottom-0 backdrop-blur-md">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="border-emerald-500/30 text-slate-300 hover:text-white hover:bg-emerald-500/20">
               Annuler
             </Button>
             <Button
               type="submit"
               id="save-task-submit-btn"
               size="sm"
-              className="font-bold shadow-md shadow-[#F7C59F]/40"
+              className="font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-lg shadow-emerald-950/50"
             >
               {initialTask ? 'Enregistrer les modifications' : 'Créer la tâche'}
             </Button>

@@ -46,31 +46,31 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="reminder-title"
-        className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-150"
+        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-150 text-slate-100"
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-b from-amber-50 to-orange-50/40 border-b border-amber-100/80 p-5 sm:p-6 text-center relative">
+        <div className="bg-emerald-950/50 border-b border-emerald-500/20 p-5 sm:p-6 text-center relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-amber-100/60 transition-colors"
+            className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
             title="Fermer"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center mb-3 shadow-xs">
-            <BellRing className="w-6 h-6 animate-pulse" />
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center mb-3 shadow-md">
+            <BellRing className="w-6 h-6 animate-pulse text-amber-300" />
           </div>
 
-          <Badge variant="amber" className="text-[10px] font-bold uppercase tracking-wide mb-1.5 bg-amber-200/80 text-amber-900 border-amber-300">
+          <Badge variant="amber" className="text-[10px] font-bold uppercase tracking-wide mb-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30">
             Rappel automatique
           </Badge>
-          <h2 id="reminder-title" className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 line-clamp-2 px-2">
+          <h2 id="reminder-title" className="text-lg sm:text-xl font-bold tracking-tight text-white line-clamp-2 px-2">
             {task.title}
           </h2>
         </div>
@@ -78,27 +78,27 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
         {/* Task Details Content */}
         <div className="p-5 sm:p-6 space-y-4">
           {task.description && (
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 text-xs text-slate-700 leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">
+            <div className="bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-500/30 text-xs text-slate-200 leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">
               {task.description}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
-              <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
+              <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
               <div>
-                <span className="text-slate-500 block text-[10px] font-medium">Échéance</span>
-                <span className="font-bold text-slate-800">
+                <span className="text-slate-400 block text-[10px] font-medium">Échéance</span>
+                <span className="font-bold text-white">
                   {formatDueDateFrench(task.dueDate, task.dueTime)}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
               <span className={`w-2.5 h-2.5 rounded-full ${priorityInfo.dot}`} />
               <div>
-                <span className="text-slate-500 block text-[10px] font-medium">Priorité</span>
-                <span className="font-bold text-slate-800">
+                <span className="text-slate-400 block text-[10px] font-medium">Priorité</span>
+                <span className="font-bold text-white">
                   {priorityInfo.label}
                 </span>
               </div>
@@ -107,14 +107,14 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
 
           {/* Subtasks summary if any */}
           {task.subtasks && task.subtasks.length > 0 && (
-            <div className="text-xs border border-slate-200/80 rounded-xl p-3 bg-slate-50/50">
-              <span className="font-bold text-slate-700 block mb-1.5">
+            <div className="text-xs border border-emerald-500/30 rounded-xl p-3 bg-emerald-950/40">
+              <span className="font-bold text-emerald-300 block mb-1.5">
                 Sous-tâches ({task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length})
               </span>
               <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
                 {task.subtasks.map((st) => (
-                  <div key={st.id} className="flex items-center gap-2 text-slate-600 text-[11px]">
-                    <span className={`w-1.5 h-1.5 rounded-full ${st.completed ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                  <div key={st.id} className="flex items-center gap-2 text-slate-200 text-[11px]">
+                    <span className={`w-1.5 h-1.5 rounded-full ${st.completed ? 'bg-emerald-400' : 'bg-slate-500'}`} />
                     <span className={st.completed ? 'line-through text-slate-400' : 'font-medium'}>{st.title}</span>
                   </div>
                 ))}
@@ -129,15 +129,15 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
               variant="default"
               size="lg"
               onClick={handleCompleteWithCelebration}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm gap-2"
+              className="w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-sm shadow-md gap-2 hover:opacity-95"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>Marquer comme terminée</span>
             </Button>
 
             {/* Snooze Options */}
-            <div className="pt-2 border-t border-slate-100">
-              <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">
+            <div className="pt-2 border-t border-emerald-500/20">
+              <span className="block text-[11px] font-bold text-emerald-300 uppercase tracking-wider mb-2 text-center">
                 Reporter le rappel
               </span>
               <div className="grid grid-cols-3 gap-2">
@@ -145,7 +145,7 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
                   variant="outline"
                   size="xs"
                   onClick={() => onSnooze(task.id, 10)}
-                  className="text-xs font-semibold"
+                  className="text-xs font-semibold border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 hover:text-white"
                 >
                   +10 min
                 </Button>
@@ -153,7 +153,7 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
                   variant="outline"
                   size="xs"
                   onClick={() => onSnooze(task.id, 60)}
-                  className="text-xs font-semibold"
+                  className="text-xs font-semibold border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 hover:text-white"
                 >
                   +1 heure
                 </Button>
@@ -161,7 +161,7 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
                   variant="outline"
                   size="xs"
                   onClick={() => onSnoozeTomorrow(task.id)}
-                  className="text-xs font-semibold"
+                  className="text-xs font-semibold border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 hover:text-white"
                 >
                   À demain
                 </Button>

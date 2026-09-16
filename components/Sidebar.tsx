@@ -215,20 +215,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id="main-desktop-sidebar"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-white/95 backdrop-blur-md border-r border-slate-200/90 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden ${
-        isVisuallyCollapsed ? 'w-20 shadow-sm' : 'w-64'
+      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/85 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden ${
+        isVisuallyCollapsed ? 'w-20 shadow-xl shadow-black/50' : 'w-64 shadow-2xl shadow-emerald-950/40'
       } ${
         isCollapsed && isHovered
-          ? 'z-50 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5'
-          : 'z-40 shadow-sm'
+          ? 'z-50 shadow-2xl shadow-emerald-950/60 ring-1 ring-emerald-500/40'
+          : 'z-40 shadow-xl'
       }`}
     >
       {/* 1. Header: Brand Logo & Collapse Toggle */}
-      <div className="h-16 px-3.5 flex items-center justify-between border-b border-slate-100/90 shrink-0">
+      <div className="h-16 px-3.5 flex items-center justify-between border-b border-emerald-500/20 shrink-0">
         {isVisuallyCollapsed ? (
           <div className="w-full flex items-center justify-between">
             <div
-              className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
+              className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-900/50 font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
               onClick={toggleCollapse}
               title="Agrandir la barre latérale"
             >
@@ -239,7 +239,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={toggleCollapse}
               title="Déplier la barre latérale"
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 hover:text-[#59240A] hover:bg-[#F7C59F]/20 active:scale-95 transition-all shrink-0 border border-slate-200/80 hover:border-[#F7C59F]/60"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-emerald-300 hover:text-white hover:bg-emerald-500/20 active:scale-95 transition-all shrink-0 border border-emerald-500/30 hover:border-emerald-400"
             >
               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
             </button>
@@ -247,14 +247,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           <div className="flex items-center justify-between w-full min-w-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 shrink-0 font-bold">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-900/50 shrink-0 font-bold">
                 <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-lg font-black tracking-tight text-slate-900 leading-none whitespace-nowrap">
+                <span className="text-lg font-black tracking-tight text-white leading-none whitespace-nowrap">
                   Planit
                 </span>
-                <span className="text-[11px] font-medium text-slate-400 truncate mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] font-medium text-emerald-300/70 truncate mt-0.5 whitespace-nowrap">
                   Productivité & Agenda
                 </span>
               </div>
@@ -267,7 +267,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={toggleCollapse}
                 title="Verrouiller la barre latérale dépliée"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-[#59240A] bg-[#F7C59F]/30 hover:bg-[#F7C59F]/50 border border-[#F7C59F]/60 transition-all active:scale-95 shrink-0"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 transition-all active:scale-95 shrink-0"
               >
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span className="whitespace-nowrap">Fixer</span>
@@ -278,7 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={toggleCollapse}
                 title="Réduire la barre latérale"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+                className="p-1.5 rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors shrink-0"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
               </button>
@@ -289,9 +289,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* 2. Top Banner / Live Clock (Expanded Only) */}
       {!isVisuallyCollapsed && (
-        <div className="px-4 py-2.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-xs text-slate-600 font-mono whitespace-nowrap animate-in fade-in duration-200">
-          <span className="truncate text-slate-500 font-medium">{currentDateStr}</span>
-          <div className="flex items-center gap-1 font-semibold text-[#BA5316] shrink-0">
+        <div className="px-4 py-2.5 bg-emerald-950/30 border-b border-emerald-500/15 flex items-center justify-between text-xs text-emerald-200/80 font-mono whitespace-nowrap animate-in fade-in duration-200">
+          <span className="truncate text-slate-300 font-medium">{currentDateStr}</span>
+          <div className="flex items-center gap-1 font-semibold text-[#F7C59F] shrink-0">
             <Clock className="w-3 h-3" />
             <span>{currentTime}</span>
           </div>
@@ -304,7 +304,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Button
             id="open-new-task-btn"
             onClick={onOpenNewTaskModal}
-            className="w-full bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold shadow-sm shadow-[#EE8D4B]/30 h-10 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] whitespace-nowrap animate-in fade-in duration-200"
+            className="w-full bg-gradient-to-r from-[#EE8D4B] to-[#DD6E26] hover:from-[#F3A975] hover:to-[#EE8D4B] text-white font-bold shadow-lg shadow-orange-950/50 h-10 rounded-xl flex items-center justify-center gap-2 border border-white/20 transition-all active:scale-[0.98] whitespace-nowrap animate-in fade-in duration-200"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nouvelle tâche</span>
@@ -315,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onOpenNewTaskModal}
             title="Nouvelle tâche"
             size="icon"
-            className="w-full h-10 bg-[#EE8D4B] hover:bg-[#BA5316] text-white rounded-xl shadow-sm shadow-[#EE8D4B]/30 flex items-center justify-center transition-all active:scale-[0.98]"
+            className="w-full h-10 bg-gradient-to-r from-[#EE8D4B] to-[#DD6E26] hover:from-[#F3A975] hover:to-[#EE8D4B] text-white rounded-xl shadow-lg shadow-orange-950/50 flex items-center justify-center border border-white/20 transition-all active:scale-[0.98]"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
           </Button>
@@ -323,12 +323,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 4. Scrollable Middle Section: Navigation & Tools */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-6 custom-scrollbar">
         
         {/* Navigation Group */}
         <div>
           {!isVisuallyCollapsed && (
-            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap animate-in fade-in duration-200">
+            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400/80 whitespace-nowrap animate-in fade-in duration-200">
               Espace de travail
             </div>
           )}
@@ -348,20 +348,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
                     active
                       ? item.special
-                        ? 'bg-purple-50 text-purple-900 border border-purple-200 font-bold shadow-2xs'
-                        : 'bg-[#F7C59F]/30 text-[#8c3507] border border-[#F7C59F]/60 font-bold shadow-2xs'
+                        ? 'bg-purple-900/40 text-purple-200 border border-purple-500/40 font-bold shadow-lg shadow-purple-950/40 backdrop-blur-md'
+                        : 'bg-emerald-500/20 text-white border border-emerald-500/40 font-bold shadow-lg shadow-emerald-950/50 backdrop-blur-md'
                       : item.special
-                        ? 'text-purple-700 hover:text-purple-900 hover:bg-purple-50/60'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                        ? 'text-purple-300 hover:text-white hover:bg-purple-900/25'
+                        : 'text-slate-300 hover:text-white hover:bg-emerald-500/15'
                   } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
                 >
                   <div
                     className={`transition-colors shrink-0 ${
                       active
                         ? item.special
-                          ? 'text-purple-700'
-                          : 'text-[#BA5316]'
-                        : 'text-slate-400 group-hover:text-slate-600'
+                          ? 'text-purple-300'
+                          : 'text-emerald-400'
+                        : 'text-slate-400 group-hover:text-emerald-300'
                     }`}
                   >
                     {item.icon}
@@ -375,8 +375,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span
                       className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 animate-in fade-in duration-200 ${
                         active
-                          ? 'bg-[#EE8D4B] text-white'
-                          : 'bg-slate-200 text-slate-700 group-hover:bg-slate-300'
+                          ? 'bg-emerald-500 text-slate-950 font-black'
+                          : 'bg-emerald-950/80 text-emerald-200 border border-emerald-500/30 group-hover:bg-emerald-900'
                       }`}
                     >
                       {item.badge}
@@ -391,15 +391,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* AI Assistant Banner / Button */}
         <div>
           {!isVisuallyCollapsed ? (
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white border border-orange-200/70 shadow-2xs animate-in fade-in duration-200">
+            <div className="p-3 rounded-2xl bg-[#0a231b]/80 border border-emerald-500/30 shadow-xl backdrop-blur-xl animate-in fade-in duration-200">
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 rounded-lg bg-[#EE8D4B]/20 text-[#BA5316] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
                   <Bot className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-bold text-orange-950 whitespace-nowrap">Assistant IA</span>
-                <Sparkles className="w-3 h-3 text-amber-500 ml-auto" />
+                <span className="text-xs font-bold text-white whitespace-nowrap">Assistant IA</span>
+                <Sparkles className="w-3 h-3 text-amber-400 ml-auto animate-pulse" />
               </div>
-              <p className="text-[11px] text-slate-600 leading-tight mb-2.5">
+              <p className="text-[11px] text-slate-300 leading-tight mb-2.5">
                 Planification intelligente & création de tâches par Gemini.
               </p>
               <Button
@@ -413,7 +413,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onOpenAIModal();
                   }
                 }}
-                className="w-full h-8 text-xs font-bold border-orange-200 bg-white hover:bg-orange-100/50 text-orange-900 rounded-lg shadow-2xs gap-1.5 whitespace-nowrap"
+                className="w-full h-8 text-xs font-bold border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 rounded-lg shadow-sm gap-1.5 whitespace-nowrap"
               >
                 <span>Ouvrir l&apos;assistant</span>
                 {!currentUser && <Lock className="w-2.5 h-2.5 text-slate-400" />}
@@ -431,9 +431,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
               }}
               title="Assistant IA Gemini"
-              className="w-full h-10 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 flex items-center justify-center transition-colors"
+              className="w-full h-10 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 flex items-center justify-center transition-colors"
             >
-              <Bot className="w-4 h-4 text-[#BA5316]" />
+              <Bot className="w-4 h-4 text-amber-300" />
             </button>
           )}
         </div>
@@ -441,7 +441,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Organisation & Tools */}
         <div>
           {!isVisuallyCollapsed && (
-            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap animate-in fade-in duration-200">
+            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400/80 whitespace-nowrap animate-in fade-in duration-200">
               Organisation & Outils
             </div>
           )}
@@ -453,11 +453,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={onOpenCategoryTagManager}
                 title={isVisuallyCollapsed ? 'Catégories & Tags' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-colors group ${
                   isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
-                <FolderPlus className="w-4 h-4 text-slate-400 group-hover:text-[#BA5316] shrink-0" />
+                <FolderPlus className="w-4 h-4 text-slate-400 group-hover:text-emerald-300 shrink-0" />
                 {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Catégories & Tags</span>}
               </button>
             )}
@@ -468,11 +468,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onOpenExportModal}
               title={isVisuallyCollapsed ? 'Exporter (.ics)' : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-colors group ${
                 isVisuallyCollapsed ? 'justify-center px-2' : ''
               }`}
             >
-              <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-600 shrink-0" />
+              <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-200 shrink-0" />
               {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Exporter (.ics)</span>}
             </button>
 
@@ -485,12 +485,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 soundManager.playClickSound();
               }}
               title={isVisuallyCollapsed ? (soundEnabled ? 'Alertes sonores activées' : 'Alertes sonores coupées') : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors group ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-colors group ${
                 isVisuallyCollapsed ? 'justify-center px-2' : ''
               }`}
             >
               {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <Volume2 className="w-4 h-4 text-emerald-400 shrink-0" />
               ) : (
                 <VolumeX className="w-4 h-4 text-slate-400 shrink-0" />
               )}
@@ -500,8 +500,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span
                     className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full whitespace-nowrap animate-in fade-in duration-200 ${
                       soundEnabled
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-slate-100 text-slate-500'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400'
                     }`}
                   >
                     {soundEnabled ? 'Activé' : 'Coupé'}
@@ -520,15 +520,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   await install();
                 }}
                 title={isVisuallyCollapsed ? "Installer l'application PlanIt" : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#59240A] bg-[#F7C59F]/20 hover:bg-[#F7C59F]/35 border border-[#F7C59F]/50 transition-colors group ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-amber-200 bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/40 transition-colors group ${
                   isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
-                <Download className="w-4 h-4 text-[#BA5316] shrink-0" />
+                <Download className="w-4 h-4 text-amber-400 shrink-0" />
                 {!isVisuallyCollapsed && (
                   <>
                     <span className="truncate flex-1 text-left font-bold whitespace-nowrap animate-in fade-in duration-200">Installer l&apos;app</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#BA5316] text-white whitespace-nowrap animate-in fade-in duration-200">
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 whitespace-nowrap animate-in fade-in duration-200">
                       PWA
                     </span>
                   </>
@@ -542,11 +542,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={onOpenPostgresModal}
                 title={isVisuallyCollapsed ? 'Diagnostic Base SQL' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors group ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-sky-500/20 transition-colors group ${
                   isVisuallyCollapsed ? 'justify-center px-2' : ''
                 }`}
               >
-                <Database className="w-4 h-4 text-blue-500 shrink-0" />
+                <Database className="w-4 h-4 text-sky-400 shrink-0" />
                 {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Diagnostic Base SQL</span>}
               </button>
             )}
@@ -555,7 +555,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 5. Bottom Section: Notifications & User Profile */}
-      <div className="p-3 border-t border-slate-100/90 bg-slate-50/50 shrink-0 space-y-2">
+      <div className="p-3 border-t border-emerald-500/20 bg-emerald-950/40 backdrop-blur-md shrink-0 space-y-2">
         
         {/* Notifications Bar */}
         <button
@@ -563,14 +563,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           onClick={onOpenNotifications}
           title="Centre de notifications et rappels"
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-2xs border border-transparent hover:border-slate-200/80 transition-all ${
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-emerald-500/20 hover:text-white border border-transparent hover:border-emerald-500/30 transition-all ${
             isVisuallyCollapsed ? 'justify-center px-2' : ''
           }`}
         >
           <div className="relative shrink-0">
-            <Bell className="w-4 h-4 text-slate-600" />
+            <Bell className="w-4 h-4 text-slate-300" />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 z-10 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-2xs ring-1.5 ring-white animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 z-10 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-1 ring-slate-900 animate-pulse">
                 {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               </span>
             )}
@@ -596,26 +596,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 id="open-auth-modal-btn"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
                 title={`Connecté : ${currentUser.name} (${currentUser.role})`}
-                className={`w-full flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 cursor-pointer transition-colors ${
+                className={`w-full flex items-center gap-2.5 p-2 rounded-xl bg-emerald-900/30 border border-emerald-500/30 hover:border-emerald-500/60 cursor-pointer transition-colors ${
                   isVisuallyCollapsed ? 'justify-center p-1.5' : ''
                 }`}
               >
-                <div className="w-8 h-8 rounded-lg bg-[#EE8D4B]/20 text-[#BA5316] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-bold text-xs flex items-center justify-center shrink-0">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </div>
 
                 {!isVisuallyCollapsed && (
                   <>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-xs font-bold text-slate-900 truncate whitespace-nowrap animate-in fade-in duration-200">
+                      <span className="text-xs font-bold text-white truncate whitespace-nowrap animate-in fade-in duration-200">
                         {currentUser.name}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-slate-500 truncate whitespace-nowrap">
+                        <span className="text-[10px] text-emerald-300/80 truncate whitespace-nowrap">
                           {currentUser.role}
                         </span>
                         {currentUser.role === 'admin' && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase whitespace-nowrap">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 font-bold uppercase whitespace-nowrap">
                             Admin
                           </span>
                         )}
@@ -636,7 +636,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 size="sm"
                 onClick={onOpenAuthModal}
                 title="Se connecter"
-                className={`w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-9 rounded-xl text-xs gap-1.5 shadow-2xs ${
+                className={`w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold h-9 rounded-xl text-xs gap-1.5 shadow-lg shadow-emerald-950/50 ${
                   isVisuallyCollapsed ? 'px-0' : ''
                 }`}
               >
@@ -647,23 +647,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Profile Popover Menu */}
             {isUserMenuOpen && currentUser && (
-              <div className="absolute left-full bottom-0 ml-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-left-2 duration-150">
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#EE8D4B]/20 text-[#BA5316] font-bold text-sm flex items-center justify-center shrink-0">
+              <div className="absolute left-full bottom-0 ml-2 w-64 bg-[#081F17]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2 z-50 animate-in fade-in slide-in-from-left-2 duration-150 text-white">
+                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/20 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-bold text-sm flex items-center justify-center shrink-0">
                     {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-slate-900 truncate">
+                    <span className="text-xs font-bold text-white truncate">
                       {currentUser.name}
                     </span>
-                    <span className="text-[11px] text-slate-500 truncate">
+                    <span className="text-[11px] text-slate-300 truncate">
                       {currentUser.email}
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-semibold">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-500/30 font-semibold">
                         {currentUser.department || 'Général'}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 font-bold uppercase">
                         {currentUser.role}
                       </span>
                     </div>
@@ -679,13 +679,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setIsUserMenuOpen(false);
                         onViewChange('admin');
                       }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 font-semibold transition-colors"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-900/40 text-purple-200 font-semibold transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Shield className="w-3.5 h-3.5 text-purple-600" />
+                        <Shield className="w-3.5 h-3.5 text-purple-400" />
                         <span>Espace Administration</span>
                       </div>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/30">
                         Ouvrir
                       </span>
                     </button>
@@ -697,9 +697,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setIsUserMenuOpen(false);
                       onOpenAuthModal();
                     }}
-                    className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-colors border-t border-slate-100 mt-1"
+                    className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors border-t border-emerald-500/20 mt-1"
                   >
-                    <UserIcon className="w-3.5 h-3.5 text-slate-500" />
+                    <UserIcon className="w-3.5 h-3.5 text-slate-400" />
                     <span>Gérer le profil / Déconnexion</span>
                   </button>
                 </div>
@@ -715,7 +715,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="button"
             onClick={toggleCollapse}
             title="Déplier la barre latérale"
-            className="w-full py-1.5 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-full py-1.5 flex items-center justify-center rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

@@ -91,10 +91,10 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
               {/* Single Unified Tâches Button (Navigate & Create) */}
               <motion.div
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center justify-between rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all ${
+                className={`flex items-center justify-between rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all ${
                   currentView === 'list'
-                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
-                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
+                    : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <button
@@ -110,15 +110,15 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                     currentView === 'list'
-                      ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                      : 'bg-white text-slate-700 shadow-xs'
+                      ? 'bg-slate-950 text-emerald-400'
+                      : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                   }`}>
                     <CheckSquare className="w-4 h-4 stroke-[2.3]" />
                   </div>
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className="text-slate-900 font-semibold">Tâches</span>
+                    <span className="font-semibold">Tâches</span>
                     {pendingTasksCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F7C59F] text-[#422006] font-bold">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 font-bold">
                         {pendingTasksCount}
                       </span>
                     )}
@@ -133,7 +133,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     handleNewTask();
                   }}
                   title="Ajouter une nouvelle tâche"
-                  className="mr-2 w-7 h-7 rounded-full bg-[#F7C59F] hover:bg-[#F7C59F]/80 text-[#422006] flex items-center justify-center shrink-0 shadow-xs active:scale-90 transition-transform"
+                  className="mr-2 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-xs active:scale-90 transition-transform"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[2.8]" />
                 </button>
@@ -144,20 +144,20 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('review')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
                   currentView === 'review'
-                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
-                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
+                    : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'review'
-                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                    : 'bg-white text-[#EE8D4B] shadow-xs'
+                    ? 'bg-slate-950 text-amber-400'
+                    : 'bg-amber-500/20 text-amber-300 shadow-xs'
                 }`}>
                   <GitPullRequest className="w-4 h-4 stroke-[2.3]" />
                 </div>
-                <span className="whitespace-nowrap text-slate-900 font-semibold">Revue Métier</span>
+                <span className="whitespace-nowrap font-semibold">Revue Métier</span>
               </motion.button>
 
               {/* Item 3: Calendrier */}
@@ -165,20 +165,20 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('calendar')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
                   currentView === 'calendar'
-                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
-                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
+                    : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'calendar'
-                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                    : 'bg-white text-slate-700 shadow-xs'
+                    ? 'bg-slate-950 text-emerald-400'
+                    : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <CalendarIcon className="w-4 h-4 stroke-[2.3]" />
                 </div>
-                <span className="whitespace-nowrap text-slate-900 font-semibold">Calendrier</span>
+                <span className="whitespace-nowrap font-semibold">Calendrier</span>
               </motion.button>
 
               {/* Item 4: Tableau Kanban */}
@@ -186,20 +186,20 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('kanban')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
                   currentView === 'kanban'
-                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
-                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
+                    : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'kanban'
-                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                    : 'bg-white text-slate-700 shadow-xs'
+                    ? 'bg-slate-950 text-emerald-400'
+                    : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <LayoutGrid className="w-4 h-4 stroke-[2.3]" />
                 </div>
-                <span className="whitespace-nowrap text-slate-900 font-semibold">Tableau</span>
+                <span className="whitespace-nowrap font-semibold">Tableau</span>
               </motion.button>
 
               {/* Item 5: Statistiques */}
@@ -207,20 +207,20 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('stats')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
                   currentView === 'stats'
-                    ? 'bg-white text-[#933F15] border-[#F7C59F] ring-2 ring-[#F7C59F]/50 shadow-[#F7C59F]/20'
-                    : 'bg-[#E5ECE7]/95 text-slate-800 border-white/90 hover:bg-white'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
+                    : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'stats'
-                    ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                    : 'bg-white text-slate-700 shadow-xs'
+                    ? 'bg-slate-950 text-emerald-400'
+                    : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <BarChart3 className="w-4 h-4 stroke-[2.3]" />
                 </div>
-                <span className="whitespace-nowrap text-slate-900 font-semibold">Stats</span>
+                <span className="whitespace-nowrap font-semibold">Stats</span>
               </motion.button>
 
               {/* Item 6: Administration */}
@@ -228,20 +228,20 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('admin')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-xl border shadow-lg shadow-slate-900/10 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
                   currentView === 'admin'
-                    ? 'bg-white text-purple-900 border-purple-400 ring-2 ring-purple-300 shadow-purple-500/20'
-                    : 'bg-[#E5ECE7]/95 text-purple-900 border-white/90 hover:bg-white'
+                    ? 'bg-purple-600 text-white border-purple-400 font-bold shadow-purple-500/30'
+                    : 'bg-[#061A13]/90 text-purple-200 border-purple-500/30 hover:bg-[#0A291E]'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'admin'
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'bg-white text-purple-700 shadow-xs'
+                    ? 'bg-slate-950 text-purple-400'
+                    : 'bg-purple-500/20 text-purple-300 shadow-xs'
                 }`}>
                   <Shield className="w-4 h-4 stroke-[2.3]" />
                 </div>
-                <span className="whitespace-nowrap text-purple-950 font-bold">Admin</span>
+                <span className="whitespace-nowrap font-bold">Admin</span>
               </motion.button>
             </motion.div>
           )}
@@ -254,10 +254,10 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
           onClick={handleToggle}
           whileTap={{ scale: 0.92 }}
           aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu de navigation'}
-          className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto shadow-xl shadow-slate-900/15 backdrop-blur-2xl border border-white/90 bg-[#E5ECE7]/95 text-slate-800 hover:bg-white"
+          className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto shadow-2xl shadow-emerald-950/60 backdrop-blur-2xl border border-emerald-500/40 bg-[#061A13]/90 text-emerald-300 hover:text-white hover:bg-[#0A291E]"
         >
           {/* Glass Inner Reflection Highlight */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/70 via-transparent to-black/5 pointer-events-none" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-emerald-400/20 via-transparent to-black/30 pointer-events-none" />
 
           {/* Animated Icon (4-dots Matrix <-> Close Cross) */}
           <AnimatePresence mode="wait">
@@ -270,7 +270,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 transition={{ duration: 0.18 }}
                 className="flex items-center justify-center"
               >
-                <X className="w-6 h-6 stroke-[2.6] text-slate-800" />
+                <X className="w-6 h-6 stroke-[2.6] text-emerald-300" />
               </motion.div>
             ) : (
               <motion.div
@@ -283,10 +283,10 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
               >
                 {/* 4-dot Grid Matrix Icon in dark slate */}
                 <div className="grid grid-cols-2 gap-1.5 p-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 </div>
               </motion.div>
             )}

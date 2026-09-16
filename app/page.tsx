@@ -640,16 +640,21 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50 flex flex-col text-slate-900 selection:bg-[#F7C59F] selection:text-[#422006] pb-24 md:pb-12 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-[#EE8D4B] selection:text-white pb-24 md:pb-12 overflow-x-hidden">
+      {/* Ambient Radial Glass Light Orbs */}
+      <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none z-0 animate-pulse duration-[10000ms]" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-amber-500/12 blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-teal-600/10 blur-[100px] pointer-events-none z-0" />
+
       {/* Ambient Dotted Glow Canvas Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <DottedGlowBackground
           className="pointer-events-none w-full h-full"
-          gap={18}
-          radius={1.6}
-          color="rgba(148, 163, 184, 0.45)"
-          glowColor="rgba(238, 141, 75, 0.85)"
-          opacity={0.45}
+          gap={20}
+          radius={1.5}
+          color="rgba(16, 185, 129, 0.25)"
+          glowColor="rgba(52, 211, 153, 0.85)"
+          opacity={0.5}
           speedMin={0.3}
           speedMax={1.3}
         />

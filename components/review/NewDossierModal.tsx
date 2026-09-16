@@ -147,19 +147,19 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto">
-        <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-slate-200 text-slate-900">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden my-auto text-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 bg-emerald-950/80 border-b border-emerald-500/30 text-white">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-[#EE8D4B]/15 text-[#BA5316]">
+            <span className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-amber-400">
               <Sparkles className="w-4 h-4" />
             </span>
-            <h3 className="text-base font-bold text-slate-900">Nouveau Dossier Métier &amp; Circuit de Revue</h3>
+            <h3 className="text-base font-bold text-white">Nouveau Dossier Métier &amp; Circuit de Revue</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -168,21 +168,21 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4 text-xs">
           {/* Department Selector */}
           <div>
-            <label className="font-bold text-slate-700 block mb-1.5">Département Référent</label>
+            <label className="font-bold text-slate-200 block mb-1.5">Département Référent</label>
             <div className="grid grid-cols-3 gap-2">
               {(['Fiscalité', 'Comptabilité', 'Juridique'] as Department[]).map((dept) => (
                 <button
                   key={dept}
                   type="button"
                   onClick={() => handleDeptChange(dept)}
-                  className={`py-2 px-3 rounded-xl font-bold border text-center transition-all ${
+                  className={`py-2 px-3 rounded-xl font-bold border text-center transition-all cursor-pointer ${
                     department === dept
                       ? dept === 'Fiscalité'
-                        ? 'bg-amber-100 border-amber-400 text-amber-950 ring-2 ring-amber-300'
+                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 ring-2 ring-amber-500/40'
                         : dept === 'Comptabilité'
-                          ? 'bg-emerald-100 border-emerald-400 text-emerald-950 ring-2 ring-emerald-300'
-                          : 'bg-blue-100 border-blue-400 text-blue-950 ring-2 ring-blue-300'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/40'
+                          : 'bg-blue-500/20 border-blue-500/50 text-blue-300 ring-2 ring-blue-500/40'
+                      : 'bg-emerald-950/40 border-emerald-500/20 text-slate-400 hover:bg-emerald-500/10 hover:text-white'
                   }`}
                 >
                   {dept}
@@ -193,25 +193,25 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Titre du Dossier</label>
+              <label className="font-bold text-slate-200 block mb-1">Titre du Dossier</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Liasse Fiscale & CVAE 2025..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                className="w-full px-3 py-2 border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 required
               />
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Nom du Client</label>
+              <label className="font-bold text-slate-200 block mb-1">Nom du Client</label>
               <input
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Ex: SAS Biopharma..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                className="w-full px-3 py-2 border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 required
               />
             </div>
@@ -219,14 +219,14 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Typologie</label>
+              <label className="font-bold text-slate-200 block mb-1">Typologie</label>
               <select
                 value={typology}
                 onChange={(e) => setTypology(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                className="w-full p-2 border border-emerald-500/30 bg-emerald-950/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
                 {TYPOLOGIES_PER_DEPT[department].map((t) => (
-                  <option key={t} value={t}>
+                  <option key={t} value={t} className="bg-slate-900 text-white">
                     {t}
                   </option>
                 ))}
@@ -234,54 +234,54 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Priorité</label>
+              <label className="font-bold text-slate-200 block mb-1">Priorité</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as DossierPriority)}
-                className="w-full p-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                className="w-full p-2 border border-emerald-500/30 bg-emerald-950/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
-                <option value="low">Basse</option>
-                <option value="medium">Normale</option>
-                <option value="high">Haute</option>
-                <option value="urgent">Urgente</option>
+                <option value="low" className="bg-slate-900 text-white">Basse</option>
+                <option value="medium" className="bg-slate-900 text-white">Normale</option>
+                <option value="high" className="bg-slate-900 text-white">Haute</option>
+                <option value="urgent" className="bg-slate-900 text-white">Urgente</option>
               </select>
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Échéance Estimée</label>
+              <label className="font-bold text-slate-200 block mb-1">Échéance Estimée</label>
               <input
                 type="date"
                 value={estimatedDate}
                 onChange={(e) => setEstimatedDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                className="w-full px-3 py-2 border border-emerald-500/30 bg-emerald-950/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
             </div>
           </div>
 
           {/* Metric input */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <span className="font-bold text-slate-800 block mb-2">
+          <div className="p-3 bg-emerald-950/40 rounded-xl border border-emerald-500/30">
+            <span className="font-bold text-white block mb-2">
               Indicateur Chiffré Initial (pour suivi du Diff financier)
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-slate-600 block mb-1">Libellé de l&apos;Indicateur</label>
+                <label className="text-slate-300 block mb-1">Libellé de l&apos;Indicateur</label>
                 <input
                   type="text"
                   value={metricLabel}
                   onChange={(e) => setMetricLabel(e.target.value)}
                   placeholder="Ex: Chiffre d'Affaires HT ou Résultat Fiscal"
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                  className="w-full px-3 py-1.5 border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
               <div>
-                <label className="text-slate-600 block mb-1">Montant initial (€)</label>
+                <label className="text-slate-300 block mb-1">Montant initial (€)</label>
                 <input
                   type="number"
                   value={metricAmount}
                   onChange={(e) => setMetricAmount(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="Ex: 1500000"
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+                  className="w-full px-3 py-1.5 border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
             </div>
@@ -289,7 +289,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
 
           {/* Initial Draft */}
           <div>
-            <label className="font-bold text-slate-700 block mb-1">
+            <label className="font-bold text-slate-200 block mb-1">
               Projet d&apos;Acte ou Note de Synthèse Initiale (pour Diff Textuel)
             </label>
             <textarea
@@ -297,18 +297,24 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
               onChange={(e) => setInitialDraft(e.target.value)}
               placeholder="Rédigez ici le projet d'acte, la note de cadrage ou le projet d'avis initial..."
               rows={4}
-              className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs focus:outline-none focus:ring-2 focus:ring-[#EE8D4B]"
+              className="w-full p-2.5 border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg font-mono text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
-            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+          <div className="flex justify-end gap-2 pt-2 border-t border-emerald-500/30">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="border-emerald-500/30 bg-emerald-950/40 text-slate-300 cursor-pointer"
+            >
               Annuler
             </Button>
             <Button
               type="submit"
               size="sm"
-              className="bg-[#BA5316] hover:bg-[#933F15] text-white font-bold gap-1.5"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Créer le Dossier (Brouillon)

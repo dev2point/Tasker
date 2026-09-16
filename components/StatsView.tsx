@@ -139,82 +139,84 @@ export const StatsView: React.FC<StatsViewProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Metric 1: Completion Rate */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               Complétion
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
               <Award className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {completionRate}%
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            <p className="text-xs text-slate-300 mt-0.5 font-medium">
               {completedTasks}/{totalTasks} terminées
             </p>
           </div>
-          <Progress value={completionRate} className="h-1.5" />
+          <Progress value={completionRate} className="h-1.5 bg-emerald-950 border border-emerald-500/20" />
         </div>
 
         {/* Metric 2: Today Focus */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               Aujourd&apos;hui
             </span>
-            <div className="w-8 h-8 rounded-xl bg-[#F7C59F]/40 text-[#59240A] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
               <Clock className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {todayCompleted}/{todayTasks.length}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            <p className="text-xs text-slate-300 mt-0.5 font-medium">
               {todayTasks.length - todayCompleted} restantes
             </p>
           </div>
           <Progress
             value={todayTasks.length > 0 ? (todayCompleted / todayTasks.length) * 100 : 0}
-            className="h-1.5"
+            className="h-1.5 bg-emerald-950 border border-emerald-500/20"
           />
         </div>
 
         {/* Metric 3: Active Reminders */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               Rappels Actifs
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
               <Bell className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {activeReminders.length}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            <p className="text-xs text-slate-300 mt-0.5 font-medium">
               Automatisés et synchronisés
             </p>
           </div>
-          <div className="h-1.5 bg-amber-100 rounded-full overflow-hidden">
-            <div className="h-full bg-amber-500 rounded-full w-full" />
+          <div className="h-1.5 bg-emerald-950 rounded-full overflow-hidden border border-emerald-500/20">
+            <div className="h-full bg-amber-400 rounded-full w-full" />
           </div>
         </div>
 
         {/* Metric 4: Overdue Alert */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               En Retard
             </span>
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                overdueTasks.length > 0 ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-400'
+              className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
+                overdueTasks.length > 0
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
               }`}
             >
               <AlertTriangle className="w-4.5 h-4.5" />
@@ -223,23 +225,23 @@ export const StatsView: React.FC<StatsViewProps> = ({
           <div>
             <div
               className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                overdueTasks.length > 0 ? 'text-rose-600' : 'text-slate-900'
+                overdueTasks.length > 0 ? 'text-rose-400' : 'text-white'
               }`}
             >
               {overdueTasks.length}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            <p className="text-xs text-slate-300 mt-0.5 font-medium">
               {overdueTasks.length > 0 ? 'Nécessite votre attention' : 'Tout est à jour !'}
             </p>
           </div>
           <div
-            className={`h-1.5 rounded-full overflow-hidden ${
-              overdueTasks.length > 0 ? 'bg-rose-100' : 'bg-slate-100'
+            className={`h-1.5 rounded-full overflow-hidden border ${
+              overdueTasks.length > 0 ? 'bg-rose-950 border-rose-500/30' : 'bg-emerald-950 border-emerald-500/20'
             }`}
           >
             <div
               className={`h-full rounded-full ${
-                overdueTasks.length > 0 ? 'bg-rose-500 w-full' : 'bg-emerald-500 w-full'
+                overdueTasks.length > 0 ? 'bg-rose-500 w-full' : 'bg-emerald-400 w-full'
               }`}
             />
           </div>
@@ -250,11 +252,11 @@ export const StatsView: React.FC<StatsViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         
         {/* Category Breakdown */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#BA5316]" />
-              <h3 className="font-bold text-sm text-slate-900">Répartition par Catégorie</h3>
+              <Layers className="w-4 h-4 text-amber-400" />
+              <h3 className="font-bold text-sm text-white">Répartition par Catégorie</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{categories.length} catégories</span>
           </div>
@@ -268,17 +270,17 @@ export const StatsView: React.FC<StatsViewProps> = ({
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: cat.color }}
                     />
-                    <span className="font-bold text-slate-800">{cat.name}</span>
+                    <span className="font-bold text-slate-200">{cat.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-500">
-                    <span className="font-semibold text-slate-700">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="font-semibold text-white">
                       {cat.completed}/{cat.total}
                     </span>
                     <span className="text-slate-400">({cat.pct}%)</span>
                   </div>
                 </div>
 
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-emerald-950/80 rounded-full overflow-hidden border border-emerald-500/20">
                   <div
                     className="h-full rounded-full transition-all duration-300"
                     style={{
@@ -293,11 +295,11 @@ export const StatsView: React.FC<StatsViewProps> = ({
         </div>
 
         {/* Priority Breakdown */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#BA5316]" />
-              <h3 className="font-bold text-sm text-slate-900">Distribution par Priorité</h3>
+              <TrendingUp className="w-4 h-4 text-amber-400" />
+              <h3 className="font-bold text-sm text-white">Distribution par Priorité</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{totalTasks} tâches au total</span>
           </div>
@@ -308,22 +310,22 @@ export const StatsView: React.FC<StatsViewProps> = ({
               return (
                 <div
                   key={p.priority}
-                  className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/60 flex items-center justify-between gap-3"
+                  className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${p.config.badge}`}>
                       {p.config.label}
                     </span>
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-slate-200">
                       {p.total} tâche{p.total > 1 ? 's' : ''}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs">
-                    <span className="text-slate-500">
-                      <strong className="text-slate-900 font-bold">{p.completed}</strong> terminées
+                    <span className="text-slate-300">
+                      <strong className="text-white font-bold">{p.completed}</strong> terminées
                     </span>
-                    <span className="text-slate-400 font-mono text-[11px]">{pct}%</span>
+                    <span className="text-amber-400 font-mono text-[11px]">{pct}%</span>
                   </div>
                 </div>
               );
@@ -334,10 +336,10 @@ export const StatsView: React.FC<StatsViewProps> = ({
 
       {/* Upcoming Reminders Section */}
       {upcomingRemindersList.length > 0 && (
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Bell className="w-4 h-4 text-amber-500" />
-            <h3 className="font-bold text-sm text-slate-900">Prochains Rappels Automatiques</h3>
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-3">
+          <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-3">
+            <Bell className="w-4 h-4 text-amber-400" />
+            <h3 className="font-bold text-sm text-white">Prochains Rappels Automatiques</h3>
           </div>
 
           <div className="space-y-2">
@@ -345,21 +347,21 @@ export const StatsView: React.FC<StatsViewProps> = ({
               <div
                 key={task.id}
                 onClick={() => onOpenTaskModal(task)}
-                className="p-3 rounded-xl border border-slate-200 hover:border-[#F7C59F] bg-slate-50/50 hover:bg-white transition-all cursor-pointer flex items-center justify-between gap-3"
+                className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all cursor-pointer flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-500/30">
                     <Clock className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-slate-900 truncate">{task.title}</h4>
-                    <p className="text-[11px] text-slate-500 font-medium">
+                    <h4 className="text-xs font-bold text-white truncate">{task.title}</h4>
+                    <p className="text-[11px] text-slate-300 font-medium">
                       Échéance : {formatDueDateFrench(task.dueDate, task.dueTime)}
                     </p>
                   </div>
                 </div>
 
-                <Badge variant="amber" className="text-[10px] shrink-0 font-bold">
+                <Badge variant="amber" className="text-[10px] shrink-0 font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   {task.reminderMinutesBefore === 0
                     ? 'À l’heure pile'
                     : `${task.reminderMinutesBefore}m avant`}

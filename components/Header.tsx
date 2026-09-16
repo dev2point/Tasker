@@ -174,12 +174,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       {/* Top Application Bar - Visible only on mobile (< md), while desktop and tablet use the Left Sidebar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full max-w-full">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#061A13]/90 backdrop-blur-2xl border-b border-emerald-500/20 shadow-xl w-full max-w-full text-white">
         <DottedGlowBackground
-          className="pointer-events-none absolute inset-0 opacity-35 overflow-hidden"
+          className="pointer-events-none absolute inset-0 opacity-30 overflow-hidden"
           gap={12}
           radius={1.2}
-          color="rgba(148, 163, 184, 0.4)"
+          color="rgba(16, 185, 129, 0.4)"
           glowColor="rgba(238, 141, 75, 0.9)"
           speedMin={0.4}
           speedMax={1.4}
@@ -189,19 +189,19 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* 1. Brand Logo & Compact Live Clock */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] flex items-center justify-center text-[#422006] shadow-xs shadow-[#F7C59F]/50 shrink-0 font-bold">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-950/50 shrink-0 font-bold">
                 <CalendarIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.3]" />
               </div>
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 leading-none">
+                <span className="text-base sm:text-lg font-black tracking-tight text-white leading-none">
                   Planit
                 </span>
                 {/* Minimalist Live Clock Pill */}
                 <div
                   title={currentDateStr}
-                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-[11px] font-mono text-slate-600 font-semibold shrink-0"
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-mono text-emerald-200 font-semibold shrink-0"
                 >
-                  <Clock className="w-3 h-3 text-[#BA5316] shrink-0" />
+                  <Clock className="w-3 h-3 text-[#F7C59F] shrink-0" />
                   <span>{currentTime}</span>
                 </div>
               </div>
@@ -258,18 +258,18 @@ export const Header: React.FC<HeaderProps> = ({
                   size="icon-sm"
                   onClick={onOpenNotifications}
                   title="Centre de rappels & alertes"
-                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-slate-700 shrink-0 overflow-visible rounded-xl hover:bg-slate-100 transition-colors"
+                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-emerald-200 border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:text-white shrink-0 overflow-visible rounded-xl transition-colors"
                 >
-                  <Bell className="w-4 h-4 text-slate-700" />
+                  <Bell className="w-4 h-4 text-emerald-300" />
                 </Button>
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 z-20 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-xs ring-2 ring-white animate-pulse pointer-events-none whitespace-nowrap">
+                  <span className="absolute -top-1.5 -right-1.5 z-20 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-xs ring-2 ring-slate-900 animate-pulse pointer-events-none whitespace-nowrap">
                     {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
                   </span>
                 )}
               </div>
 
-              {/* AI Assistant Button (Compact on md/lg, expands with full label on xl+) */}
+              {/* AI Assistant Button */}
               <Button
                 id="open-ai-assistant-btn"
                 variant="outline"
@@ -287,13 +287,9 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'Assistant IA Gemini (Création intelligente & planificateur)'
                     : 'Assistant IA (Connexion requise pour utiliser Gemini)'
                 }
-                className={`relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl ${
-                  currentUser
-                    ? 'border-orange-200/90 bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-100 text-orange-900 shadow-2xs'
-                    : 'border-[#F7C59F]/70 bg-[#F7C59F]/15 hover:bg-[#F7C59F]/30 text-[#BA5316]'
-                }`}
+                className="relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 shadow-lg shadow-amber-950/20"
               >
-                <Bot className="w-3.5 h-3.5 text-[#BA5316] shrink-0" />
+                <Bot className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 <span className="hidden xl:inline">Assistant IA</span>
                 <span className="inline xl:hidden font-bold">IA</span>
                 {!currentUser && (
@@ -325,11 +321,11 @@ export const Header: React.FC<HeaderProps> = ({
                 </Button>
 
                 {isDesktopToolsOpen && (
-                  <div className="absolute right-0 top-full mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-2.5 py-1.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="absolute right-0 top-full mt-1.5 w-60 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
+                    <div className="px-2.5 py-1.5 border-b border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                       Outils & Préférences
                     </div>
-                    <div className="py-1 space-y-0.5 text-xs">
+                    <div className="py-1 space-y-1 text-xs">
                       {/* Sound Toggle */}
                       <button
                         id="toggle-sound-btn"
@@ -338,12 +334,12 @@ export const Header: React.FC<HeaderProps> = ({
                           onToggleSound();
                           soundManager.playClickSound();
                         }}
-                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors font-semibold text-slate-700"
+                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                       >
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                              soundEnabled ? 'bg-[#F7C59F]/40 text-[#59240A]' : 'bg-slate-100 text-slate-400'
+                              soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-950 text-slate-500'
                             }`}
                           >
                             {soundEnabled ? (
@@ -356,7 +352,7 @@ export const Header: React.FC<HeaderProps> = ({
                         </div>
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                            soundEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                            soundEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
                           }`}
                         >
                           {soundEnabled ? 'Activé' : 'Coupé'}
@@ -450,25 +446,25 @@ export const Header: React.FC<HeaderProps> = ({
                       type="button"
                       onClick={() => setIsUserMenuOpen((prev) => !prev)}
                       title={`Connecté : ${currentUser.name} (${currentUser.role})`}
-                      className={`flex items-center gap-1.5 px-2 py-1 h-8.5 sm:h-9 rounded-xl border transition-colors shrink-0 max-w-[130px] sm:max-w-[150px] ${
+                      className={`flex items-center gap-1.5 px-2 py-1 h-8.5 sm:h-9 rounded-xl border transition-colors shrink-0 max-w-[130px] sm:max-w-[150px] cursor-pointer ${
                         isUserMenuOpen
-                          ? 'border-[#EE8D4B] bg-[#F7C59F]/15'
-                          : 'border-slate-200/90 hover:border-slate-300 bg-white hover:bg-slate-50'
+                          ? 'border-emerald-400 bg-emerald-500/20 text-white'
+                          : 'border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 text-slate-100'
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-lg bg-[#EE8D4B]/20 text-[#BA5316] font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/40">
                         {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                       </div>
-                      <span className="truncate font-bold text-xs text-slate-800">
+                      <span className="truncate font-bold text-xs text-slate-100">
                         {currentUser.name.split(' ')[0]}
                       </span>
                       {currentUser.role === 'admin' && (
-                        <span className="hidden xl:inline-flex text-[9px] px-1 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase shrink-0">
+                        <span className="hidden xl:inline-flex text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold uppercase shrink-0">
                           Admin
                         </span>
                       )}
                       <ChevronDown
-                        className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${
+                        className={`w-3 h-3 text-emerald-400 shrink-0 transition-transform ${
                           isUserMenuOpen ? 'rotate-180' : ''
                         }`}
                       />
@@ -480,7 +476,7 @@ export const Header: React.FC<HeaderProps> = ({
                       size="sm"
                       onClick={onOpenAuthModal}
                       title="Se connecter ou créer un compte"
-                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-xs shrink-0 rounded-xl bg-slate-900 hover:bg-slate-800 text-white"
+                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95"
                     >
                       <UserIcon className="w-3.5 h-3.5 shrink-0" />
                       <span>Connexion</span>
@@ -489,17 +485,17 @@ export const Header: React.FC<HeaderProps> = ({
 
                   {/* User Profile Popover */}
                   {isUserMenuOpen && currentUser && (
-                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
                       {/* User Info Header */}
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-[#EE8D4B]/20 text-[#BA5316] font-bold text-sm flex items-center justify-center shrink-0">
+                      <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/30 text-emerald-300 font-bold text-sm flex items-center justify-center shrink-0 border border-emerald-500/40">
                           {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold text-slate-900 truncate">
+                          <span className="text-xs font-bold text-white truncate">
                             {currentUser.name}
                           </span>
-                          <span className="text-[11px] text-slate-500 truncate">
+                          <span className="text-[11px] text-slate-300 truncate">
                             {currentUser.email}
                           </span>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -589,15 +585,15 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => setIsMobileMenuOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="px-2.5 py-1.5 border-b border-slate-100 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
+                      <div className="px-2.5 py-1.5 border-b border-emerald-500/20 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
                           Options & Réglages
                         </span>
                         <button
                           type="button"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="p-1 rounded-md text-slate-400 hover:text-slate-700"
+                          className="p-1 rounded-md text-slate-400 hover:text-white"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -611,14 +607,14 @@ export const Header: React.FC<HeaderProps> = ({
                             onToggleSound();
                             soundManager.playClickSound();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-xs font-semibold text-slate-700"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
                         >
                           <div className="flex items-center gap-2.5">
                             <div
                               className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                                 soundEnabled
-                                  ? 'bg-[#F7C59F]/40 text-[#59240A]'
-                                  : 'bg-slate-100 text-slate-400'
+                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  : 'bg-emerald-950 text-slate-500'
                               }`}
                             >
                               {soundEnabled ? (
@@ -632,8 +628,8 @@ export const Header: React.FC<HeaderProps> = ({
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               soundEnabled
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-slate-100 text-slate-500'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-slate-800 text-slate-400'
                             }`}
                           >
                             {soundEnabled ? 'Activé' : 'Coupé'}
@@ -648,10 +644,10 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onOpenCategoryTagManager();
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#F7C59F]/15 transition-colors text-xs font-semibold text-slate-700"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
+                              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
                                 <FolderPlus className="w-3.5 h-3.5" />
                               </div>
                               <span>Catégories & Tags</span>

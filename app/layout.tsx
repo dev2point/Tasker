@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-plus-jakarta',
+});
 
 export const viewport: Viewport = {
   themeColor: '#F7C59F',
@@ -49,12 +56,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
-      className="h-full bg-slate-50 text-slate-900 antialiased selection:bg-[#F7C59F] selection:text-[#422006] overflow-x-hidden"
+      className={`${plusJakarta.variable} dark h-full bg-[#03140E] text-slate-100 antialiased selection:bg-[#EE8D4B] selection:text-white overflow-x-hidden`}
     >
-      <body suppressHydrationWarning className="min-h-full font-sans antialiased overflow-x-hidden">
+      <body suppressHydrationWarning className="min-h-full font-sans antialiased overflow-x-hidden bg-[#03140E] text-slate-100">
         {children}
       </body>
     </html>
   );
 }
+
 
