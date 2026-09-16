@@ -166,7 +166,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand & Security Header */}
         <div className="text-center mb-6 space-y-2.5">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#F7C59F] to-[#EE8D4B] text-[#422006] shadow-lg shadow-[#F7C59F]/20 font-bold mb-1">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg font-bold mb-1">
             <CalendarIcon className="w-7 h-7 stroke-[2.3]" />
           </div>
           <div className="flex items-center justify-center gap-2">
@@ -183,9 +183,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
         {/* Security Access Card */}
         <div className="bg-[#061A13]/85 backdrop-blur-2xl border border-emerald-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-emerald-950/80 relative overflow-hidden text-slate-100">
-          {/* Glass Inner Reflection Highlight */}
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/10 via-transparent to-black/30 pointer-events-none" />
-          <BorderBeam size={250} duration={10} colorFrom="#10B981" colorTo="#EE8D4B" borderWidth={1.5} />
+          <BorderBeam size={250} duration={10} colorFrom="#10B981" colorTo="#34D399" borderWidth={1.5} />
           {/* Top Tabs Switcher */}
           <div className="flex bg-emerald-950/60 p-1 rounded-2xl border border-emerald-500/20 mb-6 relative z-10">
             <button
@@ -286,7 +284,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 hover:opacity-95 text-slate-950 transition-all shadow-xl shadow-emerald-950/50 gap-2 mt-2 cursor-pointer rounded-xl"
+                className="w-full h-11 font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 transition-all shadow-xl shadow-emerald-950/50 gap-2 mt-2 cursor-pointer rounded-xl"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -382,7 +380,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 hover:opacity-95 text-slate-950 transition-all shadow-xl shadow-emerald-950/50 gap-2 mt-2 cursor-pointer rounded-xl"
+                className="w-full h-11 font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 transition-all shadow-xl shadow-emerald-950/50 gap-2 mt-2 cursor-pointer rounded-xl"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

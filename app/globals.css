@@ -2,18 +2,7 @@
 
 @theme {
   --font-sans: var(--font-plus-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --color-primary: #F7C59F;
-  --color-apricot: #F7C59F;
-  --color-apricot-50: #FDF9F5;
-  --color-apricot-100: #FBF0E6;
-  --color-apricot-200: #F8DFC8;
-  --color-apricot-300: #F7C59F;
-  --color-apricot-400: #F3A975;
-  --color-apricot-500: #EE8D4B;
-  --color-apricot-600: #DD6E26;
-  --color-apricot-700: #B75217;
-  --color-apricot-800: #933F15;
-  --color-apricot-900: #59240A;
+  --color-primary: #10B981;
 }
 
 /* Custom Glassmorphism & Translucent Scrollbar Rules */
@@ -31,8 +20,8 @@
 
   /* Glassmorphism Design System (Elton Hounnou Inspired) */
   .glass-canvas {
-    background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.16) 0%, transparent 45%),
-                radial-gradient(circle at 90% 90%, rgba(238, 141, 75, 0.14) 0%, transparent 50%),
+    background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.20) 0%, transparent 45%),
+                radial-gradient(circle at 90% 90%, rgba(5, 150, 105, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 50% 40%, rgba(5, 46, 35, 0.4) 0%, transparent 75%),
                 #03140E;
   }

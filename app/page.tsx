@@ -640,10 +640,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-[#EE8D4B] selection:text-white pb-24 md:pb-12 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-emerald-500 selection:text-slate-950 pb-24 md:pb-12 overflow-x-hidden">
       {/* Ambient Radial Glass Light Orbs */}
       <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none z-0 animate-pulse duration-[10000ms]" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-amber-500/12 blur-[140px] pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-emerald-600/12 blur-[140px] pointer-events-none z-0" />
       <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-teal-600/10 blur-[100px] pointer-events-none z-0" />
 
       {/* Ambient Dotted Glow Canvas Background */}

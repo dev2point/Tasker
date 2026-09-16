@@ -181,8 +181,8 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {/* Header */}
         <div className="bg-emerald-950/40 border-b border-emerald-500/20 p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-amber-500/20 border border-emerald-500/30 flex items-center justify-center text-amber-300 shadow-md shrink-0">
-              <Bot className="w-5 h-5 text-amber-300" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shadow-md shrink-0">
+              <Bot className="w-5 h-5 text-emerald-300" />
             </div>
             <div>
               <h2 id="ai-assistant-title" className="text-base font-bold tracking-tight text-white">
@@ -195,7 +195,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -204,7 +204,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {/* If User is not logged in, display Authentication Gate */}
         {!currentUser ? (
           <div className="p-6 sm:p-8 flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-5 my-auto">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-950/60 text-amber-400 flex items-center justify-center border border-emerald-500/30 shadow-lg">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-950/60 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shadow-lg">
               <Lock className="w-7 h-7 stroke-[2.2]" />
             </div>
             
@@ -224,7 +224,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   onClose();
                   onOpenAuthModal?.();
                 }}
-                className="w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-xs py-2.5 shadow-lg shadow-emerald-950/50 rounded-xl hover:opacity-95"
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs py-2.5 shadow-md border border-emerald-400/50 rounded-xl cursor-pointer"
               >
                 Se connecter ou créer un compte
               </Button>
@@ -305,7 +305,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 <Button
                   onClick={() => handleParseTask()}
                   disabled={loading || !naturalPrompt.trim()}
-                  className="font-bold gap-2 text-xs bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md shadow-emerald-950/50 rounded-xl"
+                  className="font-bold gap-2 text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md rounded-xl cursor-pointer"
                 >
                   {loading ? (
                     <>

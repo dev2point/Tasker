@@ -843,7 +843,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               type="submit"
               id="save-task-submit-btn"
               size="sm"
-              className="font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-lg shadow-emerald-950/50"
+              className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
             >
               {initialTask ? 'Enregistrer les modifications' : 'Créer la tâche'}
             </Button>

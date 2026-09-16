@@ -93,20 +93,20 @@ export const StatsView: React.FC<StatsViewProps> = ({
     <div className="space-y-5 pb-16 md:pb-6">
       
       {/* Productivity Intelligence Ambient Banner with Dotted Glow Background */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 p-5 sm:p-6 text-white shadow-md border border-slate-700/50">
+      <div className="relative overflow-hidden rounded-2xl bg-[#061A13]/90 backdrop-blur-2xl p-5 sm:p-6 text-white shadow-md border border-emerald-500/30">
         <DottedGlowBackground
           className="pointer-events-none absolute inset-0 opacity-40"
           gap={14}
           radius={1.8}
           color="rgba(255, 255, 255, 0.4)"
-          glowColor="rgba(247, 197, 159, 0.9)"
+          glowColor="rgba(16, 185, 129, 0.9)"
           speedMin={0.4}
           speedMax={1.5}
         />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F7C59F]/20 text-[#F7C59F] border border-[#F7C59F]/30 uppercase tracking-wide">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wide">
                 Tableau de bord & IA
               </span>
               <span className="text-xs text-slate-400 font-medium">Synthèse en temps réel</span>
@@ -124,11 +124,11 @@ export const StatsView: React.FC<StatsViewProps> = ({
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
-              <div className="text-xl font-extrabold text-[#F7C59F]">{completionRate}%</div>
+              <div className="text-xl font-extrabold text-emerald-400">{completionRate}%</div>
               <div className="text-[10px] font-medium text-slate-300">Succès global</div>
             </div>
             <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
-              <div className="text-xl font-extrabold text-amber-300">{todayCompleted} / {todayTasks.length}</div>
+              <div className="text-xl font-extrabold text-emerald-300">{todayCompleted} / {todayTasks.length}</div>
               <div className="text-[10px] font-medium text-slate-300">Aujourd&apos;hui</div>
             </div>
           </div>
@@ -165,7 +165,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               Aujourd&apos;hui
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
               <Clock className="w-4.5 h-4.5" />
             </div>
           </div>
@@ -189,7 +189,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               Rappels Actifs
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
               <Bell className="w-4.5 h-4.5" />
             </div>
           </div>
@@ -202,7 +202,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
             </p>
           </div>
           <div className="h-1.5 bg-emerald-950 rounded-full overflow-hidden border border-emerald-500/20">
-            <div className="h-full bg-amber-400 rounded-full w-full" />
+            <div className="h-full bg-emerald-400 rounded-full w-full" />
           </div>
         </div>
 
@@ -255,7 +255,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
         <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
           <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-amber-400" />
+              <Layers className="w-4 h-4 text-emerald-400" />
               <h3 className="font-bold text-sm text-white">Répartition par Catégorie</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{categories.length} catégories</span>
@@ -298,7 +298,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
         <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
           <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-amber-400" />
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
               <h3 className="font-bold text-sm text-white">Distribution par Priorité</h3>
             </div>
             <span className="text-xs text-slate-400 font-semibold">{totalTasks} tâches au total</span>
@@ -325,7 +325,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
                     <span className="text-slate-300">
                       <strong className="text-white font-bold">{p.completed}</strong> terminées
                     </span>
-                    <span className="text-amber-400 font-mono text-[11px]">{pct}%</span>
+                    <span className="text-emerald-400 font-mono text-[11px]">{pct}%</span>
                   </div>
                 </div>
               );
@@ -338,7 +338,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
       {upcomingRemindersList.length > 0 && (
         <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-3">
           <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-3">
-            <Bell className="w-4 h-4 text-amber-400" />
+            <Bell className="w-4 h-4 text-emerald-400" />
             <h3 className="font-bold text-sm text-white">Prochains Rappels Automatiques</h3>
           </div>
 
@@ -350,7 +350,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
                 className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all cursor-pointer flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-500/30">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-500/30">
                     <Clock className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
@@ -361,7 +361,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
                   </div>
                 </div>
 
-                <Badge variant="amber" className="text-[10px] shrink-0 font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <Badge variant="outline" className="text-[10px] shrink-0 font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {task.reminderMinutesBefore === 0
                     ? 'À l’heure pile'
                     : `${task.reminderMinutesBefore}m avant`}

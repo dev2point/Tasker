@@ -129,7 +129,7 @@ export const ActiveReminderModal: React.FC<ActiveReminderModalProps> = ({
               variant="default"
               size="lg"
               onClick={handleCompleteWithCelebration}
-              className="w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-sm shadow-md gap-2 hover:opacity-95"
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 font-bold text-sm shadow-md gap-2 cursor-pointer transition-colors"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>Marquer comme terminée</span>

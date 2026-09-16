@@ -228,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {isVisuallyCollapsed ? (
           <div className="w-full flex items-center justify-between">
             <div
-              className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-900/50 font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
+              className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
               onClick={toggleCollapse}
               title="Agrandir la barre latérale"
             >
@@ -247,7 +247,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           <div className="flex items-center justify-between w-full min-w-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-900/50 shrink-0 font-bold">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg shrink-0 font-bold">
                 <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
               </div>
               <div className="flex flex-col min-w-0">
@@ -267,7 +267,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={toggleCollapse}
                 title="Verrouiller la barre latérale dépliée"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 transition-all active:scale-95 shrink-0"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span className="whitespace-nowrap">Fixer</span>
@@ -278,7 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={toggleCollapse}
                 title="Réduire la barre latérale"
-                className="p-1.5 rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors shrink-0"
+                className="p-1.5 rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors shrink-0 cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
               </button>
@@ -291,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {!isVisuallyCollapsed && (
         <div className="px-4 py-2.5 bg-emerald-950/30 border-b border-emerald-500/15 flex items-center justify-between text-xs text-emerald-200/80 font-mono whitespace-nowrap animate-in fade-in duration-200">
           <span className="truncate text-slate-300 font-medium">{currentDateStr}</span>
-          <div className="flex items-center gap-1 font-semibold text-[#F7C59F] shrink-0">
+          <div className="flex items-center gap-1 font-semibold text-emerald-400 shrink-0">
             <Clock className="w-3 h-3" />
             <span>{currentTime}</span>
           </div>
@@ -304,7 +304,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Button
             id="open-new-task-btn"
             onClick={onOpenNewTaskModal}
-            className="w-full bg-gradient-to-r from-[#EE8D4B] to-[#DD6E26] hover:from-[#F3A975] hover:to-[#EE8D4B] text-white font-bold shadow-lg shadow-orange-950/50 h-10 rounded-xl flex items-center justify-center gap-2 border border-white/20 transition-all active:scale-[0.98] whitespace-nowrap animate-in fade-in duration-200"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-md h-10 rounded-xl flex items-center justify-center gap-2 border border-emerald-400/50 transition-all active:scale-[0.98] whitespace-nowrap animate-in fade-in duration-200 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nouvelle tâche</span>
@@ -315,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onOpenNewTaskModal}
             title="Nouvelle tâche"
             size="icon"
-            className="w-full h-10 bg-gradient-to-r from-[#EE8D4B] to-[#DD6E26] hover:from-[#F3A975] hover:to-[#EE8D4B] text-white rounded-xl shadow-lg shadow-orange-950/50 flex items-center justify-center border border-white/20 transition-all active:scale-[0.98]"
+            className="w-full h-10 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl shadow-md flex items-center justify-center border border-emerald-400/50 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
           </Button>

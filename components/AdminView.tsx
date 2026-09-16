@@ -340,7 +340,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       <div className="bg-[#061A13]/85 backdrop-blur-2xl rounded-2xl border border-emerald-500/30 p-5 sm:p-6 shadow-2xl relative overflow-hidden text-slate-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-md">
               <Shield className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div>
@@ -352,7 +352,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   Espace Sécurisé
                 </Badge>
-                <Badge variant="apricot" className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold py-0.5">
+                <Badge variant="outline" className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold py-0.5">
                   {currentUser.name} (Admin)
                 </Badge>
               </div>
@@ -369,7 +369,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               size="sm"
               onClick={fetchDbStatus}
               disabled={dbStatus.loading}
-              className="gap-1.5 text-xs font-semibold border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 text-slate-200"
+              className="gap-1.5 text-xs font-semibold border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 text-slate-200 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${dbStatus.loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Vérifier connexion</span>
@@ -378,7 +378,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <Button
               size="sm"
               onClick={() => setShowAddUserModal(true)}
-              className="gap-1.5 text-xs font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md"
+              className="gap-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Nouveau membre</span>
@@ -469,11 +469,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveSection('overview')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeSection === 'overview'
-              ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 shadow-md'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
               : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
           }`}
         >
-          <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
+          <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
           <span>Vue d’ensemble</span>
         </button>
 
@@ -482,11 +482,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveSection('users')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeSection === 'users'
-              ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 shadow-md'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
               : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
           }`}
         >
-          <Users className="w-3.5 h-3.5 text-amber-400" />
+          <Users className="w-3.5 h-3.5 text-emerald-400" />
           <span>Gestion des Utilisateurs ({teamUsers.length})</span>
         </button>
 
@@ -495,11 +495,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveSection('security')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeSection === 'security'
-              ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 shadow-md'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
               : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
           }`}
         >
-          <Shield className="w-3.5 h-3.5 text-amber-400" />
+          <Shield className="w-3.5 h-3.5 text-emerald-400" />
           <span>Matrice des Droits (RBAC)</span>
         </button>
 
@@ -508,11 +508,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveSection('database')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeSection === 'database'
-              ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 shadow-md'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
               : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
           }`}
         >
-          <Database className="w-3.5 h-3.5 text-amber-400" />
+          <Database className="w-3.5 h-3.5 text-emerald-400" />
           <span>Base de données & Synchronisation</span>
         </button>
       </div>
@@ -789,7 +789,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <Button
                 size="sm"
                 onClick={() => setShowAddUserModal(true)}
-                className="gap-1.5 text-xs font-bold shrink-0 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95"
+                className="gap-1.5 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Ajouter</span>
@@ -1129,7 +1129,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <Button
                 onClick={handleSyncTasks}
                 disabled={isSyncing}
-                className="gap-2 text-xs font-bold shrink-0 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95"
+                className="gap-2 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>Lancer la synchronisation</span>
@@ -1250,7 +1250,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 >
                   Annuler
                 </Button>
-                <Button type="submit" size="sm" disabled={isSubmittingUser} className="font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95">
+                <Button type="submit" size="sm" disabled={isSubmittingUser} className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer">
                   {isSubmittingUser ? 'Création...' : 'Créer le membre'}
                 </Button>
               </div>

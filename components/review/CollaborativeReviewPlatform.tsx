@@ -202,10 +202,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col gap-1.5 max-w-2xl">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-amber-500 text-slate-950 shadow-md">
+              <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
                 <GitPullRequest className="w-5 h-5 stroke-[2.2]" />
               </span>
-              <span className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold">
+              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">
                 Plateforme Collaborative &amp; Circuit de Revue Métier
               </span>
             </div>
@@ -213,7 +213,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
               Revue Maker-Checker, Diff &amp; Traçabilité Interdépartements
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Décloisonnez et sécurisez le travail entre <strong className="text-amber-300">Fiscalité</strong>,{' '}
+              Décloisonnez et sécurisez le travail entre <strong className="text-emerald-300">Fiscalité</strong>,{' '}
               <strong className="text-emerald-300">Comptabilité</strong> et <strong className="text-blue-300">Juridique</strong>. Validation hiérarchique
               stricte, comparateur de versions et journal d&apos;audit légal immuable pour conformité
               zéro défaut.
@@ -224,7 +224,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
             <Button
               type="button"
               onClick={() => setIsNewModalOpen(true)}
-              className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-xs gap-1.5 shadow-md hover:opacity-95 transition-all"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer transition-all"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               Nouveau Dossier Métier
@@ -304,10 +304,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           <span className="text-[10px] text-emerald-400 mt-0.5">Conformité certifiée</span>
         </div>
 
-        <div className="col-span-2 sm:col-span-1 p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-amber-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-amber-300 text-xs font-semibold">Passerelles Bloquantes</span>
-          <span className="text-xl font-black text-amber-200 mt-1">{stats.blockedRequests}</span>
-          <span className="text-[10px] text-amber-400 mt-0.5">Pièces en attente</span>
+        <div className="col-span-2 sm:col-span-1 p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-emerald-500/30 shadow-xl flex flex-col text-slate-100">
+          <span className="text-emerald-300 text-xs font-semibold">Passerelles Bloquantes</span>
+          <span className="text-xl font-black text-emerald-200 mt-1">{stats.blockedRequests}</span>
+          <span className="text-[10px] text-emerald-400 mt-0.5">Pièces en attente</span>
         </div>
       </div>
 
@@ -318,11 +318,11 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           onClick={() => setSelectedDept('Tous')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             selectedDept === 'Tous'
-              ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 shadow-md'
+              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md font-bold'
               : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
           }`}
         >
-          <Building2 className="w-4 h-4 text-amber-400" />
+          <Building2 className="w-4 h-4 text-emerald-400" />
           Tous les Pôles ({dossiers.length})
         </button>
 
@@ -331,11 +331,11 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           onClick={() => setSelectedDept('Fiscalité')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             selectedDept === 'Fiscalité'
-              ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-md'
-              : 'text-slate-300 hover:text-amber-300 hover:bg-amber-500/10'
+              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md font-bold'
+              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
           }`}
         >
-          <Calculator className="w-4 h-4 text-amber-400" />
+          <Calculator className="w-4 h-4 text-emerald-400" />
           Fiscalité ({deptCounts['Fiscalité']})
         </button>
 
@@ -398,7 +398,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
               onClick={() => setSelectedStatus(st)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                 selectedStatus === st
-                  ? 'bg-gradient-to-r from-emerald-500/30 to-amber-500/20 text-white border border-emerald-500/40 font-bold shadow-xs'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-xs'
                   : 'bg-emerald-950/40 text-slate-300 hover:bg-emerald-500/20 hover:text-white'
               }`}
             >
@@ -424,7 +424,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredDossiers.length === 0 ? (
           <div className="col-span-full p-12 text-center bg-[#061A13]/85 backdrop-blur-2xl rounded-2xl border border-dashed border-emerald-500/30 text-slate-300 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-amber-500 text-slate-950 flex items-center justify-center mx-auto mb-3 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center mx-auto mb-3 shadow-md">
               <GitPullRequest className="w-6 h-6 stroke-[2.2]" />
             </div>
             <h4 className="text-sm font-bold text-white">
@@ -442,7 +442,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                 <Button
                   type="button"
                   onClick={() => setIsNewModalOpen(true)}
-                  className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-bold text-xs gap-1.5 shadow-md hover:opacity-95"
+                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                   Créer un premier dossier

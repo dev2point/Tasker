@@ -397,7 +397,7 @@ export const ListView: React.FC<ListViewProps> = ({
             id="quick-add-submit-btn"
             size="xs"
             disabled={!quickTitle.trim()}
-            className="shrink-0 font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md shadow-emerald-950/40"
+            className="shrink-0 font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
           >
             Ajouter
           </Button>
@@ -441,9 +441,9 @@ export const ListView: React.FC<ListViewProps> = ({
             <button
               type="button"
               onClick={() => onOpenTaskModal()}
-              className="text-[11px] font-semibold text-amber-300 hover:text-amber-200 ml-auto flex items-center gap-1"
+              className="text-[11px] font-semibold text-emerald-300 hover:text-emerald-200 ml-auto flex items-center gap-1 cursor-pointer"
             >
-              <SlidersHorizontal className="w-3 h-3 text-amber-400" />
+              <SlidersHorizontal className="w-3 h-3 text-emerald-400" />
               <span>Options avancées</span>
             </button>
           </div>
@@ -501,10 +501,10 @@ export const ListView: React.FC<ListViewProps> = ({
               variant="outline"
               size="xs"
               onClick={() => onOpenCategoryTagManager('categories')}
-              className="text-xs font-bold gap-1 shrink-0 text-amber-200 hover:text-white hover:bg-amber-500/20 border-amber-500/30"
+              className="text-xs font-bold gap-1 shrink-0 text-emerald-300 hover:text-white hover:bg-emerald-500/20 border-emerald-500/30 cursor-pointer"
               title="Gérer les catégories et étiquettes"
             >
-              <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
+              <FolderPlus className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Gérer Catégories</span>
             </Button>
           )}
@@ -861,8 +861,8 @@ export const ListView: React.FC<ListViewProps> = ({
 
                               {/* Automated Reminder indicator */}
                               {task.reminderMinutesBefore >= 0 && !task.completed && (
-                                <span className="flex items-center gap-1 text-amber-700 font-semibold text-[11px] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                                  <Bell className="w-3 h-3 text-amber-500" />
+                                <span className="flex items-center gap-1 text-emerald-300 font-semibold text-[11px] bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                                  <Bell className="w-3 h-3 text-emerald-400" />
                                   {task.reminderMinutesBefore === 0
                                     ? 'À l’heure'
                                     : `${task.reminderMinutesBefore}m avant`}
@@ -871,8 +871,8 @@ export const ListView: React.FC<ListViewProps> = ({
 
                               {/* Assignee pill */}
                               {task.assigneeName && (
-                                <span className="flex items-center gap-1 text-[#7c2d12] font-semibold text-[11px] bg-[#F7C59F]/30 px-2 py-0.5 rounded-md border border-[#F7C59F]/60">
-                                  <span className="w-3.5 h-3.5 rounded-full bg-[#EE8D4B] text-white flex items-center justify-center text-[9px] font-bold">
+                                <span className="flex items-center gap-1 text-emerald-200 font-semibold text-[11px] bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[9px] font-bold">
                                     {task.assigneeName.charAt(0)}
                                   </span>
                                   <span>{task.assigneeName.split(' ')[0]}</span>

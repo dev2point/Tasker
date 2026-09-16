@@ -332,7 +332,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-black shrink-0 transition-colors ${
                         isCurrent
-                          ? 'bg-gradient-to-r from-emerald-400 to-amber-400 text-slate-950 ring-4 ring-emerald-500/40'
+                          ? 'bg-emerald-400 text-slate-950 ring-4 ring-emerald-500/40 font-bold'
                           : isPast
                             ? 'bg-emerald-500 text-slate-950'
                             : 'bg-emerald-950 border border-emerald-500/30 text-slate-400'
@@ -432,7 +432,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
                 <div className="p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 shadow-md">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Edit3 className="w-4 h-4 text-amber-400" />
+                      <Edit3 className="w-4 h-4 text-emerald-400" />
                       Édition directe des amendements par le Superviseur
                     </span>
                     {!isEditingContent ? (
@@ -440,7 +440,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
                         type="button"
                         size="sm"
                         onClick={() => setIsEditingContent(true)}
-                        className="h-7 text-xs font-bold bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950"
+                        className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
                       >
                         Activer le mode modification
                       </Button>
@@ -454,7 +454,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
                             setDraftContent(dossier.textDocument.currentContent);
                             setIsEditingContent(false);
                           }}
-                          className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300"
+                          className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300 cursor-pointer"
                         >
                           Annuler
                         </Button>
@@ -462,7 +462,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
                           type="button"
                           size="sm"
                           onClick={handleSaveDraftAmendments}
-                          className="h-7 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950"
+                          className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
                         >
                           Consigner les amendements
                         </Button>
@@ -541,7 +541,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
               <Button
                 type="button"
                 onClick={() => handleTransition('soumis')}
-                className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 font-black text-xs gap-1.5 shadow-md hover:opacity-95"
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
                 Soumettre au Superviseur N+1

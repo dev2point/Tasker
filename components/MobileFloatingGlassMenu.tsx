@@ -133,7 +133,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     handleNewTask();
                   }}
                   title="Ajouter une nouvelle tâche"
-                  className="mr-2 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-xs active:scale-90 transition-transform"
+                  className="mr-2 w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shrink-0 shadow-xs border border-emerald-400/50 active:scale-90 transition-transform cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[2.8]" />
                 </button>
@@ -144,7 +144,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 type="button"
                 onClick={() => handleSelectView('review')}
                 whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 cursor-pointer ${
                   currentView === 'review'
                     ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-emerald-500/30'
                     : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
@@ -152,8 +152,8 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'review'
-                    ? 'bg-slate-950 text-amber-400'
-                    : 'bg-amber-500/20 text-amber-300 shadow-xs'
+                    ? 'bg-slate-950 text-emerald-400'
+                    : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <GitPullRequest className="w-4 h-4 stroke-[2.3]" />
                 </div>
@@ -257,7 +257,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
           className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto shadow-2xl shadow-emerald-950/60 backdrop-blur-2xl border border-emerald-500/40 bg-[#061A13]/90 text-emerald-300 hover:text-white hover:bg-[#0A291E]"
         >
           {/* Glass Inner Reflection Highlight */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-emerald-400/20 via-transparent to-black/30 pointer-events-none" />
+          <div className="absolute inset-0 rounded-full bg-emerald-400/10 pointer-events-none" />
 
           {/* Animated Icon (4-dots Matrix <-> Close Cross) */}
           <AnimatePresence mode="wait">

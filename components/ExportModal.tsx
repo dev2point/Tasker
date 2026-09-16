@@ -147,7 +147,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 <Calendar className="w-4 h-4 text-amber-300" />
                 <span className="font-bold text-white">Export Google Calendar & Apple</span>
               </div>
-              <Badge variant="apricot" className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <Badge variant="outline" className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 .ICS
               </Badge>
             </div>
@@ -157,7 +157,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <Button
               onClick={handleExportICal}
               size="sm"
-              className="w-full font-bold gap-2 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 shadow-md"
+              className="w-full font-bold gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Télécharger le fichier .ics</span>

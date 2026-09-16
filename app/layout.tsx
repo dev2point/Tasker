@@ -9,7 +9,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#F7C59F',
+  themeColor: '#10B981',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
-      className={`${plusJakarta.variable} dark h-full bg-[#03140E] text-slate-100 antialiased selection:bg-[#EE8D4B] selection:text-white overflow-x-hidden`}
+      className={`${plusJakarta.variable} dark h-full bg-[#03140E] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden`}
     >
       <body suppressHydrationWarning className="min-h-full font-sans antialiased overflow-x-hidden bg-[#03140E] text-slate-100">
         {children}

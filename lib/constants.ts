@@ -32,8 +32,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: 'finance',
     name: 'Finance & Admin',
-    color: '#f59e0b', // amber-500
-    bgLight: 'bg-amber-50 text-amber-700 border-amber-200',
+    color: '#14b8a6', // teal-500
+    bgLight: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
     iconName: 'CreditCard',
   },
   {
@@ -68,10 +68,10 @@ export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; b
   },
   high: {
     label: 'Élevée',
-    color: '#f97316',
-    badge: 'bg-orange-100 text-orange-700 border-orange-200',
-    border: 'border-l-orange-500',
-    dot: 'bg-orange-500',
+    color: '#10b981',
+    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    border: 'border-l-emerald-500',
+    dot: 'bg-emerald-500',
   },
   medium: {
     label: 'Moyenne',

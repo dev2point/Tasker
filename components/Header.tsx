@@ -149,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
       id: 'review' as ViewMode,
       label: 'Revue Métier',
       shortLabel: 'Revue',
-      icon: <GitPullRequest className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-[#EE8D4B]" />,
+      icon: <GitPullRequest className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-emerald-400" />,
     },
     {
       id: 'stats',
@@ -180,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
           gap={12}
           radius={1.2}
           color="rgba(16, 185, 129, 0.4)"
-          glowColor="rgba(238, 141, 75, 0.9)"
+          glowColor="rgba(16, 185, 129, 0.9)"
           speedMin={0.4}
           speedMax={1.4}
         />
@@ -189,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* 1. Brand Logo & Compact Live Clock */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#10B981] via-[#059669] to-[#EE8D4B] flex items-center justify-center text-white shadow-lg shadow-emerald-950/50 shrink-0 font-bold">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-950/50 shrink-0 font-bold">
                 <CalendarIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.3]" />
               </div>
               <div className="flex items-center gap-2 min-w-0">
@@ -201,14 +201,14 @@ export const Header: React.FC<HeaderProps> = ({
                   title={currentDateStr}
                   className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-mono text-emerald-200 font-semibold shrink-0"
                 >
-                  <Clock className="w-3 h-3 text-[#F7C59F] shrink-0" />
+                  <Clock className="w-3 h-3 text-emerald-400 shrink-0" />
                   <span>{currentTime}</span>
                 </div>
               </div>
             </div>
 
             {/* 2. Desktop Primary Navigation Segment (Ergonomic, auto-fitting) */}
-            <nav className="hidden md:flex items-center bg-slate-100/80 p-0.5 lg:p-1 rounded-xl border border-slate-200/80 shadow-2xs shrink-0">
+            <nav className="hidden md:flex items-center bg-emerald-950/60 p-0.5 lg:p-1 rounded-xl border border-emerald-500/20 shadow-xs shrink-0">
               {navItems.map((item) => {
                 const active = currentView === item.id;
                 return (
@@ -220,14 +220,14 @@ export const Header: React.FC<HeaderProps> = ({
                       soundManager.playClickSound();
                       onViewChange(item.id);
                     }}
-                    className={`flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1 lg:py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1 lg:py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap cursor-pointer ${
                       active
                         ? item.special
-                          ? 'bg-white text-purple-900 shadow-xs border border-purple-200 font-bold'
-                          : 'bg-white text-[#933F15] shadow-xs border border-[#F7C59F]/60 font-bold'
+                          ? 'bg-purple-500/20 text-purple-300 shadow-xs border border-purple-500/30 font-bold'
+                          : 'bg-emerald-500/20 text-emerald-300 shadow-xs border border-emerald-500/40 font-bold'
                         : item.special
-                          ? 'text-purple-700 hover:text-purple-900 hover:bg-purple-100/60'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                          ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10'
+                          : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
                     }`}
                   >
                     {item.icon}
@@ -236,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {item.badge !== undefined && (
                       <span
                         className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                          active ? 'bg-[#F7C59F] text-[#422006]' : 'bg-slate-200 text-slate-700'
+                          active ? 'bg-emerald-500/30 text-emerald-200' : 'bg-emerald-950 text-slate-300'
                         }`}
                       >
                         {item.badge}
@@ -258,7 +258,7 @@ export const Header: React.FC<HeaderProps> = ({
                   size="icon-sm"
                   onClick={onOpenNotifications}
                   title="Centre de rappels & alertes"
-                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-emerald-200 border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:text-white shrink-0 overflow-visible rounded-xl transition-colors"
+                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-emerald-200 border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:text-white shrink-0 overflow-visible rounded-xl transition-colors cursor-pointer"
                 >
                   <Bell className="w-4 h-4 text-emerald-300" />
                 </Button>
@@ -287,9 +287,9 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'Assistant IA Gemini (Création intelligente & planificateur)'
                     : 'Assistant IA (Connexion requise pour utiliser Gemini)'
                 }
-                className="relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 shadow-lg shadow-amber-950/20"
+                className="relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl border-emerald-500/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 shadow-md backdrop-blur-md cursor-pointer"
               >
-                <Bot className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <Bot className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                 <span className="hidden xl:inline">Assistant IA</span>
                 <span className="inline xl:hidden font-bold">IA</span>
                 {!currentUser && (
@@ -297,7 +297,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </Button>
 
-              {/* Universal Desktop Tools Popover (Permanent on all desktop viewports: md, lg, xl) */}
+              {/* Universal Desktop Tools Popover */}
               <div ref={desktopToolsRef} className="relative hidden md:block">
                 <Button
                   id="desktop-more-tools-btn"
@@ -305,13 +305,13 @@ export const Header: React.FC<HeaderProps> = ({
                   size="sm"
                   onClick={() => setIsDesktopToolsOpen((prev) => !prev)}
                   title="Outils, sons & export"
-                  className={`h-8.5 sm:h-9 px-2 sm:px-2.5 text-xs font-semibold gap-1 rounded-xl transition-all ${
+                  className={`h-8.5 sm:h-9 px-2 sm:px-2.5 text-xs font-semibold gap-1 rounded-xl transition-all cursor-pointer ${
                     isDesktopToolsOpen
-                      ? 'border-[#F7C59F] bg-[#F7C59F]/20 text-[#59240A]'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'border-emerald-400 bg-emerald-500/20 text-white'
+                      : 'border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20 hover:text-white'
                   }`}
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-300" />
                   <span className="hidden xl:inline">Outils</span>
                   <ChevronDown
                     className={`w-3 h-3 text-slate-400 transition-transform ${
@@ -368,9 +368,9 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onOpenCategoryTagManager();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-[#F7C59F]/15 transition-colors font-semibold text-slate-700"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                         >
-                          <div className="w-6 h-6 rounded-lg bg-[#F7C59F]/30 text-[#BA5316] flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
                             <FolderPlus className="w-3.5 h-3.5" />
                           </div>
                           <span>Catégories & Tags</span>
@@ -385,9 +385,9 @@ export const Header: React.FC<HeaderProps> = ({
                           setIsDesktopToolsOpen(false);
                           onOpenExportModal();
                         }}
-                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors font-semibold text-slate-700"
+                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                       >
-                        <div className="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
                           <Download className="w-3.5 h-3.5" />
                         </div>
                         <span>Exporter l&apos;agenda (.ics)</span>
@@ -459,7 +459,7 @@ export const Header: React.FC<HeaderProps> = ({
                         {currentUser.name.split(' ')[0]}
                       </span>
                       {currentUser.role === 'admin' && (
-                        <span className="hidden xl:inline-flex text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold uppercase shrink-0">
+                        <span className="hidden xl:inline-flex text-[9px] px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold uppercase shrink-0">
                           Admin
                         </span>
                       )}
@@ -476,7 +476,7 @@ export const Header: React.FC<HeaderProps> = ({
                       size="sm"
                       onClick={onOpenAuthModal}
                       title="Se connecter ou créer un compte"
-                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95"
+                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer transition-colors"
                     >
                       <UserIcon className="w-3.5 h-3.5 shrink-0" />
                       <span>Connexion</span>
@@ -553,7 +553,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="open-new-task-btn"
                 size="sm"
                 onClick={onOpenNewTaskModal}
-                className="hidden md:inline-flex bg-[#EE8D4B] hover:bg-[#BA5316] text-white font-bold shadow-xs h-8.5 sm:h-9 shrink-0 gap-1.5 px-2.5 lg:px-3 rounded-xl transition-colors"
+                className="hidden md:inline-flex bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40 backdrop-blur-md shadow-md h-8.5 sm:h-9 shrink-0 gap-1.5 px-2.5 lg:px-3 rounded-xl transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span className="hidden xl:inline">Nouvelle tâche</span>
@@ -570,11 +570,11 @@ export const Header: React.FC<HeaderProps> = ({
                   title="Options & Paramètres"
                   className={`h-8.5 w-8.5 rounded-xl transition-colors ${
                     isMobileMenuOpen
-                      ? 'border-[#F7C59F] bg-[#F7C59F]/20 text-[#59240A]'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'border-emerald-400 bg-emerald-500/20 text-white'
+                      : 'border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20 hover:text-white'
                   }`}
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-300" />
                 </Button>
 
                 {/* Mobile Dropdown Popover */}
@@ -644,10 +644,10 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onOpenCategoryTagManager();
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
                                 <FolderPlus className="w-3.5 h-3.5" />
                               </div>
                               <span>Catégories & Tags</span>

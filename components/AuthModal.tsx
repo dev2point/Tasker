@@ -206,13 +206,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 w-full max-w-md overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 relative text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glass Inner Reflection Highlight */}
-        <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/10 via-transparent to-black/30 pointer-events-none z-10" />
-        <BorderBeam size={220} duration={10} colorFrom="#10B981" colorTo="#EE8D4B" borderWidth={1.5} />
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-emerald-500/20 bg-emerald-950/40">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-amber-500 flex items-center justify-center text-slate-950 shadow-md font-bold">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-md font-bold">
               <KeyRound className="w-4.5 h-4.5 stroke-[2.3]" />
             </div>
             <div>
@@ -259,7 +256,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="space-y-4">
               <div className="p-4 bg-emerald-950/40 rounded-2xl border border-emerald-500/30 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500/30 to-amber-500/30 text-amber-300 flex items-center justify-center font-bold text-lg border border-emerald-500/40 shadow-inner">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-lg border border-emerald-500/40 shadow-inner">
                     {currentUser.name
                       ? currentUser.name
                           .split(' ')
@@ -423,7 +420,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="submit-signin-btn"
                     type="submit"
                     disabled={isLoading}
-                    className="w-full mt-2 font-bold py-2.5 rounded-xl shadow-md bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 text-xs sm:text-sm"
+                    className="w-full mt-2 font-bold py-2.5 rounded-xl shadow-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer text-xs sm:text-sm"
                   >
                     {isLoading ? 'Connexion en cours...' : 'Se connecter'}
                   </Button>
@@ -529,7 +526,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="submit-signup-btn"
                     type="submit"
                     disabled={isLoading}
-                    className="w-full mt-3 font-bold py-2.5 rounded-xl shadow-md bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 text-xs sm:text-sm"
+                    className="w-full mt-3 font-bold py-2.5 rounded-xl shadow-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer text-xs sm:text-sm"
                   >
                     {isLoading ? 'Création en cours...' : 'Créer mon compte'}
                   </Button>

@@ -77,7 +77,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
   const getDeptColor = (dept: Department) => {
     switch (dept) {
       case 'Fiscalité':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
       case 'Comptabilité':
         return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
       case 'Juridique':
@@ -90,7 +90,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
       {/* Header Info Banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-emerald-950/80 border border-emerald-500/30 text-white rounded-xl shadow-md">
         <div className="flex items-center gap-2.5">
-          <ArrowRightLeft className="w-5 h-5 text-amber-400 shrink-0" />
+          <ArrowRightLeft className="w-5 h-5 text-emerald-400 shrink-0" />
           <div>
             <h4 className="text-sm font-bold">Passerelles Interdépartements &amp; Pièces Requises</h4>
             <p className="text-xs text-slate-300">
@@ -104,7 +104,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
             type="button"
             size="sm"
             onClick={() => setIsCreating(true)}
-            className="h-8 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 text-slate-950 hover:opacity-95 font-bold text-xs gap-1.5 cursor-pointer shadow-md"
+            className="h-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 font-bold text-xs gap-1.5 cursor-pointer shadow-md"
           >
             <Plus className="w-3.5 h-3.5" />
             Demander une Pièce / Avis
@@ -120,7 +120,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
         >
           <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
             <span className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Send className="w-3.5 h-3.5 text-amber-400" />
+              <Send className="w-3.5 h-3.5 text-emerald-400" />
               Nouvelle Passerelle Inter-Pôle pour le dossier {dossierRef}
             </span>
             <Button
@@ -224,7 +224,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
             <Button
               type="submit"
               size="sm"
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1 cursor-pointer"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 font-bold text-xs gap-1 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               Transmettre la demande
