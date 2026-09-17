@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { User, UserRole } from '@/types/user';
 import { Task, Category } from '@/types/task';
 import { soundManager } from '@/lib/sound';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
 interface AdminViewProps {
   currentUser: User | null;
@@ -39,9 +40,12 @@ interface AdminViewProps {
   onTasksSynced?: (tasks: Task[]) => void;
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
+  onSaveCategory?: (category: Category) => void;
+  onDeleteCategory?: (categoryId: string, fallbackCategoryId?: string) => void;
+  onResetDefaultCategories?: () => void;
 }
 
-type AdminSection = 'overview' | 'users' | 'tasks' | 'database' | 'security';
+type AdminSection = 'overview' | 'users' | 'tasks' | 'database' | 'security' | 'categories';
 
 export const AdminView: React.FC<AdminViewProps> = ({
   currentUser,
@@ -53,6 +57,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onTasksSynced,
   onOpenAuthModal,
   onOpenCategoryTagManager,
+  onSaveCategory,
+  onDeleteCategory,
+  onResetDefaultCategories,
 }) => {
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -513,7 +520,20 @@ export const AdminView: React.FC<AdminViewProps> = ({
           }`}
         >
           <Database className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Base de données & Synchronisation</span>
+          <span>Base de données &amp; Synchronisation</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('categories')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'categories'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
+              : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
+          }`}
+        >
+          <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Catégories du Cabinet ({categories.length})</span>
         </button>
       </div>
 
@@ -1156,6 +1176,118 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   <div className="text-[11px] text-slate-400 mt-1">Classification, couleurs, icônes</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 5: CABINET CATEGORIES */}
+      {activeSection === 'categories' && (
+        <div className="space-y-6">
+          <div className="bg-[#061A13]/85 backdrop-blur-2xl rounded-2xl border border-emerald-500/30 p-5 shadow-xl space-y-4 text-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-emerald-500/20">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-md">
+                  <FolderOpen className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Catégories Métiers &amp; Pôles du Cabinet</h3>
+                  <p className="text-xs text-slate-400">
+                    4 départements principaux : <span className="text-emerald-300 font-semibold">Fiscalité</span>, <span className="text-emerald-300 font-semibold">Comptabilité</span>, <span className="text-emerald-300 font-semibold">Juridique</span> et <span className="text-emerald-300 font-semibold">Recherche &amp; Innovation</span>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {onResetDefaultCategories && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm('Voulez-vous réinitialiser les catégories par défaut du cabinet ?')) {
+                        onResetDefaultCategories();
+                        soundManager.playClickSound();
+                      }
+                    }}
+                    className="text-xs text-slate-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/30 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1 text-emerald-400" />
+                    Réinitialiser les 4 Pôles
+                  </Button>
+                )}
+
+                {onOpenCategoryTagManager && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={onOpenCategoryTagManager}
+                    className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 mr-1 stroke-[2.5]" />
+                    Gérer les Catégories &amp; Tags
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div className="text-xs text-slate-300">
+                <strong className="text-white">Synchronisation Database Active :</strong> Toute modification effectuée par l’administrateur est enregistrée immédiatement dans la base de données PostgreSQL &amp; IndexedDB et s’applique instantanément à tous les utilisateurs.
+              </div>
+            </div>
+
+            {/* Grid of Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+              {categories.map((cat) => {
+                const taskCount = tasks.filter((t) => t.category === cat.id).length;
+                return (
+                  <div
+                    key={cat.id}
+                    className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:border-emerald-500/50 transition-all flex items-center justify-between gap-3 shadow-md"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border"
+                        style={{
+                          backgroundColor: `${cat.color}20`,
+                          borderColor: `${cat.color}50`,
+                          color: cat.color,
+                        }}
+                      >
+                        <CategoryIcon name={cat.iconName} className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-white truncate flex items-center gap-1.5">
+                          <span>{cat.name}</span>
+                          {cat.isDefault && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                              Pôle Standard
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {taskCount} {taskCount > 1 ? 'dossiers / tâches associés' : 'dossier / tâche associé'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {onOpenCategoryTagManager && (
+                        <button
+                          type="button"
+                          onClick={onOpenCategoryTagManager}
+                          title="Modifier la catégorie"
+                          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                        >
+                          <FolderOpen className="w-4 h-4 text-emerald-400" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

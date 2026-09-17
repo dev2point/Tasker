@@ -76,46 +76,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [localCollapsed, setLocalCollapsed] = useState<boolean>(false);
   const isCollapsed = controlledCollapsed !== undefined ? controlledCollapsed : localCollapsed;
 
-  // Hover expansion state for collapsed sidebar ("animation limpide" on hover)
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // The sidebar is visually collapsed only when it is collapsed AND not hovered
-  const isVisuallyCollapsed = isCollapsed && !isHovered;
-
-  const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-    if (isCollapsed) {
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    if (isCollapsed) {
-      // Small graceful buffer (150ms) to ensure smooth user experience
-      hoverTimeoutRef.current = setTimeout(() => {
-        setIsHovered(false);
-      }, 150);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Clean collapse state - Sidebar takes exact layout space without floating overlay
+  const isVisuallyCollapsed = isCollapsed;
 
   const toggleCollapse = () => {
     soundManager.playClickSound();
-    setIsHovered(false);
     if (onToggleCollapse) {
       onToggleCollapse();
     } else {
@@ -213,14 +178,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="main-desktop-sidebar"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/85 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden ${
+      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/90 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden z-30 ${
         isVisuallyCollapsed ? 'w-20 shadow-xl shadow-black/50' : 'w-64 shadow-2xl shadow-emerald-950/40'
-      } ${
-        isCollapsed && isHovered
-          ? 'z-50 shadow-2xl shadow-emerald-950/60 ring-1 ring-emerald-500/40'
-          : 'z-40 shadow-xl'
       }`}
     >
       {/* 1. Header: Brand Logo & Collapse Toggle */}

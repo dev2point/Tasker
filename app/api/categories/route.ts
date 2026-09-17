@@ -29,10 +29,21 @@ export async function GET(req: NextRequest) {
 
   try {
     await ensureDatabaseTables();
-    const rows = await db.select().from(categories);
+    let rows = await db.select().from(categories);
+
+    const legacyIds = ['travail', 'personnel', 'projet', 'sante', 'finance', 'etudes'];
+    const hasLegacy = rows.some((r) => legacyIds.includes(r.id));
+
+    if (hasLegacy) {
+      for (const legId of legacyIds) {
+        await db.update(tasks).set({ category: 'fiscalite' }).where(eq(tasks.category, legId));
+        await db.delete(categories).where(eq(categories.id, legId));
+      }
+      rows = await db.select().from(categories);
+    }
 
     if (rows.length === 0) {
-      // Seed default categories if table is empty
+      // Seed default cabinet categories if table is empty
       for (const cat of DEFAULT_CATEGORIES) {
         await db.insert(categories).values({
           id: cat.id,
@@ -45,10 +56,7 @@ export async function GET(req: NextRequest) {
         }).onConflictDoNothing();
       }
 
-      return NextResponse.json({
-        source: 'postgresql_supabase',
-        categories: DEFAULT_CATEGORIES,
-      });
+      rows = await db.select().from(categories);
     }
 
     const formatted: Category[] = rows.map((r) => ({
@@ -144,7 +152,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
-    const fallbackCategoryId = searchParams.get('fallback') || 'travail';
+    const fallbackCategoryId = searchParams.get('fallback') || 'fiscalite';
 
     if (!id) {
       return NextResponse.json({ error: 'Missing category id' }, { status: 400 });

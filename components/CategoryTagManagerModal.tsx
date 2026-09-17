@@ -75,7 +75,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
 
   // Delete Category Confirmation State
   const [deletingCatId, setDeletingCatId] = useState<string | null>(null);
-  const [fallbackCatId, setFallbackCatId] = useState<string>('travail');
+  const [fallbackCatId, setFallbackCatId] = useState<string>('fiscalite');
 
   // Compute all unique tags and task counts
   const tagStats = useMemo(() => {
@@ -184,7 +184,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
     if (!target) return;
 
     const remaining = categories.filter((c) => c.id !== catId);
-    const fallback = remaining.length > 0 ? remaining[0].id : 'travail';
+    const fallback = remaining.length > 0 ? remaining[0].id : 'fiscalite';
 
     onDeleteCategory(catId, fallback);
     soundManager.playClickSound();

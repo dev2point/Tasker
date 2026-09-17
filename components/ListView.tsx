@@ -73,7 +73,7 @@ export const ListView: React.FC<ListViewProps> = ({
   const [quickTitle, setQuickTitle] = useState('');
   const [quickDate, setQuickDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [quickTime, setQuickTime] = useState('14:00');
-  const [quickCategory, setQuickCategory] = useState(categories[0]?.id || 'travail');
+  const [quickCategory, setQuickCategory] = useState(categories[0]?.id || 'fiscalite');
   const [showAdvancedQuickAdd, setShowAdvancedQuickAdd] = useState(false);
 
   // Compute all available tags across tasks

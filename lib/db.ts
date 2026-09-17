@@ -254,7 +254,9 @@ export async function initIndexedDBStore(): Promise<{
 
     // 2. Check categories
     let categories = await db.getAll('categories');
-    if (categories.length === 0) {
+    const legacyCatIds = new Set(['travail', 'personnel', 'projet', 'sante', 'finance', 'etudes']);
+    const hasLegacy = categories.some((c) => legacyCatIds.has(c.id));
+    if (categories.length === 0 || hasLegacy) {
       categories = DEFAULT_CATEGORIES;
       await dbPutAllCategories(categories);
     }

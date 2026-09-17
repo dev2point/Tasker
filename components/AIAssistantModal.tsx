@@ -111,7 +111,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           dueDate: r.dueDate,
           dueTime: r.dueTime || undefined,
           priority: r.priority || 'medium',
-          category: r.category || 'travail',
+          category: r.category || 'fiscalite',
           reminderMinutesBefore: r.reminderMinutesBefore ?? 15,
           subtasks,
           tags: ['IA'],

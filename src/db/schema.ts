@@ -110,8 +110,8 @@ export const workspaceMembers = pgTable('workspace_members', {
 export const categories = pgTable('categories', {
   id: varchar('id', { length: 64 }).primaryKey(),
   name: varchar('name', { length: 128 }).notNull(),
-  color: varchar('color', { length: 32 }).notNull(),
-  bgLight: varchar('bg_light', { length: 32 }).notNull(),
+  color: varchar('color', { length: 64 }).notNull(),
+  bgLight: text('bg_light').notNull(),
   iconName: varchar('icon_name', { length: 64 }).notNull(),
   workspaceId: varchar('workspace_id', { length: 64 }).references(() => workspaces.id, {
     onDelete: 'cascade',

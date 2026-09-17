@@ -64,7 +64,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   const [dueTime, setDueTime] = useState(initialTask?.dueTime || '14:00');
   const [hasTime, setHasTime] = useState(Boolean(initialTask?.dueTime || !initialTask));
   const [priority, setPriority] = useState<Priority>(initialTask?.priority || 'medium');
-  const [category, setCategory] = useState(initialTask?.category || (categories[0]?.id || 'travail'));
+  const [category, setCategory] = useState(initialTask?.category || (categories[0]?.id || 'fiscalite'));
   const [assigneeId, setAssigneeId] = useState(initialTask?.assigneeId || '');
   const [reminderMinutesBefore, setReminderMinutesBefore] = useState<number>(
     typeof initialTask?.reminderMinutesBefore === 'number'

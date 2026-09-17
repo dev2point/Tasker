@@ -66,7 +66,7 @@ Extrais et déduis logiquement:
 - dueDate (format YYYY-MM-DD, relatif à aujourd'hui si mentionné "demain", "vendredi", "le 15", etc. Si non spécifié, utilise aujourd'hui ${todayDate})
 - dueTime (format HH:mm en 24h, ex "14:30", ou "" si non spécifié)
 - priority ("urgent", "high", "medium", ou "low")
-- category ("travail", "personnel", "projet", "sante", "finance", "etudes")
+- category ("fiscalite", "comptabilite", "juridique", "innovation", "audit", "gestion")
 - reminderMinutesBefore (nombre de minutes avant: 0, 5, 10, 15, 30, 60, 120, 1440, ou -1 si non souhaité. Si un rappel est suggéré ou implicite, utilise 15 ou 30)
 - subtasks (liste de 2 à 4 sous-tâches concrètes et pertinentes)`,
         config: {
@@ -84,7 +84,7 @@ Extrais et déduis logiquement:
               },
               category: {
                 type: Type.STRING,
-                enum: ['travail', 'personnel', 'projet', 'sante', 'finance', 'etudes'],
+                enum: ['fiscalite', 'comptabilite', 'juridique', 'innovation', 'audit', 'gestion'],
               },
               reminderMinutesBefore: { type: Type.INTEGER },
               subtasks: {

@@ -145,8 +145,8 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       CREATE TABLE IF NOT EXISTS categories (
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(128) NOT NULL,
-        color VARCHAR(32) NOT NULL,
-        bg_light VARCHAR(32) NOT NULL,
+        color VARCHAR(64) NOT NULL,
+        bg_light TEXT NOT NULL,
         icon_name VARCHAR(64) NOT NULL,
         workspace_id VARCHAR(64) REFERENCES workspaces(id) ON DELETE CASCADE,
         is_default BOOLEAN DEFAULT false,
@@ -376,6 +376,13 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
             END
           );
           ALTER TABLE workspace_members ALTER COLUMN role SET DEFAULT 'member'::user_role;
+        END IF;
+
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'categories' AND column_name = 'bg_light'
+        ) THEN
+          ALTER TABLE categories ALTER COLUMN bg_light TYPE TEXT;
         END IF;
       END
       $$;

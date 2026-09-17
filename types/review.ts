@@ -1,4 +1,4 @@
-export type Department = 'Fiscalité' | 'Comptabilité' | 'Juridique';
+export type Department = 'Fiscalité' | 'Comptabilité' | 'Juridique' | 'Recherche & Innovation';
 
 export type ReviewStatus =
   | 'brouillon'

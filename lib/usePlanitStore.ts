@@ -13,7 +13,7 @@ import {
 
 const STORAGE_KEYS = {
   TASKS: 'planit_tasks_v1',
-  CATEGORIES: 'planit_categories_v1',
+  CATEGORIES: 'planit_categories_v2',
   NOTIFICATIONS: 'planit_notifications_v1',
   SOUND_ENABLED: 'planit_sound_enabled_v1',
   VIEW_MODE: 'planit_view_mode_v1',
@@ -164,7 +164,10 @@ export function usePlanitStore() {
 
   const categories = useMemo<Category[]>(() => {
     try {
-      return JSON.parse(categoriesRaw);
+      const parsed: Category[] = JSON.parse(categoriesRaw);
+      const legacyIds = new Set(['travail', 'personnel', 'projet', 'sante', 'finance', 'etudes']);
+      const filtered = parsed.filter((c) => !legacyIds.has(c.id));
+      return filtered.length > 0 ? filtered : DEFAULT_CATEGORIES;
     } catch {
       return DEFAULT_CATEGORIES;
     }
@@ -180,14 +183,13 @@ export function usePlanitStore() {
 
   const soundEnabled = soundEnabledRaw === 'true';
 
-  // Initialize and synchronize with IndexedDB on mount
+  // Initialize and synchronize with IndexedDB and Database API on mount
   useEffect(() => {
     if (!isMounted || isDBInitialized) return;
     isDBInitialized = true;
 
     initIndexedDBStore()
       .then((data) => {
-        // If IndexedDB had existing records, ensure local store is aligned
         if (data.tasks.length > 0) {
           const currentLocal = localStorage.getItem(STORAGE_KEYS.TASKS);
           if (!currentLocal || currentLocal === '[]') {
@@ -196,15 +198,35 @@ export function usePlanitStore() {
           }
         }
         if (data.categories.length > 0) {
+          const legacyIds = new Set(['travail', 'personnel', 'projet', 'sante', 'finance', 'etudes']);
+          const cleanCats = data.categories.filter((c) => !legacyIds.has(c.id));
           const currentLocalCats = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-          if (!currentLocalCats) {
-            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data.categories));
+          if (!currentLocalCats && cleanCats.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(cleanCats));
             notify();
           }
         }
       })
       .catch((err) => {
         console.warn('IndexedDB sync skipped:', err);
+      });
+
+    // Fetch live categories directly from PostgreSQL DB via API route
+    fetch('/api/categories')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.categories) && data.categories.length > 0) {
+          const currentLocalCats = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+          const fetchedStr = JSON.stringify(data.categories);
+          if (currentLocalCats !== fetchedStr) {
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, fetchedStr);
+            notify();
+            dbPutAllCategories(data.categories).catch(console.error);
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Initial categories fetch from DB skipped:', err);
       });
   }, [isMounted]);
 
@@ -260,7 +282,7 @@ export function usePlanitStore() {
 
   // Delete category and reassign orphan tasks
   const deleteCategory = useCallback(
-    (categoryIdToDelete: string, fallbackId: string = 'travail') => {
+    (categoryIdToDelete: string, fallbackId: string = 'fiscalite') => {
       setCategories((prev) => {
         const filtered = prev.filter((c) => c.id !== categoryIdToDelete);
         return filtered.length > 0 ? filtered : DEFAULT_CATEGORIES;

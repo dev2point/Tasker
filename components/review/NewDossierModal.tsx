@@ -34,6 +34,13 @@ const TYPOLOGIES_PER_DEPT: Record<Department, string[]> = {
     'Contrats Commerciaux & CGV',
     'Fusion-Absorption & Apport Partiel d’Actif',
   ],
+  'Recherche & Innovation': [
+    'Dossier de Justification CIR/CII',
+    'Rescrit Fiscal R&D & Éligibilité',
+    'Audit & Sécurisation de Crédit Impôt',
+    'Subventions & Bpifrance Innovation',
+    'Valorisation IP & Brevets',
+  ],
 };
 
 export const NewDossierModal: React.FC<NewDossierModalProps> = ({
@@ -69,7 +76,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
 
     const now = new Date().toISOString();
     const deptPrefix =
-      department === 'Fiscalité' ? 'FIS' : department === 'Comptabilité' ? 'CPT' : 'JUR';
+      department === 'Fiscalité' ? 'FIS' : department === 'Comptabilité' ? 'CPT' : department === 'Juridique' ? 'JUR' : 'RND';
     const randomNum = Math.floor(100 + Math.random() * 900);
     const ref = `DOS-${new Date().getFullYear()}-${deptPrefix}-${randomNum}`;
 
@@ -169,19 +176,15 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
           {/* Department Selector */}
           <div>
             <label className="font-bold text-slate-200 block mb-1.5">Département Référent</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['Fiscalité', 'Comptabilité', 'Juridique'] as Department[]).map((dept) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {(['Fiscalité', 'Comptabilité', 'Juridique', 'Recherche & Innovation'] as Department[]).map((dept) => (
                 <button
                   key={dept}
                   type="button"
                   onClick={() => handleDeptChange(dept)}
-                  className={`py-2 px-3 rounded-xl font-bold border text-center transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl font-bold border text-center text-xs transition-all cursor-pointer ${
                     department === dept
-                      ? dept === 'Fiscalité'
-                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 ring-2 ring-amber-500/40'
-                        : dept === 'Comptabilité'
-                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/40'
-                          : 'bg-blue-500/20 border-blue-500/50 text-blue-300 ring-2 ring-blue-500/40'
+                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/40 shadow-sm'
                       : 'bg-emerald-950/40 border-emerald-500/20 text-slate-400 hover:bg-emerald-500/10 hover:text-white'
                   }`}
                 >

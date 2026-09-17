@@ -353,7 +353,7 @@ export default function HomePage() {
         dueDate: taskPayload.dueDate || new Date().toISOString().split('T')[0],
         dueTime: taskPayload.dueTime,
         priority: taskPayload.priority || 'medium',
-        category: taskPayload.category || 'travail',
+        category: taskPayload.category || 'fiscalite',
         completed: Boolean(taskPayload.completed),
         createdAt: nowIso,
         updatedAt: nowIso,
@@ -449,7 +449,7 @@ export default function HomePage() {
     title: string,
     dueDate: string,
     dueTime?: string,
-    category: string = 'travail'
+    category: string = 'fiscalite'
   ) => {
     const nowIso = new Date().toISOString();
     const newTask: Task = {
@@ -718,7 +718,7 @@ export default function HomePage() {
 
       {/* Main Content Area: dynamically offset by the Left Sidebar on desktop/tablet */}
       <div
-        className={`relative z-10 flex flex-col flex-1 pt-14 md:pt-6 transition-all duration-200 min-w-0 ${
+        className={`relative z-10 flex flex-col flex-1 pt-14 md:pt-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${
           isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
         }`}
       >
@@ -794,6 +794,9 @@ export default function HomePage() {
             }}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
             onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
+            onSaveCategory={saveCategory}
+            onDeleteCategory={deleteCategory}
+            onResetDefaultCategories={resetCategories}
           />
         )}
       </main>

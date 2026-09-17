@@ -37,6 +37,7 @@ import {
   Scale,
   Calculator,
   RefreshCw,
+  Lightbulb,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -160,6 +161,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       Fiscalité: dossiers.filter((d) => d.department === 'Fiscalité').length,
       Comptabilité: dossiers.filter((d) => d.department === 'Comptabilité').length,
       Juridique: dossiers.filter((d) => d.department === 'Juridique').length,
+      'Recherche & Innovation': dossiers.filter((d) => d.department === 'Recherche & Innovation').length,
     };
   }, [dossiers]);
 
@@ -357,12 +359,25 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           onClick={() => setSelectedDept('Juridique')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             selectedDept === 'Juridique'
-              ? 'bg-blue-500/20 text-blue-200 border border-blue-500/40 shadow-md'
-              : 'text-slate-300 hover:text-blue-300 hover:bg-blue-500/10'
+              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md'
+              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
           }`}
         >
-          <Scale className="w-4 h-4 text-blue-400" />
+          <Scale className="w-4 h-4 text-emerald-400" />
           Juridique ({deptCounts['Juridique']})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedDept('Recherche & Innovation')}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            selectedDept === 'Recherche & Innovation'
+              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md'
+              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
+          }`}
+        >
+          <Lightbulb className="w-4 h-4 text-emerald-400" />
+          Recherche &amp; Innovation ({deptCounts['Recherche & Innovation']})
         </button>
       </div>
 

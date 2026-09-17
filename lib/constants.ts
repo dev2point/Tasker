@@ -2,46 +2,52 @@ import { Category, Priority, Task } from '@/types/task';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
-    id: 'travail',
-    name: 'Travail',
-    color: '#3b82f6', // blue-500
-    bgLight: 'bg-blue-50 text-blue-700 border-blue-200',
-    iconName: 'Briefcase',
-  },
-  {
-    id: 'personnel',
-    name: 'Personnel',
+    id: 'fiscalite',
+    name: 'Fiscalité & Déclarations',
     color: '#10b981', // emerald-500
-    bgLight: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    iconName: 'User',
+    bgLight: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    iconName: 'Receipt',
+    isDefault: true,
   },
   {
-    id: 'projet',
-    name: 'Projet',
+    id: 'comptabilite',
+    name: 'Comptabilité & Bilan',
+    color: '#3b82f6', // blue-500
+    bgLight: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    iconName: 'Calculator',
+    isDefault: true,
+  },
+  {
+    id: 'juridique',
+    name: 'Juridique & Droit des Sociétés',
     color: '#8b5cf6', // purple-500
-    bgLight: 'bg-purple-50 text-purple-700 border-purple-200',
-    iconName: 'FolderGit2',
+    bgLight: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    iconName: 'Scale',
+    isDefault: true,
   },
   {
-    id: 'sante',
-    name: 'Santé & Bien-être',
-    color: '#f43f5e', // rose-500
-    bgLight: 'bg-rose-50 text-rose-700 border-rose-200',
-    iconName: 'HeartPulse',
+    id: 'innovation',
+    name: 'Recherche & Innovation (CIR/CII)',
+    color: '#06b6d4', // cyan-500
+    bgLight: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    iconName: 'Lightbulb',
+    isDefault: true,
   },
   {
-    id: 'finance',
-    name: 'Finance & Admin',
+    id: 'audit_contentieux',
+    name: 'Audit & Contentieux Fiscal',
+    color: '#f59e0b', // amber-500
+    bgLight: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    iconName: 'ShieldAlert',
+    isDefault: true,
+  },
+  {
+    id: 'gestion_cabinet',
+    name: 'Gestion Cabinet & Paie',
     color: '#14b8a6', // teal-500
     bgLight: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
-    iconName: 'CreditCard',
-  },
-  {
-    id: 'etudes',
-    name: 'Formation & Lecture',
-    color: '#06b6d4', // cyan-500
-    bgLight: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-    iconName: 'GraduationCap',
+    iconName: 'Building2',
+    isDefault: true,
   },
 ];
 

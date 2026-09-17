@@ -149,7 +149,7 @@ export const InterDepGatewayViewer: React.FC<InterDepGatewayViewerProps> = ({
                 onChange={(e) => setToDepartment(e.target.value as Department)}
                 className="w-full p-2 rounded-lg border border-emerald-500/30 bg-emerald-950/80 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
-                {(['Comptabilité', 'Fiscalité', 'Juridique'] as Department[])
+                {(['Comptabilité', 'Fiscalité', 'Juridique', 'Recherche & Innovation'] as Department[])
                   .filter((d) => d !== currentDepartment)
                   .map((d) => (
                     <option key={d} value={d} className="bg-slate-900 text-white">
