@@ -126,7 +126,7 @@ function sanitizeAuthUrl(rawUrl?: string | null): string {
   } else if (url.startsWith('127.0.0.1:')) {
     url = 'http://' + url;
   } else if (!/^https?:\/\//i.test(url)) {
-    url = (url.includes('.run.app') || url.includes('.vercel.app'))
+    url = (url.includes('.run.app') || url.includes('.vercel.app') || url.includes('.trycloudflare.com'))
       ? `https://${url}`
       : `http://${url}`;
   }
@@ -189,6 +189,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://*.trycloudflare.com',
     'https://*.run.app',
     'https://*.google.com',
     'https://*.aistudio.google.com',

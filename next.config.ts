@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     '*.europe-west2.run.app',
     'localhost:3000',
     '127.0.0.1:3000',
+    'mails-leadership-sending-will.trycloudflare.com',
   ],
   typescript: {
     ignoreBuildErrors: false,
