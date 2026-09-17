@@ -151,14 +151,14 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-8 relative bg-slate-50 text-slate-900 overflow-hidden select-none">
+    <div className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-8 relative bg-[#03140E] text-slate-100 overflow-hidden select-none">
       {/* Dynamic Animated Dotted Ambient Background */}
       <DottedGlowBackground
         className="pointer-events-none absolute inset-0 opacity-60 overflow-hidden"
         gap={16}
         radius={1.5}
-        color="rgba(148, 163, 184, 0.25)"
-        glowColor="rgba(238, 141, 75, 0.4)"
+        color="rgba(16, 185, 129, 0.25)"
+        glowColor="rgba(52, 211, 153, 0.4)"
         speedMin={0.3}
         speedMax={1.2}
       />
@@ -170,13 +170,13 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             <CalendarIcon className="w-7 h-7 stroke-[2.3]" />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">Planit</h1>
-            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-bold py-0.5 gap-1">
+            <h1 className="text-2xl font-black tracking-tight text-white">Planit</h1>
+            <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold py-0.5 gap-1">
               <ShieldCheck className="w-3 h-3" />
               Espace Confidentiel
             </Badge>
           </div>
-          <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
+          <p className="text-xs text-emerald-200/80 max-w-xs mx-auto leading-relaxed">
             Application privée réservée aux membres autorisés. Veuillez vous identifier pour accéder à vos tâches, agendas et données.
           </p>
         </div>
