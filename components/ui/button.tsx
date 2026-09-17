@@ -4,28 +4,28 @@ import { cn } from "@/lib/utils"
 import { BorderBeam } from "@/components/magicui/border-beam"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#F7C59F] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98] relative overflow-hidden",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98] relative overflow-hidden",
   {
     variants: {
       variant: {
         default:
-          "bg-[#F7C59F] text-[#422006] font-bold shadow-xs hover:bg-[#F3A975] hover:shadow-md hover:shadow-[#F7C59F]/30 active:bg-[#EE8D4B]",
+          "bg-emerald-500 text-white font-bold shadow-md hover:bg-emerald-400 hover:shadow-emerald-500/20 border border-emerald-400/50 active:bg-emerald-600",
         destructive:
-          "bg-rose-600 text-white shadow-sm hover:bg-rose-700 hover:shadow-md hover:shadow-rose-500/20 active:bg-rose-800",
+          "bg-rose-600 text-white shadow-sm hover:bg-rose-500 hover:shadow-rose-500/30 border border-rose-500/40 active:bg-rose-700",
         outline:
-          "border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100",
+          "border border-emerald-500/30 bg-[#082219]/90 text-emerald-200 shadow-xs hover:bg-emerald-500/20 hover:text-white hover:border-emerald-500/50 active:bg-emerald-500/30",
         secondary:
-          "bg-slate-100 text-slate-900 shadow-xs hover:bg-slate-200 active:bg-slate-200/80",
+          "bg-[#082219] text-slate-200 border border-emerald-500/20 shadow-xs hover:bg-emerald-500/20 hover:text-white active:bg-emerald-500/30",
         ghost:
-          "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200/60",
+          "text-slate-300 hover:bg-emerald-500/20 hover:text-white active:bg-emerald-500/30",
         link:
-          "text-[#b45309] underline-offset-4 hover:underline",
+          "text-emerald-400 underline-offset-4 hover:underline",
         soft:
-          "bg-[#F7C59F]/25 text-[#7c2d12] hover:bg-[#F7C59F]/40 active:bg-[#F7C59F]/50 border border-[#F7C59F]/40",
+          "bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/80 active:bg-emerald-800/80 border border-emerald-500/30",
         success:
-          "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-500/20",
+          "bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 hover:shadow-emerald-500/20 border border-emerald-400/50",
         warning:
-          "bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md hover:shadow-amber-500/20",
+          "bg-amber-500 text-white shadow-sm hover:bg-amber-400 hover:shadow-amber-500/20 border border-amber-400/50",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -61,7 +61,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {children}
         {showBorderBeam && (
-          <BorderBeam size={80} duration={6} colorFrom="#F7C59F" colorTo="#EE8D4B" borderWidth={1} />
+          <BorderBeam size={80} duration={6} colorFrom="#10b981" colorTo="#34d399" borderWidth={1} />
         )}
       </button>
     )

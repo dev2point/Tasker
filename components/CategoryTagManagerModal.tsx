@@ -468,7 +468,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       type="button"
                       size="sm"
                       onClick={handleStartAddCategory}
-                      className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md cursor-pointer border border-emerald-400/50"
+                      className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-white shadow-md cursor-pointer border border-emerald-400/50"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>Ajouter une catégorie</span>
@@ -671,7 +671,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       setIsAddingTag(true);
                       setTagError('');
                     }}
-                    className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md cursor-pointer border border-emerald-400/50"
+                    className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-white shadow-md cursor-pointer border border-emerald-400/50"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Nouvelle étiquette</span>

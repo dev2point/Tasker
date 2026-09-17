@@ -496,32 +496,30 @@ export const ListView: React.FC<ListViewProps> = ({
 
           {/* Manage Categories & Tags Button */}
           {onOpenCategoryTagManager && (
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="xs"
               onClick={() => onOpenCategoryTagManager('categories')}
-              className="text-xs font-bold gap-1 shrink-0 text-emerald-300 hover:text-white hover:bg-emerald-500/20 border-emerald-500/30 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold gap-1.5 shrink-0 bg-[#082219] hover:bg-emerald-500/20 text-emerald-300 hover:text-white border border-emerald-500/30 cursor-pointer flex items-center transition-colors shadow-xs"
               title="Gérer les catégories et étiquettes"
             >
               <FolderPlus className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Gérer Catégories</span>
-            </Button>
+            </button>
           )}
         </div>
 
         {/* Category Pills Filter */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px] -mx-1 px-1">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+          <span className="text-[11px] font-bold text-emerald-400/90 uppercase tracking-wider shrink-0 mr-1">
             Catégorie :
           </span>
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap border ${
+            className={`px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap border cursor-pointer ${
               selectedCategory === 'all'
-                ? 'bg-[#BA5316] text-white border-[#BA5316] shadow-2xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-emerald-500 text-slate-950 font-bold border-emerald-400 shadow-md'
+                : 'bg-[#082219]/90 text-slate-200 border-emerald-500/30 hover:bg-emerald-500/20 hover:text-white'
             }`}
           >
             Toutes
@@ -534,10 +532,10 @@ export const ListView: React.FC<ListViewProps> = ({
                 key={c.id}
                 type="button"
                 onClick={() => setSelectedCategory(active ? 'all' : c.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap border cursor-pointer ${
                   active
-                    ? 'shadow-2xs text-white border-transparent'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    ? 'shadow-md text-white border-emerald-400/60 font-bold'
+                    : 'bg-[#082219]/90 text-slate-200 border-emerald-500/25 hover:bg-emerald-500/20 hover:text-white'
                 }`}
                 style={active ? { backgroundColor: c.color } : {}}
               >
@@ -550,7 +548,7 @@ export const ListView: React.FC<ListViewProps> = ({
                 {count > 0 && (
                   <span
                     className={`text-[10px] px-1 rounded-full font-bold ${
-                      active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                      active ? 'bg-white/30 text-white' : 'bg-emerald-950/90 text-emerald-300 border border-emerald-500/30'
                     }`}
                   >
                     {count}
@@ -564,8 +562,8 @@ export const ListView: React.FC<ListViewProps> = ({
         {/* Multi-Tag Filtering Bar */}
         {allAvailableTags.length > 0 && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px] -mx-1 px-1 pt-0.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-              <Tag className="w-3 h-3 text-slate-400" />
+            <span className="text-[11px] font-bold text-emerald-400/90 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+              <Tag className="w-3 h-3 text-emerald-400" />
               Tags :
             </span>
 
@@ -577,8 +575,8 @@ export const ListView: React.FC<ListViewProps> = ({
                   key={item.name}
                   type="button"
                   onClick={() => toggleTagFilter(item.name)}
-                  className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${
-                    active ? 'shadow-2xs ring-1' : 'hover:scale-102'
+                  className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border cursor-pointer ${
+                    active ? 'shadow-md ring-1 ring-emerald-400 font-extrabold' : 'hover:scale-102 opacity-90 hover:opacity-100'
                   }`}
                   style={{
                     backgroundColor: active ? style.hex : style.bg,
@@ -589,8 +587,8 @@ export const ListView: React.FC<ListViewProps> = ({
                   <Hash className="w-3 h-3 opacity-80" />
                   <span>{item.name}</span>
                   <span
-                    className={`text-[9px] px-1 rounded-full ${
-                      active ? 'bg-white/30 text-white' : 'bg-black/5 text-slate-700'
+                    className={`text-[9px] px-1 rounded-full font-bold ${
+                      active ? 'bg-white/30 text-white' : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/20'
                     }`}
                   >
                     {item.count}
@@ -604,7 +602,7 @@ export const ListView: React.FC<ListViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenCategoryTagManager('tags')}
-                className="text-[11px] font-bold text-[#BA5316] hover:underline px-1 whitespace-nowrap ml-1"
+                className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 hover:underline px-1 whitespace-nowrap ml-1 cursor-pointer"
               >
                 + Gérer
               </button>
@@ -672,30 +670,30 @@ export const ListView: React.FC<ListViewProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end text-xs">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto text-xs">
             {/* Group By selector */}
-            <div className="flex items-center gap-1 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm min-w-0 flex-1 sm:flex-none">
               <Layers className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupByType)}
-                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer w-full min-w-0 truncate"
               >
                 <option value="dueDate" className="bg-slate-900 text-white">Grouper par Date</option>
                 <option value="category" className="bg-slate-900 text-white">Grouper par Catégorie</option>
-                <option value="tag" className="bg-slate-900 text-white">Grouper par Étiquette (Tag)</option>
+                <option value="tag" className="bg-slate-900 text-white">Grouper par Tag</option>
                 <option value="priority" className="bg-slate-900 text-white">Grouper par Priorité</option>
                 <option value="none" className="bg-slate-900 text-white">Sans groupement</option>
               </select>
             </div>
 
             {/* Sort By selector */}
-            <div className="flex items-center gap-1 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 shadow-sm min-w-0 flex-1 sm:flex-none">
               <ArrowUpDown className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'priority' | 'title')}
-                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-emerald-200 outline-hidden pr-1 cursor-pointer w-full min-w-0 truncate"
               >
                 <option value="dueDate" className="bg-slate-900 text-white">Trier par Échéance</option>
                 <option value="priority" className="bg-slate-900 text-white">Trier par Priorité</option>
@@ -708,26 +706,26 @@ export const ListView: React.FC<ListViewProps> = ({
 
       {/* Task Groups and Items */}
       {groupedTasks.length === 0 || sortedTasks.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-10 sm:p-14 text-center text-slate-400 shadow-2xs">
-          <div className="w-14 h-14 rounded-2xl bg-[#F7C59F]/30 text-[#8E390C] flex items-center justify-center mx-auto mb-3.5 shadow-xs">
+        <div className="bg-[#061A13]/85 backdrop-blur-2xl rounded-3xl border border-emerald-500/20 p-10 sm:p-14 text-center text-slate-300 shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center mx-auto mb-3.5 shadow-md">
             <Calendar className="w-7 h-7 stroke-[1.7]" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">Aucune tâche à afficher</h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+          <h3 className="text-base font-bold text-white">Aucune tâche à afficher</h3>
+          <p className="text-xs text-slate-300/80 mt-1 max-w-sm mx-auto leading-relaxed">
             {hasActiveFilters
               ? 'Aucune tâche ne correspond à vos critères de filtrage ou recherche.'
               : 'Toutes vos tâches sont à jour ou aucune tâche n’a encore été planifiée.'}
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearAllFilters} className="font-bold">
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="font-bold cursor-pointer">
                 Effacer les filtres
               </Button>
             )}
             <Button
               onClick={() => onOpenTaskModal()}
               size="sm"
-              className="font-bold shadow-sm shadow-[#F7C59F]/40"
+              className="font-bold shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Créer une tâche</span>
@@ -743,13 +741,13 @@ export const ListView: React.FC<ListViewProps> = ({
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border shadow-2xs ${
-                        group.badge || 'bg-slate-100 text-slate-700 border-slate-200'
+                      className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border shadow-xs ${
+                        group.badge || 'bg-emerald-950/80 text-emerald-200 border-emerald-500/30'
                       }`}
                     >
                       {group.title}
                     </span>
-                    <span className="text-xs text-slate-400 font-semibold">
+                    <span className="text-xs text-emerald-300/70 font-semibold">
                       ({group.tasks.length})
                     </span>
                   </div>
@@ -771,11 +769,11 @@ export const ListView: React.FC<ListViewProps> = ({
                   return (
                     <div
                       key={task.id}
-                      className={`p-3.5 sm:p-4 transition-colors hover:bg-slate-50/80 border-l-4 ${
+                      className={`p-3.5 sm:p-4 transition-colors hover:bg-emerald-500/10 border-l-4 ${
                         task.completed
-                          ? 'border-l-slate-300 bg-slate-50/40'
+                          ? 'border-l-slate-600 bg-slate-900/30'
                           : isOverdue
-                          ? 'border-l-rose-500 bg-rose-50/20'
+                          ? 'border-l-rose-500 bg-rose-950/30'
                           : priority.border
                       }`}
                     >
@@ -785,7 +783,7 @@ export const ListView: React.FC<ListViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleCheckboxClick(task.id, task.completed)}
-                            className="mt-0.5 text-slate-400 hover:text-emerald-600 transition-colors shrink-0 focus:outline-hidden"
+                            className="mt-0.5 text-slate-400 hover:text-emerald-400 transition-colors shrink-0 focus:outline-hidden cursor-pointer"
                             title={
                               task.completed
                                 ? 'Marquer comme non terminée'
@@ -793,9 +791,9 @@ export const ListView: React.FC<ListViewProps> = ({
                             }
                           >
                             {task.completed ? (
-                              <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
+                              <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-950" />
                             ) : (
-                              <Circle className="w-5 h-5 hover:text-[#B75217] transition-colors" />
+                              <Circle className="w-5 h-5 hover:text-emerald-400 transition-colors" />
                             )}
                           </button>
 
@@ -803,10 +801,10 @@ export const ListView: React.FC<ListViewProps> = ({
                             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                               <h4
                                 onClick={() => onOpenTaskModal(task)}
-                                className={`text-sm font-bold cursor-pointer hover:text-[#B75217] transition-colors leading-snug ${
+                                className={`text-sm font-bold cursor-pointer hover:text-emerald-300 transition-colors leading-snug ${
                                   task.completed
                                     ? 'line-through text-slate-400 font-medium'
-                                    : 'text-slate-900'
+                                    : 'text-white'
                                 }`}
                               >
                                 {task.title}
@@ -824,35 +822,35 @@ export const ListView: React.FC<ListViewProps> = ({
                                 type="button"
                                 onClick={() => setSelectedCategory(cat.id)}
                                 title={`Filtrer par catégorie : ${cat.name}`}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-transform hover:scale-105"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-transform hover:scale-105 cursor-pointer"
                                 style={{
-                                  backgroundColor: `${cat.color}15`,
-                                  color: cat.color,
-                                  borderColor: `${cat.color}35`,
+                                  backgroundColor: `${cat.color}25`,
+                                  color: '#ffffff',
+                                  borderColor: `${cat.color}60`,
                                 }}
                               >
-                                <CategoryIcon name={cat.iconName} className="w-3 h-3" />
+                                <CategoryIcon name={cat.iconName} className="w-3 h-3" style={{ color: cat.color }} />
                                 <span>{cat.name}</span>
                               </button>
                             </div>
 
                             {/* Description preview */}
                             {task.description && (
-                              <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-normal">
+                              <p className="text-xs text-slate-300/80 line-clamp-2 leading-relaxed font-normal">
                                 {task.description}
                               </p>
                             )}
 
                             {/* Meta Tags, Date, Time & Reminders */}
-                            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs text-slate-500 pt-1">
+                            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs text-slate-300 pt-1">
                               {/* Due Date & Time */}
                               <span
                                 className={`flex items-center gap-1 font-semibold ${
                                   isOverdue
-                                    ? 'text-rose-600 font-bold'
+                                    ? 'text-rose-400 font-bold'
                                     : task.dueDate === new Date().toISOString().split('T')[0]
-                                    ? 'text-[#933F15] font-bold'
-                                    : 'text-slate-600'
+                                    ? 'text-amber-300 font-bold'
+                                    : 'text-slate-300'
                                 }`}
                               >
                                 <Calendar className="w-3.5 h-3.5" />
@@ -884,9 +882,9 @@ export const ListView: React.FC<ListViewProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => toggleTaskExpand(task.id)}
-                                  className="flex items-center gap-1 text-[#7c2d12] hover:text-[#59240A] font-semibold text-[11px] bg-[#F7C59F]/30 px-2 py-0.5 rounded-md border border-[#F7C59F]/50"
+                                  className="flex items-center gap-1 text-emerald-200 hover:text-white font-semibold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30 cursor-pointer"
                                 >
-                                  <CheckCircle2 className="w-3 h-3 text-[#B75217]" />
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                                   <span>
                                     {completedSubtasks}/{totalSubtasks}
                                   </span>
@@ -910,8 +908,8 @@ export const ListView: React.FC<ListViewProps> = ({
                                         type="button"
                                         onClick={() => toggleTagFilter(t)}
                                         title={`Filtrer par le tag #${t}`}
-                                        className={`inline-flex items-center gap-0.5 text-[10px] px-2 py-0.2 rounded-md font-bold border transition-all ${
-                                          isFiltering ? 'ring-1 shadow-2xs font-extrabold' : 'hover:opacity-80'
+                                        className={`inline-flex items-center gap-0.5 text-[10px] px-2 py-0.2 rounded-md font-bold border transition-all cursor-pointer ${
+                                          isFiltering ? 'ring-1 ring-emerald-400 shadow-xs font-extrabold' : 'hover:opacity-80'
                                         }`}
                                         style={{
                                           backgroundColor: style.bg,
@@ -938,7 +936,7 @@ export const ListView: React.FC<ListViewProps> = ({
                               type="button"
                               onClick={() => onPostponeTask(task.id, 1)}
                               title="Reporter à demain (+1 jour)"
-                              className="px-2 py-1 rounded-lg text-slate-500 hover:text-[#B75217] hover:bg-slate-100 transition-colors text-[11px] font-bold border border-slate-200/60"
+                              className="px-2 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-emerald-500/20 transition-colors text-[11px] font-bold border border-emerald-500/30 cursor-pointer"
                             >
                               +1j
                             </button>
@@ -949,7 +947,7 @@ export const ListView: React.FC<ListViewProps> = ({
                             type="button"
                             onClick={() => onOpenTaskModal(task)}
                             title="Modifier la tâche"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-[#B75217] hover:bg-slate-100 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -959,7 +957,7 @@ export const ListView: React.FC<ListViewProps> = ({
                             type="button"
                             onClick={() => onDuplicateTask(task)}
                             title="Dupliquer la tâche"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex"
+                            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-emerald-500/20 transition-colors hidden sm:inline-flex cursor-pointer"
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </button>
@@ -969,7 +967,7 @@ export const ListView: React.FC<ListViewProps> = ({
                             type="button"
                             onClick={() => onDeleteTask(task.id)}
                             title="Supprimer la tâche"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -978,8 +976,8 @@ export const ListView: React.FC<ListViewProps> = ({
 
                       {/* Expanded Subtasks Inline Checklist */}
                       {isExpanded && task.subtasks && task.subtasks.length > 0 && (
-                        <div className="mt-3 pl-8 pr-2 pt-3 border-t border-slate-100 space-y-2 animate-in fade-in-50 duration-150">
-                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <div className="mt-3 pl-8 pr-2 pt-3 border-t border-emerald-500/20 space-y-2 animate-in fade-in-50 duration-150">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-emerald-300">
                             <span className="uppercase tracking-wider">Sous-tâches & Étapes</span>
                             <span>{Math.round(subtaskProgress)}%</span>
                           </div>
@@ -991,17 +989,17 @@ export const ListView: React.FC<ListViewProps> = ({
                             {task.subtasks.map((st) => (
                               <label
                                 key={st.id}
-                                className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/90 hover:bg-slate-100 text-xs font-medium text-slate-700 cursor-pointer transition-colors border border-slate-200/50"
+                                className="flex items-center gap-2.5 p-2 rounded-xl bg-[#04120C]/80 hover:bg-emerald-950/60 text-xs font-medium text-slate-200 cursor-pointer transition-colors border border-emerald-500/20"
                               >
                                 <input
                                   type="checkbox"
                                   checked={st.completed}
                                   onChange={() => onToggleSubtask(task.id, st.id)}
-                                  className="rounded text-[#EE8D4B] focus:ring-[#F7C59F] w-3.5 h-3.5 cursor-pointer accent-[#EE8D4B]"
+                                  className="rounded text-emerald-500 focus:ring-emerald-400 w-3.5 h-3.5 cursor-pointer accent-emerald-500"
                                 />
                                 <span
                                   className={
-                                    st.completed ? 'line-through text-slate-400' : 'text-slate-800'
+                                    st.completed ? 'line-through text-slate-400' : 'text-slate-100'
                                   }
                                 >
                                   {st.title}
