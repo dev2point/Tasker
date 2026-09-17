@@ -419,15 +419,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onViewChange('admin');
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 transition-colors font-semibold text-purple-900 border-t border-slate-100 mt-1"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 transition-colors font-semibold text-purple-200 border-t border-emerald-500/20 mt-1"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
                               <Shield className="w-3.5 h-3.5" />
                             </div>
                             <span>Espace Admin</span>
                           </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900 uppercase">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
                             Admin
                           </span>
                         </button>
@@ -476,7 +476,7 @@ export const Header: React.FC<HeaderProps> = ({
                       size="sm"
                       onClick={onOpenAuthModal}
                       title="Se connecter ou créer un compte"
-                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer transition-colors"
+                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 cursor-pointer transition-colors"
                     >
                       <UserIcon className="w-3.5 h-3.5 shrink-0" />
                       <span>Connexion</span>
@@ -499,10 +499,10 @@ export const Header: React.FC<HeaderProps> = ({
                             {currentUser.email}
                           </span>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-semibold">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-500/30 font-semibold">
                               {currentUser.department || 'Général'}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-bold uppercase">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 font-bold uppercase">
                               {currentUser.role}
                             </span>
                           </div>
@@ -519,13 +519,13 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsUserMenuOpen(false);
                               onViewChange('admin');
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 font-semibold transition-colors"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 font-semibold transition-colors cursor-pointer"
                           >
                             <div className="flex items-center gap-2">
-                              <Shield className="w-3.5 h-3.5 text-purple-600" />
+                              <Shield className="w-3.5 h-3.5 text-purple-400" />
                               <span>Espace Administration</span>
                             </div>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40">
                               Ouvrir
                             </span>
                           </button>
@@ -537,9 +537,9 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsUserMenuOpen(false);
                             onOpenAuthModal();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-colors border-t border-slate-100 mt-1"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors border-t border-emerald-500/20 mt-1 cursor-pointer"
                         >
-                          <UserIcon className="w-3.5 h-3.5 text-slate-500" />
+                          <UserIcon className="w-3.5 h-3.5 text-slate-300" />
                           <span>Gérer le profil / Déconnexion</span>
                         </button>
                       </div>
@@ -663,15 +663,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsMobileMenuOpen(false);
                             onOpenExportModal();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-xs font-semibold text-slate-700"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200"
                         >
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
                               <Download className="w-3.5 h-3.5" />
                             </div>
                             <span>Export iCal (.ics)</span>
                           </div>
-                          <Badge variant="outline" className="text-[9px]">
+                          <Badge variant="outline" className="text-[9px] border-emerald-500/30 text-emerald-300">
                             Agenda
                           </Badge>
                         </button>
@@ -685,15 +685,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onViewChange('admin');
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-purple-900 transition-colors text-xs font-semibold border-t border-slate-100 mt-1"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 transition-colors text-xs font-semibold border-t border-emerald-500/20 mt-1"
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
+                              <div className="w-7 h-7 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
                                 <Shield className="w-3.5 h-3.5" />
                               </div>
                               <span>Administration</span>
                             </div>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-200 text-purple-900 uppercase">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
                               Admin
                             </span>
                           </button>

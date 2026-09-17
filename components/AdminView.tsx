@@ -385,7 +385,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <Button
               size="sm"
               onClick={() => setShowAddUserModal(true)}
-              className="gap-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
+              className="gap-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Nouveau membre</span>
@@ -809,7 +809,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <Button
                 size="sm"
                 onClick={() => setShowAddUserModal(true)}
-                className="gap-1.5 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
+                className="gap-1.5 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Ajouter</span>
@@ -1149,7 +1149,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <Button
                 onClick={handleSyncTasks}
                 disabled={isSyncing}
-                className="gap-2 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
+                className="gap-2 text-xs font-bold shrink-0 bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>Lancer la synchronisation</span>
@@ -1382,7 +1382,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 >
                   Annuler
                 </Button>
-                <Button type="submit" size="sm" disabled={isSubmittingUser} className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer">
+                <Button type="submit" size="sm" disabled={isSubmittingUser} className="font-bold bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 cursor-pointer">
                   {isSubmittingUser ? 'Création...' : 'Créer le membre'}
                 </Button>
               </div>

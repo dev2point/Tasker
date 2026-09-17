@@ -29,21 +29,21 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
     <div className="space-y-2.5 mb-5 sm:mb-6">
       {/* Overdue alert banner */}
       {overdueTasks.length > 0 && (
-        <div className="bg-rose-50/90 border border-rose-200/90 rounded-2xl p-3.5 sm:p-4 text-rose-950 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-rose-950/80 backdrop-blur-xl border border-rose-500/40 rounded-2xl p-3.5 sm:p-4 text-rose-100 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-rose-100/80 rounded-xl text-rose-600 shrink-0 mt-0.5 border border-rose-200/60">
+            <div className="p-2 bg-rose-500/20 rounded-xl text-rose-300 shrink-0 mt-0.5 border border-rose-500/30">
               <AlertCircle className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-rose-950">
+                <span className="font-bold text-sm text-rose-100">
                   {overdueTasks.length} tâche{overdueTasks.length > 1 ? 's' : ''} en retard
                 </span>
-                <Badge variant="destructive" className="text-[10px] py-0 px-2">
+                <Badge variant="destructive" className="text-[10px] py-0 px-2 font-bold bg-rose-500 text-white">
                   Action requise
                 </Badge>
               </div>
-              <p className="text-xs text-rose-800/90 mt-0.5 truncate font-medium">
+              <p className="text-xs text-rose-200/80 mt-0.5 truncate font-medium">
                 {overdueTasks.map((t) => t.title).join(' • ')}
               </p>
             </div>
@@ -55,7 +55,7 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                 variant="outline"
                 size="xs"
                 onClick={() => onRescheduleToToday(overdueTasks[0].id)}
-                className="bg-white hover:bg-rose-50 border-rose-200 text-rose-800 text-xs font-semibold flex-1 sm:flex-none"
+                className="bg-rose-900/60 hover:bg-rose-900 border-rose-500/40 text-rose-200 text-xs font-semibold flex-1 sm:flex-none cursor-pointer"
               >
                 Reporter à aujourd&apos;hui
               </Button>
@@ -64,7 +64,7 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
               variant="destructive"
               size="xs"
               onClick={() => onOpenTask(overdueTasks[0])}
-              className="gap-1 font-bold flex-1 sm:flex-none"
+              className="gap-1 font-bold flex-1 sm:flex-none bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
             >
               <span>Voir</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -75,16 +75,17 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
 
       {/* Daily Digest / Today Focus Banner */}
       {dueTodayTasks.length > 0 && overdueTasks.length === 0 && (
-        <div className="bg-[#F7C59F]/30 border border-[#F7C59F]/60 rounded-2xl px-4 py-3 text-[#422006] flex items-center justify-between gap-3 text-xs shadow-2xs">
+        <div className="bg-[#061A13]/80 backdrop-blur-xl border border-emerald-500/30 rounded-2xl px-4 py-3 text-emerald-100 flex items-center justify-between gap-3 text-xs shadow-md">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 bg-[#F7C59F]/60 rounded-lg text-[#7c2d12] shrink-0">
+            <div className="p-1.5 bg-amber-500/20 rounded-lg text-amber-300 border border-amber-500/30 shrink-0">
               <Clock className="w-3.5 h-3.5" />
             </div>
-            <span className="font-medium text-slate-800 truncate">
-              <strong className="text-[#59240A] font-bold">{dueTodayTasks.length} tâche{dueTodayTasks.length > 1 ? 's' : ''}</strong> à accomplir aujourd&apos;hui
+            <span className="font-medium text-emerald-200 truncate">
+              <strong className="text-amber-300 font-bold">{dueTodayTasks.length} tâche{dueTodayTasks.length > 1 ? 's' : ''}</strong>{' '}
+              <span className="text-emerald-100 font-medium">à accomplir aujourd&apos;hui</span>
             </span>
           </div>
-          <Badge variant="apricot" className="hidden sm:inline-flex text-[11px] font-bold py-0.5">
+          <Badge variant="outline" className="hidden sm:inline-flex text-[11px] font-bold py-0.5 border-emerald-500/40 text-emerald-300 bg-emerald-500/20">
             Rappels automatiques synchronisés
           </Badge>
         </div>
