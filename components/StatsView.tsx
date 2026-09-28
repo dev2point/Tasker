@@ -122,14 +122,14 @@ export const StatsView: React.FC<StatsViewProps> = ({
                 : `${totalTasks - completedTasks} tâche(s) restent à finaliser pour optimiser votre flux.`}
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
+            <div className="px-3 sm:px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
               <div className="text-xl font-extrabold text-emerald-400">{completionRate}%</div>
-              <div className="text-[10px] font-medium text-slate-300">Succès global</div>
+              <div className="text-[10px] font-medium text-slate-300 truncate">Succès global</div>
             </div>
-            <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center min-w-[90px]">
+            <div className="px-3 sm:px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
               <div className="text-xl font-extrabold text-emerald-300">{todayCompleted} / {todayTasks.length}</div>
-              <div className="text-[10px] font-medium text-slate-300">Aujourd&apos;hui</div>
+              <div className="text-[10px] font-medium text-slate-300 truncate">Aujourd&apos;hui</div>
             </div>
           </div>
         </div>

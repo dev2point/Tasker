@@ -19,6 +19,7 @@ import { CollaborativeReviewPlatform } from '@/components/review/CollaborativeRe
 import { AuthModal } from '@/components/AuthModal';
 import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
+import { Microsoft365Modal } from '@/components/Microsoft365Modal';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
@@ -66,6 +67,7 @@ export default function HomePage() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isM365ModalOpen, setIsM365ModalOpen] = useState<boolean>(false);
   const [isPostgresModalOpen, setIsPostgresModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
@@ -673,6 +675,7 @@ export default function HomePage() {
           }
         }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenM365Modal={() => setIsM365ModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenPostgresModal={
           currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
@@ -702,6 +705,7 @@ export default function HomePage() {
           }
         }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenM365Modal={() => setIsM365ModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenPostgresModal={
           currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
@@ -854,6 +858,7 @@ export default function HomePage() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         tasks={tasks}
+        onOpenM365Modal={() => setIsM365ModalOpen(true)}
         onImportTasks={(imported) => {
           saveTasks(imported);
           fetch('/api/sync', {
@@ -862,6 +867,13 @@ export default function HomePage() {
             body: JSON.stringify(imported),
           }).catch(console.error);
         }}
+      />
+
+      {/* 5b. Microsoft 365 Integration Hub (Excel, Word, Outlook, OneDrive) */}
+      <Microsoft365Modal
+        isOpen={isM365ModalOpen}
+        onClose={() => setIsM365ModalOpen(false)}
+        tasks={tasks}
       />
 
       {/* 6. PostgreSQL Supabase & Team / Roles (RBAC) Modal - Réservé exclusivement aux administrateurs */}

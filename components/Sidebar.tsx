@@ -25,6 +25,7 @@ import {
   LogOut,
   ChevronDown,
   Lock,
+  Building,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -43,6 +44,7 @@ export interface SidebarProps {
   onOpenPostgresModal?: () => void;
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
+  onOpenM365Modal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -63,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenPostgresModal,
   onOpenAuthModal,
   onOpenCategoryTagManager,
+  onOpenM365Modal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -434,6 +437,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-200 shrink-0" />
               {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Exporter (.ics)</span>}
             </button>
+
+            {/* Microsoft 365 Hub */}
+            {onOpenM365Modal && (
+              <button
+                id="open-m365-sidebar-btn"
+                type="button"
+                onClick={onOpenM365Modal}
+                title={isVisuallyCollapsed ? 'Microsoft 365 (Office, Outlook)' : undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-200 hover:text-white hover:bg-blue-900/30 transition-colors group ${
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
+                }`}
+              >
+                <Building className="w-4 h-4 text-blue-400 group-hover:text-blue-300 shrink-0" />
+                {!isVisuallyCollapsed && (
+                  <>
+                    <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Microsoft 365</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40 shrink-0">
+                      M365
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Sound Toggle */}
             <button

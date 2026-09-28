@@ -24,6 +24,7 @@ import {
   GitPullRequest,
   LogOut,
   Sparkles,
+  Building,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -43,6 +44,7 @@ interface HeaderProps {
   onOpenPostgresModal?: () => void;
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
+  onOpenM365Modal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -61,6 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPostgresModal,
   onOpenAuthModal,
   onOpenCategoryTagManager,
+  onOpenM365Modal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -393,6 +396,29 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Exporter l&apos;agenda (.ics)</span>
                       </button>
 
+                      {/* Microsoft 365 Hub */}
+                      {onOpenM365Modal && (
+                        <button
+                          id="open-m365-btn"
+                          type="button"
+                          onClick={() => {
+                            setIsDesktopToolsOpen(false);
+                            onOpenM365Modal();
+                          }}
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 transition-colors font-semibold text-blue-200 hover:text-white cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                              <Building className="w-3.5 h-3.5" />
+                            </div>
+                            <span>Microsoft 365 (Office, Outlook)</span>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
+                            M365
+                          </span>
+                        </button>
+                      )}
+
                       {/* Diagnostic Postgres if applicable */}
                       {onOpenPostgresModal && currentUser?.role === 'admin' && (
                         <button
@@ -675,6 +701,28 @@ export const Header: React.FC<HeaderProps> = ({
                             Agenda
                           </Badge>
                         </button>
+
+                        {/* Microsoft 365 Hub */}
+                        {onOpenM365Modal && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenM365Modal();
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 text-blue-200 transition-colors text-xs font-semibold"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                                <Building className="w-3.5 h-3.5" />
+                              </div>
+                              <span>Microsoft 365 (Office, Outlook)</span>
+                            </div>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
+                              M365
+                            </span>
+                          </button>
+                        )}
 
                         {/* Dedicated Admin Interface Option */}
                         {currentUser?.role === 'admin' && (

@@ -11,6 +11,8 @@ import {
   AlertCircle,
   Database,
   Smartphone,
+  Building,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Task } from '@/types/task';
 import { generateICalendar, downloadFile } from '@/lib/ical';
@@ -23,6 +25,7 @@ interface ExportModalProps {
   onClose: () => void;
   tasks: Task[];
   onImportTasks: (tasks: Task[]) => void;
+  onOpenM365Modal?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -30,6 +33,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   tasks,
   onImportTasks,
+  onOpenM365Modal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [successMsg, setSuccessMsg] = useState('');
@@ -139,7 +143,38 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         )}
 
         {/* Action Blocks */}
-        <div className="space-y-3 text-xs">
+        <div className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1">
+          {/* 0. Microsoft 365 Ecosystem */}
+          {onOpenM365Modal && (
+            <div className="p-4 rounded-2xl border border-blue-500/40 bg-blue-950/30 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-blue-600/30 text-blue-300 flex items-center justify-center border border-blue-500/40">
+                    <Building className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-white">Écosystème Microsoft 365</span>
+                </div>
+                <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/40 text-[9px] font-bold">
+                  Excel • Word • Outlook
+                </Badge>
+              </div>
+              <p className="text-slate-300 leading-relaxed text-[11px]">
+                Générez des classeurs Excel formatés (.xlsx), des rapports Word officiels (.docx) et synchronisez avec Outlook & OneDrive.
+              </p>
+              <Button
+                onClick={() => {
+                  onClose();
+                  onOpenM365Modal();
+                }}
+                size="sm"
+                className="w-full font-bold gap-2 bg-blue-600 hover:bg-blue-500 text-white shadow-md cursor-pointer h-8 text-xs"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Ouvrir le Centre Microsoft 365</span>
+              </Button>
+            </div>
+          )}
+
           {/* 1. iCalendar (.ics) */}
           <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 space-y-2">
             <div className="flex items-center justify-between">

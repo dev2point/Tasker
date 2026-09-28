@@ -383,7 +383,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
       {/* 4. Filter & Search Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-[#061A13]/85 backdrop-blur-2xl p-3.5 rounded-xl border border-emerald-500/30 shadow-xl">
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
