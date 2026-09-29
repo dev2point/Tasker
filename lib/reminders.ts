@@ -19,6 +19,14 @@ export function getTaskDueDateTime(task: Task): Date {
 
 // Calculate when the reminder should trigger
 export function getReminderTriggerTime(task: Task): Date | null {
+  // If this task was snoozed to a specific timestamp, prioritize that snooze timestamp
+  if (task.snoozedUntil) {
+    const snoozeDate = new Date(task.snoozedUntil);
+    if (!isNaN(snoozeDate.getTime())) {
+      return snoozeDate;
+    }
+  }
+
   if (task.reminderMinutesBefore < 0) return null; // Disabled
   const dueDateTime = getTaskDueDateTime(task);
   const triggerMs = dueDateTime.getTime() - task.reminderMinutesBefore * 60 * 1000;

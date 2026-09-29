@@ -35,6 +35,7 @@ import {
   requestNotificationPermission,
   sendBrowserNotification,
   getNextRecurrenceDate,
+  formatDueDateFrench,
 } from '@/lib/reminders';
 import { soundManager } from '@/lib/sound';
 import { usePlanitStore } from '@/lib/usePlanitStore';
@@ -286,8 +287,9 @@ export default function HomePage() {
 
         // Send browser notification for the first triggered task
         const firstTask = triggeredTasks[0];
+        const dueFormatted = formatDueDateFrench(firstTask.dueDate, firstTask.dueTime);
         sendBrowserNotification(`⏰ Rappel Planit: ${firstTask.title}`, {
-          body: `Échéance prévue aujourd'hui à ${firstTask.dueTime || 'heure indiquée'}.`,
+          body: `Échéance : ${dueFormatted || 'Non spécifiée'}.`,
         });
 
         // Set as active pop-up if no modal is currently focused
@@ -498,19 +500,32 @@ export default function HomePage() {
 
   // Postpone Task (+1 or +N days)
   const handlePostponeTask = (taskId: string, days: number = 1) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
-        const [y, m, d] = t.dueDate.split('-').map(Number);
-        const date = new Date(y, m - 1, d);
-        date.setDate(date.getDate() + days);
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
+        let baseDate: Date;
+        // If task is overdue (past date), postpone relative to today so it moves into the future
+        if (t.dueDate < todayStr) {
+          baseDate = new Date(today);
+        } else {
+          const [y, m, d] = t.dueDate.split('-').map(Number);
+          baseDate = new Date(y, m - 1, d);
+        }
+        baseDate.setDate(baseDate.getDate() + days);
+        const yyyy = baseDate.getFullYear();
+        const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(baseDate.getDate()).padStart(2, '0');
+
         targetUpdatedTask = {
           ...t,
           dueDate: `${yyyy}-${mm}-${dd}`,
+          snoozedUntil: undefined, // Reset any snooze timestamp upon manual reschedule
           reminderTriggered: false,
+          reminderDismissed: false,
           updatedAt: new Date().toISOString(),
         };
         return targetUpdatedTask;
@@ -533,7 +548,9 @@ export default function HomePage() {
         targetUpdatedTask = {
           ...t,
           dueDate: todayStr,
+          snoozedUntil: undefined,
           reminderTriggered: false,
+          reminderDismissed: false,
           updatedAt: new Date().toISOString(),
         };
         return targetUpdatedTask;
@@ -574,33 +591,60 @@ export default function HomePage() {
     saveTasks(updated);
   };
 
-  // Snooze active reminder by minutes
+  // Snooze active reminder by minutes (Preserves task's true dueDate & dueTime!)
   const handleSnoozeReminder = (taskId: string, minutes: number) => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + minutes);
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const dateStr = now.toISOString().split('T')[0];
+    const snoozeDate = new Date(Date.now() + minutes * 60 * 1000);
+    let targetUpdatedTask: Task | null = null;
 
-    const updated = tasks.map((t) =>
-      t.id === taskId
-        ? {
-            ...t,
-            dueDate: dateStr,
-            dueTime: timeStr,
-            reminderMinutesBefore: 0, // alert at exact snoozed time
-            reminderTriggered: false,
-            updatedAt: new Date().toISOString(),
-          }
-        : t
-    );
+    const updated = tasks.map((t) => {
+      if (t.id === taskId) {
+        targetUpdatedTask = {
+          ...t,
+          snoozedUntil: snoozeDate.toISOString(),
+          reminderTriggered: false,
+          reminderDismissed: false,
+          updatedAt: new Date().toISOString(),
+        };
+        return targetUpdatedTask;
+      }
+      return t;
+    });
+
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
     saveTasks(updated);
     setActiveReminderTask(null);
+    soundManager.playClickSound();
   };
 
-  // Snooze reminder until tomorrow
+  // Snooze reminder until tomorrow morning (Preserves task's true dueDate & dueTime!)
   const handleSnoozeReminderTomorrow = (taskId: string) => {
-    handlePostponeTask(taskId, 1);
+    const tomorrowMorning = new Date();
+    tomorrowMorning.setDate(tomorrowMorning.getDate() + 1);
+    tomorrowMorning.setHours(9, 0, 0, 0); // 9:00 AM tomorrow
+
+    let targetUpdatedTask: Task | null = null;
+    const updated = tasks.map((t) => {
+      if (t.id === taskId) {
+        targetUpdatedTask = {
+          ...t,
+          snoozedUntil: tomorrowMorning.toISOString(),
+          reminderTriggered: false,
+          reminderDismissed: false,
+          updatedAt: new Date().toISOString(),
+        };
+        return targetUpdatedTask;
+      }
+      return t;
+    });
+
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask);
+    }
+    saveTasks(updated);
     setActiveReminderTask(null);
+    soundManager.playClickSound();
   };
 
   // Notifications clear / read
@@ -734,6 +778,7 @@ export default function HomePage() {
           onOpenTask={handleOpenTaskModal}
           onCompleteTask={handleToggleComplete}
           onRescheduleToToday={handleRescheduleToToday}
+          onPostponeTask={handlePostponeTask}
         />
 
         {/* Dynamic Views */}
@@ -829,6 +874,7 @@ export default function HomePage() {
         }}
         onSnooze={handleSnoozeReminder}
         onSnoozeTomorrow={handleSnoozeReminderTomorrow}
+        onPostponeDueDate={handlePostponeTask}
       />
 
       {/* 3. Notifications Center Dropdown */}

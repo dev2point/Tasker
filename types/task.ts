@@ -32,6 +32,7 @@ export interface Task {
   reminderTriggered?: boolean;
   reminderDismissed?: boolean;
   reminderTriggeredAt?: string;
+  snoozedUntil?: string; // ISO string for postponed reminder timestamp without modifying task dueDate
   recurrence: Recurrence;
   tags: string[];
   subtasks: Subtask[];
