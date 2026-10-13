@@ -135,6 +135,9 @@ export interface ReviewDossier {
   // Cross-department bridges
   interDepRequests: InterDepRequest[];
   
+  // Tracked file versions & documents
+  trackedFiles?: import('./file-version').TrackedFile[];
+  
   // Immutable Audit Trail
   auditTrail: AuditLogEntry[];
   

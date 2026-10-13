@@ -17,6 +17,8 @@ import { TextDiffViewer } from './TextDiffViewer';
 import { DataDiffViewer } from './DataDiffViewer';
 import { AuditTrailViewer } from './AuditTrailViewer';
 import { InterDepGatewayViewer } from './InterDepGatewayViewer';
+import { FileVersionManager } from '@/components/FileVersionManager';
+import { TrackedFile } from '@/types/file-version';
 import {
   X,
   Lock,
@@ -66,7 +68,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
   onUpdateDossier,
   activeViewers = [],
 }) => {
-  const [activeTab, setActiveTab] = useState<'diff' | 'data' | 'audit' | 'gateway'>('diff');
+  const [activeTab, setActiveTab] = useState<'diff' | 'data' | 'files' | 'gateway' | 'audit'>('diff');
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [prevDossierId, setPrevDossierId] = useState<string | undefined>(dossier?.id);
   const [draftContent, setDraftContent] = useState<string>(() => dossier?.textDocument.currentContent || '');
@@ -196,6 +198,29 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
           ipAddress: '192.168.1.42',
           action: 'requete_inter_pole',
           details: `Statut de la passerelle #${reqId} mis à jour vers "${status}".`,
+        },
+        ...dossier.auditTrail,
+      ],
+    };
+    onUpdateDossier(updated);
+  };
+
+  const handleUpdateTrackedFiles = (updatedFiles: TrackedFile[]) => {
+    const updated: ReviewDossier = {
+      ...dossier,
+      trackedFiles: updatedFiles,
+      updatedAt: new Date().toISOString(),
+      auditTrail: [
+        {
+          id: `aud-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          actorId: currentUser.id,
+          actorName: currentUser.name,
+          actorDepartment: currentUser.department,
+          actorRole: currentUser.role,
+          ipAddress: '192.168.1.42',
+          action: 'amendement_texte',
+          details: `Mise à jour des fichiers suivis et documents de travail (${updatedFiles.length} document(s)).`,
         },
         ...dossier.auditTrail,
       ],
@@ -398,6 +423,19 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
 
           <button
             type="button"
+            onClick={() => setActiveTab('files')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
+              activeTab === 'files'
+                ? 'bg-[#061A13] text-emerald-300 border-emerald-500/40 shadow-md -mb-px'
+                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+            Fichiers &amp; Versions ({dossier.trackedFiles?.length || 0})
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('gateway')}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
               activeTab === 'gateway'
@@ -504,6 +542,24 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
           )}
 
           {activeTab === 'data' && <DataDiffViewer dataFields={dossier.dataFields} />}
+
+          {activeTab === 'files' && (
+            <div className="space-y-4">
+              <FileVersionManager
+                files={dossier.trackedFiles || []}
+                onChangeFiles={handleUpdateTrackedFiles}
+                currentUser={{
+                  id: currentUser.id,
+                  name: currentUser.name,
+                  email: currentUser.email,
+                  role: currentUser.role,
+                  department: currentUser.department,
+                }}
+                contextTitle={`Dossier ${dossier.ref} - ${dossier.title}`}
+                readOnly={dossier.status === 'archive' || (dossier.lock.isLocked && Boolean(isLockedByOther))}
+              />
+            </div>
+          )}
 
           {activeTab === 'gateway' && (
             <InterDepGatewayViewer

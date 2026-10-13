@@ -21,6 +21,8 @@ import {
   Check,
 } from 'lucide-react';
 import { Task, Priority, Recurrence, Category, Subtask } from '@/types/task';
+import { TrackedFile } from '@/types/file-version';
+import { FileVersionManager } from '@/components/FileVersionManager';
 import { User } from '@/types/user';
 import { REMINDER_OPTIONS, PRIORITY_CONFIG } from '@/lib/constants';
 import {
@@ -83,6 +85,10 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   const [tagInput, setTagInput] = useState('');
   const [isGeneratingSubtasks, setIsGeneratingSubtasks] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeTab, setActiveTab] = useState<'details' | 'files'>('details');
+  const [trackedFiles, setTrackedFiles] = useState<TrackedFile[]>(
+    initialTask?.trackedFiles ? [...initialTask.trackedFiles] : []
+  );
 
   // Inline Quick Category Creation Popover State
   const [showQuickCategoryCreator, setShowQuickCategoryCreator] = useState(false);
@@ -262,6 +268,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
       completed: status === 'completed',
       subtasks,
       tags,
+      trackedFiles,
     };
 
     soundManager.playClickSound();
@@ -320,6 +327,40 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
           </button>
         </div>
 
+        {/* Modal Navigation Tabs (Détails vs Fichiers versionnés) */}
+        <div className="flex items-center gap-2 px-5 sm:px-6 pt-3 bg-emerald-950/60 border-b border-emerald-500/20">
+          <button
+            type="button"
+            onClick={() => setActiveTab('details')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
+              activeTab === 'details'
+                ? 'bg-[#061A13] text-emerald-300 border-emerald-500/40 shadow-md -mb-px'
+                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
+            }`}
+          >
+            <Folder className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Paramètres de la tâche</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('files')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
+              activeTab === 'files'
+                ? 'bg-[#061A13] text-amber-300 border-emerald-500/40 shadow-md -mb-px'
+                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
+            }`}
+          >
+            <Repeat className="w-3.5 h-3.5 text-amber-400" />
+            <span>Documents &amp; Suivi des Versions</span>
+            {trackedFiles.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                {trackedFiles.length}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Modal Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
           {errorMsg && (
@@ -329,21 +370,36 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
             </div>
           )}
 
-          {/* Title Input */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
-              Titre de la tâche <span className="text-rose-400">*</span>
-            </label>
-            <input
-              type="text"
-              id="task-title-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Préparer la réunion de projet, payer les factures..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-sm font-semibold text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-hidden"
-              autoFocus
-            />
-          </div>
+          {activeTab === 'files' ? (
+            <div className="space-y-4">
+              <FileVersionManager
+                files={trackedFiles}
+                onChangeFiles={(updatedFiles) => setTrackedFiles(updatedFiles)}
+                currentUser={{
+                  name: teamUsers.find((u) => u.id === assigneeId)?.name || 'Collaborateur',
+                  email: teamUsers.find((u) => u.id === assigneeId)?.email,
+                  role: 'collaborateur',
+                }}
+                contextTitle={title ? `Tâche : ${title}` : 'Nouvelle tâche'}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Title Input */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
+                  Titre de la tâche <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="task-title-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ex: Préparer la réunion de projet, payer les factures..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-sm font-semibold text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-hidden"
+                  autoFocus
+                />
+              </div>
 
           {/* Description */}
           <div>
@@ -807,32 +863,34 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               ))}
             </div>
 
-            {/* Add subtask input */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={newSubtaskTitle}
-                onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddSubtask();
-                  }
-                }}
-                placeholder="Ajouter une étape..."
-                className="flex-1 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddSubtask}
-                className="font-bold text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20"
-              >
-                Ajouter
-              </Button>
+              {/* Add subtask input */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                  placeholder="Ajouter une étape..."
+                  className="flex-1 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddSubtask}
+                  className="font-bold text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20"
+                >
+                  Ajouter
+                </Button>
+              </div>
             </div>
-          </div>
+            </>
+          )}
 
           {/* Footer Actions */}
           <div className="p-4 bg-emerald-950/80 border-t border-emerald-500/20 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 flex items-center justify-end gap-3 sticky bottom-0 backdrop-blur-md">

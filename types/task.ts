@@ -38,6 +38,7 @@ export interface Task {
   subtasks: Subtask[];
   color?: string;
   status?: 'todo' | 'in_progress' | 'completed';
+  trackedFiles?: import('./file-version').TrackedFile[];
 }
 
 export interface Category {

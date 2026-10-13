@@ -23,6 +23,7 @@ import {
   SlidersHorizontal,
   FolderPlus,
   Hash,
+  FileText,
 } from 'lucide-react';
 import { Task, Category, Priority, FilterType, GroupByType } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';
@@ -894,6 +895,19 @@ export const ListView: React.FC<ListViewProps> = ({
                                     <ChevronRight className="w-3 h-3" />
                                   )}
                                 </button>
+                              )}
+
+                              {/* Tracked Files & Versions Indicator */}
+                              {task.trackedFiles && task.trackedFiles.length > 0 && (
+                                <span
+                                  onClick={() => onOpenTaskModal(task)}
+                                  className="flex items-center gap-1 text-amber-300 font-semibold text-[11px] bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/30 cursor-pointer hover:bg-amber-500/20 transition-colors"
+                                  title={`${task.trackedFiles.length} document(s) avec historique de versions`}
+                                >
+                                  <FileText className="w-3 h-3 text-amber-400" />
+                                  <span>{task.trackedFiles.length} doc{task.trackedFiles.length > 1 ? 's' : ''}</span>
+                                  <span className="font-mono text-[9px] text-amber-400/80">({task.trackedFiles[0]?.currentVersion})</span>
+                                </span>
                               )}
 
                               {/* Tags Pills with Click-To-Filter */}
