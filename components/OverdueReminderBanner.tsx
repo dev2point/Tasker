@@ -68,10 +68,10 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
   };
 
   return (
-    <div className="space-y-2.5 mb-5 sm:mb-6">
+    <div className={`space-y-2.5 mb-5 sm:mb-6 transition-all duration-150 ${isMenuOpen ? 'relative z-50' : 'relative z-20'}`}>
       {/* Overdue alert banner */}
       {overdueTasks.length > 0 && primaryOverdue && (
-        <div className="bg-rose-950/80 backdrop-blur-xl border border-rose-500/40 rounded-2xl p-3.5 sm:p-4 text-rose-100 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+        <div className="bg-rose-950/80 backdrop-blur-xl border border-rose-500/40 rounded-2xl p-3.5 sm:p-4 text-rose-100 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-30">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-rose-500/20 rounded-xl text-rose-300 shrink-0 mt-0.5 border border-rose-500/30">
               <AlertCircle className="w-4.5 h-4.5" />
@@ -107,19 +107,19 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
 
               {/* Postpone Options Dropdown */}
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-56 bg-slate-900/95 backdrop-blur-xl border border-rose-500/40 rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300/80 border-b border-rose-500/20 mb-1">
+                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-64 max-w-[calc(100vw-2.5rem)] bg-slate-900/98 backdrop-blur-2xl border border-rose-500/50 rounded-2xl shadow-2xl p-2 z-50 text-xs animate-in fade-in zoom-in-95 duration-100 ring-1 ring-rose-500/30">
+                  <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300/90 border-b border-rose-500/20 mb-1">
                     Reporter « {primaryOverdue.title.slice(0, 24)}{primaryOverdue.title.length > 24 ? '...' : ''} »
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handlePostpone(0)}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/20 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-amber-400" />
-                      <span>À aujourd&apos;hui</span>
+                      <span className="font-medium">À aujourd&apos;hui</span>
                     </div>
                     <span className="text-[10px] text-slate-400">Ce jour</span>
                   </button>
@@ -127,11 +127,11 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                   <button
                     type="button"
                     onClick={() => handlePostpone(1)}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/20 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>À demain (+1 jour)</span>
+                      <span className="font-medium">À demain (+1 jour)</span>
                     </div>
                     <span className="text-[10px] text-slate-400">+1j</span>
                   </button>
@@ -139,11 +139,11 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                   <button
                     type="button"
                     onClick={() => handlePostpone(3)}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/20 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <CalendarDays className="w-3.5 h-3.5 text-blue-400" />
-                      <span>Dans 3 jours</span>
+                      <span className="font-medium">Dans 3 jours</span>
                     </div>
                     <span className="text-[10px] text-slate-400">+3j</span>
                   </button>
@@ -151,11 +151,11 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                   <button
                     type="button"
                     onClick={() => handlePostpone(7)}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/20 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Dans 1 semaine (+7 jours)</span>
+                      <span className="font-medium">Dans 1 semaine (+7 jours)</span>
                     </div>
                     <span className="text-[10px] text-slate-400">+7j</span>
                   </button>
@@ -167,7 +167,7 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                         setIsMenuOpen(false);
                         onOpenTask(primaryOverdue);
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-300 hover:text-rose-100 hover:bg-rose-500/20 text-left transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-300 hover:text-rose-100 hover:bg-rose-500/25 text-left transition-colors cursor-pointer font-medium"
                     >
                       <ArrowRight className="w-3.5 h-3.5" />
                       <span>Choisir une autre date...</span>
