@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:load": "vitest run tests/load-performance.test.ts",
     "clean": "next clean",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",

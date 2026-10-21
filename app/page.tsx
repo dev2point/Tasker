@@ -20,6 +20,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { Microsoft365Modal } from '@/components/Microsoft365Modal';
+import { BenchmarkModal } from '@/components/BenchmarkModal';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
@@ -74,6 +75,9 @@ export default function HomePage() {
   const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
   const [categoryTagModalInitialTab, setCategoryTagModalInitialTab] = useState<'categories' | 'tags'>('categories');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState<boolean>(false);
+  const [sandboxBackupTasks, setSandboxBackupTasks] = useState<Task[] | null>(null);
+  const isSandboxActive = sandboxBackupTasks !== null;
 
   const handleOpenCategoryTagManager = useCallback((initialTab: 'categories' | 'tags' = 'categories') => {
     setCategoryTagModalInitialTab(initialTab);
@@ -254,6 +258,24 @@ export default function HomePage() {
   const saveTasks = useCallback((updatedTasks: Task[]) => {
     setTasks(updatedTasks);
   }, [setTasks]);
+
+  // Sandbox load test handlers
+  const handleInjectSandboxTasks = useCallback(
+    (sandboxTasks: Task[]) => {
+      if (sandboxBackupTasks === null) {
+        setSandboxBackupTasks(tasks);
+      }
+      saveTasks(sandboxTasks);
+    },
+    [sandboxBackupTasks, tasks, saveTasks]
+  );
+
+  const handleRestoreRealTasks = useCallback(() => {
+    if (sandboxBackupTasks !== null) {
+      saveTasks(sandboxBackupTasks);
+      setSandboxBackupTasks(null);
+    }
+  }, [sandboxBackupTasks, saveTasks]);
 
   // Save notifications helper
   const saveNotifications = useCallback((updatedNotifs: TaskNotification[]) => {
@@ -726,6 +748,7 @@ export default function HomePage() {
         }
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
+        onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -756,6 +779,7 @@ export default function HomePage() {
         }
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
+        onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -961,6 +985,16 @@ export default function HomePage() {
         onResetDefaultCategories={resetCategories}
         onRenameTag={renameTag}
         onDeleteTag={deleteTag}
+      />
+
+      {/* 9. Benchmark & Load Testing Studio Modal */}
+      <BenchmarkModal
+        isOpen={isBenchmarkModalOpen}
+        onClose={() => setIsBenchmarkModalOpen(false)}
+        currentTasks={tasks}
+        onInjectSandboxTasks={handleInjectSandboxTasks}
+        onRestoreRealTasks={handleRestoreRealTasks}
+        isSandboxActive={isSandboxActive}
       />
 
       {/* PWA Background Services, Offline Connectivity & Floating Install Card */}

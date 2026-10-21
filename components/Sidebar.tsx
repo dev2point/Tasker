@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Lock,
   Building,
+  Gauge,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -45,6 +46,7 @@ export interface SidebarProps {
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
+  onOpenBenchmarkModal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -66,6 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAuthModal,
   onOpenCategoryTagManager,
   onOpenM365Modal,
+  onOpenBenchmarkModal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -533,6 +536,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <Database className="w-4 h-4 text-sky-400 shrink-0" />
                 {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Diagnostic Base SQL</span>}
+              </button>
+            )}
+
+            {/* Load Test & Bench Studio */}
+            {onOpenBenchmarkModal && (
+              <button
+                id="open-benchmark-btn"
+                type="button"
+                onClick={onOpenBenchmarkModal}
+                title={isVisuallyCollapsed ? 'Tests de charge & Bench volumétrique' : undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/20 transition-all group ${
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
+                }`}
+              >
+                <Gauge className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 shrink-0" />
+                {!isVisuallyCollapsed && (
+                  <>
+                    <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">
+                      Tests de charge
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                      Bench
+                    </span>
+                  </>
+                )}
               </button>
             )}
           </div>

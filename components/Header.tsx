@@ -25,6 +25,7 @@ import {
   LogOut,
   Sparkles,
   Building,
+  Gauge,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -45,6 +46,7 @@ interface HeaderProps {
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
+  onOpenBenchmarkModal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -64,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuthModal,
   onOpenCategoryTagManager,
   onOpenM365Modal,
+  onOpenBenchmarkModal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -720,6 +723,29 @@ export const Header: React.FC<HeaderProps> = ({
                             </div>
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
                               M365
+                            </span>
+                          </button>
+                        )}
+
+                        {/* Benchmark & Load Testing Studio */}
+                        {onOpenBenchmarkModal && (
+                          <button
+                            id="mobile-benchmark-btn"
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenBenchmarkModal();
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 text-emerald-300 transition-colors text-xs font-semibold"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                                <Gauge className="w-3.5 h-3.5" />
+                              </div>
+                              <span>Tests de charge</span>
+                            </div>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              Bench
                             </span>
                           </button>
                         )}
