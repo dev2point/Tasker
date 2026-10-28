@@ -1,6 +1,6 @@
 {
-  "summary": "Plan complet détaillant les prérequis exacts, démarches étape par étape et outils intégrés à l'application pour configurer un compte professionnel Microsoft avec votre propre domaine personnalisé et accéder à l'espace développeur (Microsoft Entra ID, Microsoft Graph et Azure).",
-  "updatedAt": "2026-10-13T16:49:39.954140814Z",
-  "requestFeedback": true,
-  "userFacing": true
+  "summary":  "Implementation plan for redesigning AuthModal with a desktop split-screen layout, left welcome panel with mfisca-tasks branding, cabinet highlights, security and RGPD compliance, and right authentication/signup form.",
+  "updatedAt":  "2026-10-23T11:36:31.306063716Z",
+  "requestFeedback":  true,
+  "userFacing":  true
 }

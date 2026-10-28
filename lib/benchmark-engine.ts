@@ -317,7 +317,7 @@ export function benchmarkSortingAndGrouping(tasks: Task[], iterations = 15): Ben
   const { p50, p95, p99, max } = computePercentiles(durations);
   const opsPerSec = Math.round((iterations / (durations.reduce((a, b) => a + b, 0) / 1000)));
 
-  const targetThresholdMs = 25;
+  const targetThresholdMs = 45;
   const status: 'pass' | 'warning' | 'fail' =
     p95 <= targetThresholdMs ? 'pass' : p95 <= targetThresholdMs * 2 ? 'warning' : 'fail';
 

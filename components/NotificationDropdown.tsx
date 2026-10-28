@@ -9,6 +9,9 @@ import {
   AlertTriangle,
   X,
   ExternalLink,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import { TaskNotification, Task } from '@/types/task';
 import { formatDueDateFrench } from '@/lib/reminders';
@@ -117,17 +120,41 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             notifications.map((notif) => {
               const matchedTask = tasks.find((t) => t.id === notif.taskId);
               const isOverdue = notif.type === 'overdue';
+              const isAdminAction =
+                notif.type === 'admin_update' ||
+                notif.type === 'admin_completed' ||
+                notif.type === 'admin_delete';
+
+              const getNotificationIcon = () => {
+                if (notif.type === 'admin_completed') {
+                  return <ShieldCheck className="w-4 h-4 text-emerald-300" />;
+                }
+                if (notif.type === 'admin_delete') {
+                  return <ShieldAlert className="w-4 h-4 text-rose-300" />;
+                }
+                if (notif.type === 'admin_update') {
+                  return <Shield className="w-4 h-4 text-purple-300" />;
+                }
+                if (isOverdue) {
+                  return <AlertTriangle className="w-4 h-4 text-rose-300" />;
+                }
+                return <Clock className="w-4 h-4 text-amber-300" />;
+              };
 
               return (
                 <div
                   key={notif.id}
                   onClick={() => {
-                    onSelectTask(notif.taskId);
+                    if (notif.type !== 'admin_delete' && notif.taskId) {
+                      onSelectTask(notif.taskId);
+                    }
                     onClose();
                   }}
                   className={`p-3 rounded-xl border transition-all cursor-pointer hover:shadow-xs flex items-start gap-3 ${
                     notif.read
                       ? 'bg-emerald-950/30 border-emerald-500/20 opacity-75 hover:opacity-100'
+                      : isAdminAction
+                      ? 'bg-purple-950/40 border-purple-500/40'
                       : isOverdue
                       ? 'bg-rose-950/60 border-rose-500/40'
                       : 'bg-emerald-950/60 border-emerald-500/40'
@@ -135,30 +162,45 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                 >
                   <div
                     className={`p-2 rounded-xl shrink-0 mt-0.5 border ${
-                      isOverdue
+                      isAdminAction
+                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                        : isOverdue
                         ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                         : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                     }`}
                   >
-                    {isOverdue ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                    {getNotificationIcon()}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="font-bold text-xs text-white truncate">
-                        {notif.taskTitle}
-                      </span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {isAdminAction && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-500/30 text-purple-200 border border-purple-500/40 uppercase">
+                            Admin
+                          </span>
+                        )}
+                        <span className="font-bold text-xs text-white truncate">
+                          {notif.taskTitle}
+                        </span>
+                      </div>
                       {!notif.read && (
                         <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                       )}
                     </div>
 
-                    <p className="text-[11px] text-slate-300 mt-0.5 font-medium">
-                      {isOverdue ? 'Échéance dépassée' : 'Rappel d’échéance'} :{' '}
-                      {matchedTask ? formatDueDateFrench(matchedTask.dueDate, matchedTask.dueTime) : ''}
+                    <p className="text-[11px] text-slate-300 mt-0.5 font-medium leading-relaxed">
+                      {notif.message ? (
+                        notif.message
+                      ) : (
+                        <>
+                          {isOverdue ? 'Échéance dépassée' : 'Rappel d’échéance'} :{' '}
+                          {matchedTask ? formatDueDateFrench(matchedTask.dueDate, matchedTask.dueTime) : ''}
+                        </>
+                      )}
                     </p>
 
-                    <span className="text-[10px] text-amber-300 font-mono mt-1 block">
+                    <span className="text-[10px] text-amber-300/90 font-mono mt-1 block">
                       {new Date(notif.triggerTime).toLocaleTimeString('fr-FR', {
                         hour: '2-digit',
                         minute: '2-digit',

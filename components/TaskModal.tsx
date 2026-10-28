@@ -44,6 +44,7 @@ interface TaskModalProps {
   defaultDate?: string;
   allExistingTags?: string[];
   onQuickCreateCategory?: (category: Category) => void;
+  currentUser?: User | null;
 }
 
 const DEFAULT_POPULAR_TAGS = ['urgent', 'projet', 'client', 'design', 'bug', 'réunion', 'important', 'revue'];
@@ -57,6 +58,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   defaultDate,
   allExistingTags = [],
   onQuickCreateCategory,
+  currentUser,
 }) => {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
@@ -307,12 +309,19 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
               <CategoryIcon name={selectedCategoryObj.iconName} className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
-                {initialTask ? 'Modifier la tâche' : 'Nouvelle tâche'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
+                  {initialTask ? 'Modifier la tâche' : 'Nouvelle tâche'}
+                </h2>
+                {currentUser?.role === 'admin' && initialTask && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase">
+                    Admin
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-300 font-medium">
                 {initialTask
-                  ? 'Modifiez les échéances, rappels, catégories ou tags'
+                  ? `Créée par ${initialTask.creatorName || "l'équipe"} • Modifiez les échéances et détails`
                   : 'Planifiez une tâche avec catégorie, étiquettes et alertes'}
               </p>
             </div>

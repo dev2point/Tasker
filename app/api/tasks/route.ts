@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { tasks, users } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
+import { tasks, users, activityLogs } from '@/src/db/schema';
+import { eq, or } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 
@@ -28,7 +28,22 @@ export async function GET(req: NextRequest) {
 
   try {
     await ensureDatabaseTables();
-    const rows = await db.select().from(tasks);
+    
+    // RBAC: Admin sees all tasks; regular users only see tasks they created or that are assigned to them
+    let rows;
+    if (user.role === 'admin') {
+      rows = await db.select().from(tasks);
+    } else {
+      rows = await db
+        .select()
+        .from(tasks)
+        .where(
+          or(
+            eq(tasks.creatorId, user.id),
+            eq(tasks.assigneeId, user.id)
+          )
+        );
+    }
 
     const formatted: Task[] = rows.map((r) => ({
       id: r.id,
@@ -114,7 +129,42 @@ export async function POST(req: NextRequest) {
         },
       });
 
-    let validCreatorId = taskData.creatorId || user.id;
+    // Check if task exists to verify RBAC rights on update
+    const existingRows = await db.select().from(tasks).where(eq(tasks.id, taskData.id)).limit(1);
+    const existing = existingRows[0];
+    const isAdmin = user.role === 'admin';
+
+    if (existing) {
+      const isCreator = existing.creatorId === user.id;
+      const isAssignee = existing.assigneeId === user.id;
+
+      if (!isAdmin && !isCreator && !isAssignee) {
+        return NextResponse.json(
+          { error: "Action non autorisée. Vous n'avez pas les droits pour modifier cette tâche." },
+          { status: 403 }
+        );
+      }
+
+      // Log admin modifications on user's tasks
+      if (isAdmin && (existing.creatorId !== user.id || existing.assigneeId !== user.id)) {
+        try {
+          const actionKind = taskData.completed !== existing.completed ? 'completed' : 'updated';
+          await db.insert(activityLogs).values({
+            id: 'act-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+            taskId: existing.id,
+            userId: user.id,
+            userName: user.name,
+            action: actionKind,
+            details: `L'administrateur ${user.name} a ${actionKind === 'completed' ? 'marqué comme terminée' : 'modifié'} la tâche « ${existing.title} »`,
+            createdAt: new Date(),
+          });
+        } catch (logErr) {
+          console.warn('Activity log insert skipped:', logErr);
+        }
+      }
+    }
+
+    let validCreatorId = existing ? existing.creatorId : (taskData.creatorId || user.id);
     if (validCreatorId) {
       const creatorExists = await db.select().from(users).where(eq(users.id, validCreatorId)).limit(1);
       if (creatorExists.length === 0) {
@@ -205,6 +255,37 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'Missing task id' }, { status: 400 });
+    }
+
+    // RBAC: Verify if task exists and check if user is admin or creator
+    const existingRows = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    if (existingRows.length > 0) {
+      const existing = existingRows[0];
+      const isAdmin = user.role === 'admin';
+      const isCreator = existing.creatorId === user.id;
+
+      if (!isAdmin && !isCreator) {
+        return NextResponse.json(
+          { error: "Action non autorisée. Seul le créateur ou l'administrateur peut supprimer cette tâche." },
+          { status: 403 }
+        );
+      }
+
+      if (isAdmin && existing.creatorId && existing.creatorId !== user.id) {
+        try {
+          await db.insert(activityLogs).values({
+            id: 'act-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+            taskId: existing.id,
+            userId: user.id,
+            userName: user.name,
+            action: 'updated',
+            details: `L'administrateur ${user.name} a supprimé la tâche « ${existing.title} »`,
+            createdAt: new Date(),
+          });
+        } catch (e) {
+          console.warn('Activity log deletion trace skipped:', e);
+        }
+      }
     }
 
     await db.delete(tasks).where(eq(tasks.id, id));

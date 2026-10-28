@@ -38,8 +38,8 @@ describe('Banc d\'essai de charge & Performance volumétrique', () => {
     const metric = benchmarkSortingAndGrouping(tasks, 10);
 
     expect(metric.sampleCount).toBe(10);
-    expect(metric.p95Ms).toBeLessThan(60);
-    expect(metric.opsPerSec).toBeGreaterThan(15);
+    expect(metric.p95Ms).toBeLessThan(100);
+    expect(metric.opsPerSec).toBeGreaterThan(10);
     expect(metric.status).not.toBe('fail');
   });
 

@@ -66,7 +66,11 @@ export interface TaskNotification {
   dueTime?: string;
   triggerTime: string;
   read: boolean;
-  type: 'due' | 'reminder' | 'overdue';
+  type: 'due' | 'reminder' | 'overdue' | 'admin_update' | 'admin_completed' | 'admin_delete' | 'assigned';
+  targetUserId?: string;
+  actionBy?: string;
+  actionByName?: string;
+  message?: string;
   snoozedUntil?: string;
 }
 

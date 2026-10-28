@@ -296,44 +296,18 @@ export const AdminView: React.FC<AdminViewProps> = ({
   // Security check: if not admin
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="py-12 px-4 max-w-2xl mx-auto text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-xs">
-          <Lock className="w-7 h-7" />
+      <div className="py-16 px-4 max-w-xl mx-auto text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto shadow-lg">
+          <Lock className="w-8 h-8 stroke-[1.8]" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Accès Administrateur Restreint</h2>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          Cette interface d’administration est réservée aux utilisateurs disposant du rôle{' '}
-          <strong className="text-slate-900">Admin</strong>.
-          {currentUser ? (
-            <span>
-              {' '}Votre rôle actuel est <strong className="uppercase text-amber-700">{currentUser.role}</strong>.
-            </span>
-          ) : (
-            ' Vous naviguez actuellement en mode invité ou membre.'
-          )}
+        <h2 className="text-xl font-bold text-white">Accès Administrateur Restreint</h2>
+        <p className="text-xs text-slate-300 leading-relaxed">
+          Cette interface d’administration est exclusivement réservée aux utilisateurs disposant du rôle <strong className="text-white">Admin</strong>. Les rôles et privilèges sont strictement gérés par un administrateur système.
         </p>
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-          <Button
-            onClick={() => {
-              console.log('[Planit AdminView] Promoting session user to Admin role');
-              onSelectUser({
-                id: currentUser?.id || 'admin-demo',
-                name: currentUser?.name || 'Administrateur',
-                email: currentUser?.email || 'admin@planit.local',
-                role: 'admin',
-                department: currentUser?.department || 'Direction',
-                status: 'active',
-                createdAt: currentUser?.createdAt || new Date().toISOString(),
-              });
-            }}
-            className="font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200"
-          >
-            <Shield className="w-4 h-4 mr-1.5" />
-            Activer le rôle Administrateur
-          </Button>
+        <div className="pt-3 flex items-center justify-center gap-3">
           {onOpenAuthModal && (
-            <Button variant="outline" onClick={onOpenAuthModal} className="font-semibold">
-              Se connecter / Changer de compte
+            <Button variant="outline" onClick={onOpenAuthModal} className="font-semibold text-xs border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20">
+              Se connecter avec un compte administrateur
             </Button>
           )}
         </div>

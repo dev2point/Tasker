@@ -27,6 +27,15 @@ import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard';
 import { useSession, getSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
+import {
+  canUserViewTask,
+  canUserCompleteTask,
+  canUserEditTask,
+  canUserDeleteTask,
+  filterTasksForUser,
+  filterNotificationsForUser,
+  buildAdminActionNotification,
+} from '@/lib/rbac';
 
 import { Task, TaskNotification, ViewMode } from '@/types/task';
 import { User, UserRole } from '@/types/user';
@@ -173,7 +182,7 @@ export default function HomePage() {
         id: u.id,
         name: u.name || u.email?.split('@')[0] || 'Utilisateur',
         email: u.email,
-        role: (u.role as UserRole) || 'admin',
+        role: (u.role as UserRole) || 'member',
         department: u.department || undefined,
         status: (u.status as any) || 'active',
         avatarUrl: u.image || undefined,
@@ -182,6 +191,13 @@ export default function HomePage() {
     }
     return selectedFallbackUser;
   }, [authSession?.user, selectedFallbackUser]);
+
+  // Strict Navigation Guard: non-admins cannot stay in admin view
+  useEffect(() => {
+    if (currentView === 'admin' && currentUser?.role !== 'admin') {
+      setCurrentView('list');
+    }
+  }, [currentView, currentUser?.role, setCurrentView]);
 
   // Load tasks and team users strictly when user is authenticated
   useEffect(() => {
@@ -354,6 +370,47 @@ export default function HomePage() {
 
     if (taskPayload.id) {
       // Update existing
+      const existing = tasks.find((t) => t.id === taskPayload.id);
+      if (existing && !canUserEditTask(existing, currentUser)) {
+        soundManager.playClickSound();
+        sendBrowserNotification('Action non autorisée', {
+          body: "Vous n'avez pas les droits pour modifier cette tâche.",
+        });
+        return;
+      }
+
+      // Check if admin is modifying someone else's task -> automatically notify them!
+      if (currentUser?.role === 'admin' && existing) {
+        const isSomeoneElses =
+          (existing.creatorId && existing.creatorId !== currentUser.id) ||
+          (existing.assigneeId && existing.assigneeId !== currentUser.id);
+
+        if (isSomeoneElses) {
+          const targetId =
+            existing.assigneeId && existing.assigneeId !== currentUser.id
+              ? existing.assigneeId
+              : existing.creatorId;
+
+          if (targetId) {
+            let detail = `L'administrateur ${currentUser.name} a mis à jour votre tâche « ${taskPayload.title || existing.title} ».`;
+            if (taskPayload.completed !== undefined && taskPayload.completed !== existing.completed) {
+              detail = `L'administrateur ${currentUser.name} a ${taskPayload.completed ? 'validé' : 'réouvert'} votre tâche « ${existing.title} ».`;
+            } else if (taskPayload.dueDate && taskPayload.dueDate !== existing.dueDate) {
+              detail = `L'administrateur ${currentUser.name} a modifié l'échéance de votre tâche « ${existing.title} » au ${taskPayload.dueDate}.`;
+            }
+
+            const notif = buildAdminActionNotification(
+              taskPayload.completed ? 'admin_completed' : 'admin_update',
+              { id: existing.id, title: taskPayload.title || existing.title, dueDate: taskPayload.dueDate || existing.dueDate },
+              currentUser,
+              targetId,
+              detail
+            );
+            saveNotifications([notif, ...notifications]);
+          }
+        }
+      }
+
       let updatedTaskObj: Task | null = null;
       const updated = tasks.map((t) => {
         if (t.id === taskPayload.id) {
@@ -371,7 +428,7 @@ export default function HomePage() {
       }
       saveTasks(updated);
     } else {
-      // Create new
+      // Create new: automatically attach creatorId and creatorName
       const newTask: Task = {
         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
         title: taskPayload.title || 'Nouvelle tâche',
@@ -383,6 +440,11 @@ export default function HomePage() {
         completed: Boolean(taskPayload.completed),
         createdAt: nowIso,
         updatedAt: nowIso,
+        creatorId: currentUser?.id,
+        creatorName: currentUser?.name,
+        assigneeId: taskPayload.assigneeId,
+        assigneeName: taskPayload.assigneeName,
+        assigneeAvatar: taskPayload.assigneeAvatar,
         reminderMinutesBefore:
           typeof taskPayload.reminderMinutesBefore === 'number'
             ? taskPayload.reminderMinutesBefore
@@ -400,6 +462,43 @@ export default function HomePage() {
 
   // Toggle Task Completion (with automated recurrence handling)
   const handleToggleComplete = (taskId: string) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    if (!canUserCompleteTask(targetTask, currentUser)) {
+      soundManager.playClickSound();
+      sendBrowserNotification('Action non autorisée', {
+        body: "Seul l'assigné, le créateur ou un administrateur peut marquer cette tâche comme terminée.",
+      });
+      return;
+    }
+
+    // If admin is completing someone else's task, notify that user!
+    if (currentUser?.role === 'admin') {
+      const isSomeoneElses =
+        (targetTask.creatorId && targetTask.creatorId !== currentUser.id) ||
+        (targetTask.assigneeId && targetTask.assigneeId !== currentUser.id);
+
+      if (isSomeoneElses) {
+        const targetId =
+          targetTask.assigneeId && targetTask.assigneeId !== currentUser.id
+            ? targetTask.assigneeId
+            : targetTask.creatorId;
+
+        if (targetId) {
+          const nextCompletedState = !targetTask.completed;
+          const notif = buildAdminActionNotification(
+            nextCompletedState ? 'admin_completed' : 'admin_update',
+            targetTask,
+            currentUser,
+            targetId,
+            `L'administrateur ${currentUser.name} a ${nextCompletedState ? 'validé et marqué comme terminée' : 'réouvert'} votre tâche « ${targetTask.title} ».`
+          );
+          saveNotifications([notif, ...notifications]);
+        }
+      }
+    }
+
     let newTaskToSpawn: Task | null = null;
     let targetUpdatedTask: Task | null = null;
 
@@ -449,6 +548,41 @@ export default function HomePage() {
 
   // Delete Task
   const handleDeleteTask = (taskId: string) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    if (!canUserDeleteTask(targetTask, currentUser)) {
+      soundManager.playClickSound();
+      sendBrowserNotification('Action non autorisée', {
+        body: "Seul le créateur ou un administrateur peut supprimer cette tâche.",
+      });
+      return;
+    }
+
+    // If admin deletes someone else's task, notify that user!
+    if (currentUser?.role === 'admin') {
+      const isSomeoneElses =
+        (targetTask.creatorId && targetTask.creatorId !== currentUser.id) ||
+        (targetTask.assigneeId && targetTask.assigneeId !== currentUser.id);
+
+      if (isSomeoneElses) {
+        const targetId =
+          targetTask.assigneeId && targetTask.assigneeId !== currentUser.id
+            ? targetTask.assigneeId
+            : targetTask.creatorId;
+
+        if (targetId) {
+          const notif = buildAdminActionNotification(
+            'admin_delete',
+            targetTask,
+            currentUser,
+            targetId
+          );
+          saveNotifications([notif, ...notifications]);
+        }
+      }
+    }
+
     deleteTaskFromDb(taskId);
     saveTasks(tasks.filter((t) => t.id !== taskId));
   };
@@ -686,20 +820,31 @@ export default function HomePage() {
     }
   };
 
+  // Strict RBAC: compute visible tasks & notifications based on current user role & ownership
+  const visibleTasks = useMemo(() => {
+    return filterTasksForUser(tasks, currentUser);
+  }, [tasks, currentUser]);
+
+  const visibleTaskIds = useMemo(() => new Set(visibleTasks.map((t) => t.id)), [visibleTasks]);
+
+  const userNotifications = useMemo(() => {
+    return filterNotificationsForUser(notifications, currentUser, visibleTaskIds);
+  }, [notifications, currentUser, visibleTaskIds]);
+
   // Computed data for top banners and badges
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const overdueTasks = useMemo(() => tasks.filter((t) => isTaskOverdue(t)), [tasks]);
+  const overdueTasks = useMemo(() => visibleTasks.filter((t) => isTaskOverdue(t)), [visibleTasks]);
   const dueTodayTasks = useMemo(
-    () => tasks.filter((t) => t.dueDate === todayStr && !t.completed),
-    [tasks, todayStr]
+    () => visibleTasks.filter((t) => t.dueDate === todayStr && !t.completed),
+    [visibleTasks, todayStr]
   );
   const unreadNotificationsCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
+    () => userNotifications.filter((n) => !n.read).length,
+    [userNotifications]
   );
   const activeRemindersCount = useMemo(
-    () => tasks.filter((t) => !t.completed && t.reminderMinutesBefore >= 0).length,
-    [tasks]
+    () => visibleTasks.filter((t) => !t.completed && t.reminderMinutesBefore >= 0).length,
+    [visibleTasks]
   );
 
   // Strict Confidentiality Wall: Render authentication gate immediately when no authenticated user
@@ -754,7 +899,7 @@ export default function HomePage() {
         activeRemindersCount={activeRemindersCount}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
-        pendingTasksCount={tasks.filter((t) => !t.completed).length}
+        pendingTasksCount={visibleTasks.filter((t) => !t.completed).length}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
@@ -785,7 +930,7 @@ export default function HomePage() {
         activeRemindersCount={activeRemindersCount}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
-        pendingTasksCount={tasks.filter((t) => !t.completed).length}
+        pendingTasksCount={visibleTasks.filter((t) => !t.completed).length}
       />
 
       {/* Main Content Area: dynamically offset by the Left Sidebar on desktop/tablet */}
@@ -808,7 +953,8 @@ export default function HomePage() {
         {/* Dynamic Views */}
         {currentView === 'list' && (
           <ListView
-            tasks={tasks}
+            tasks={visibleTasks}
+            currentUser={currentUser}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
             onToggleComplete={handleToggleComplete}
@@ -827,7 +973,7 @@ export default function HomePage() {
 
         {currentView === 'calendar' && (
           <CalendarView
-            tasks={tasks}
+            tasks={visibleTasks}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
             onToggleComplete={handleToggleComplete}
@@ -836,7 +982,7 @@ export default function HomePage() {
 
         {currentView === 'kanban' && (
           <KanbanView
-            tasks={tasks}
+            tasks={visibleTasks}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
             onUpdateTaskStatus={handleUpdateTaskStatus}
@@ -845,7 +991,7 @@ export default function HomePage() {
 
         {currentView === 'stats' && (
           <StatsView
-            tasks={tasks}
+            tasks={visibleTasks}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
           />
@@ -886,6 +1032,7 @@ export default function HomePage() {
         teamUsers={teamUsers}
         defaultDate={defaultDateForModal}
         onQuickCreateCategory={saveCategory}
+        currentUser={currentUser}
       />
 
       {/* 2. Active Reminder Ringing Popup */}
@@ -905,7 +1052,7 @@ export default function HomePage() {
       <NotificationDropdown
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
-        notifications={notifications}
+        notifications={userNotifications}
         tasks={tasks}
         onMarkAllAsRead={handleMarkAllNotificationsRead}
         onClearAll={handleClearAllNotifications}

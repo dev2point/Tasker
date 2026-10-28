@@ -35,6 +35,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TaskScrollList } from '@/components/TaskScrollList';
+import { User } from '@/types/user';
+import { canUserCompleteTask, canUserDeleteTask } from '@/lib/rbac';
 
 interface ListViewProps {
   tasks: Task[];
@@ -47,6 +49,7 @@ interface ListViewProps {
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
   onPostponeTask: (taskId: string, days: number) => void;
   onOpenCategoryTagManager?: (initialTab?: 'categories' | 'tags') => void;
+  currentUser?: User | null;
 }
 
 export const ListView: React.FC<ListViewProps> = ({
@@ -60,6 +63,7 @@ export const ListView: React.FC<ListViewProps> = ({
   onToggleSubtask,
   onPostponeTask,
   onOpenCategoryTagManager,
+  currentUser,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
@@ -341,6 +345,11 @@ export const ListView: React.FC<ListViewProps> = ({
   }, [sortedTasks, groupBy, categories]);
 
   const handleCheckboxClick = (taskId: string, currentCompleted: boolean) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task && currentUser && !canUserCompleteTask(task, currentUser)) {
+      soundManager.playClickSound();
+      return;
+    }
     if (!currentCompleted) {
       soundManager.playCompleteSound();
       confetti({
@@ -762,6 +771,8 @@ export const ListView: React.FC<ListViewProps> = ({
                   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
                   const isOverdue = isTaskOverdue(task);
                   const isExpanded = Boolean(expandedTasks[task.id]);
+                  const canComplete = canUserCompleteTask(task, currentUser || null);
+                  const canDelete = canUserDeleteTask(task, currentUser || null);
                   const completedSubtasks = task.subtasks?.filter((s) => s.completed).length || 0;
                   const totalSubtasks = task.subtasks?.length || 0;
                   const subtaskProgress =
@@ -783,10 +794,17 @@ export const ListView: React.FC<ListViewProps> = ({
                         <div className="flex items-start gap-3 min-w-0 flex-1">
                           <button
                             type="button"
+                            disabled={!canComplete}
                             onClick={() => handleCheckboxClick(task.id, task.completed)}
-                            className="mt-0.5 text-slate-400 hover:text-emerald-400 transition-colors shrink-0 focus:outline-hidden cursor-pointer"
+                            className={`mt-0.5 transition-colors shrink-0 focus:outline-hidden ${
+                              !canComplete
+                                ? 'opacity-40 cursor-not-allowed text-slate-500'
+                                : 'text-slate-400 hover:text-emerald-400 cursor-pointer'
+                            }`}
                             title={
-                              task.completed
+                              !canComplete
+                                ? "Seul l'assigné, le créateur ou un administrateur peut marquer cette tâche comme terminée"
+                                : task.completed
                                 ? 'Marquer comme non terminée'
                                 : 'Marquer comme terminée'
                             }
@@ -979,9 +997,22 @@ export const ListView: React.FC<ListViewProps> = ({
                           {/* Delete */}
                           <button
                             type="button"
-                            onClick={() => onDeleteTask(task.id)}
-                            title="Supprimer la tâche"
-                            className="p-1.5 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            disabled={!canDelete}
+                            onClick={() => {
+                              if (canDelete) {
+                                onDeleteTask(task.id);
+                              }
+                            }}
+                            title={
+                              canDelete
+                                ? 'Supprimer la tâche'
+                                : "Seul le créateur ou l'administrateur peut supprimer cette tâche"
+                            }
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              canDelete
+                                ? 'text-slate-300 hover:text-rose-400 hover:bg-rose-950/40 cursor-pointer'
+                                : 'text-slate-600 opacity-25 cursor-not-allowed'
+                            }`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>

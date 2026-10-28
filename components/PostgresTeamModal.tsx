@@ -11,7 +11,6 @@ import {
   Plus,
   Key,
   Layers,
-  UserCheck,
   Shield,
   Server,
   Cloud,
@@ -354,9 +353,9 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-white">Utilisateur Actif (Session Actuelle)</h4>
+                  <h4 className="text-xs font-bold text-white">Membres de l'équipe</h4>
                   <p className="text-[11px] text-slate-300">
-                    Sélectionnez votre profil pour tester les permissions et voir vos tâches assignées.
+                    Liste des membres enregistrés et leurs rôles attribués.
                   </p>
                 </div>
                 <Button
@@ -495,17 +494,6 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
                           <span className="text-[11px] font-medium text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">
                             {assignedCount} tâche{assignedCount > 1 ? 's' : ''}
                           </span>
-                          {!isCurrent && (
-                            <Button
-                              variant="outline"
-                              size="xs"
-                              onClick={() => onSelectUser(u)}
-                              className="text-xs gap-1 border-emerald-500/40 text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35"
-                            >
-                              <UserCheck className="w-3 h-3" />
-                              Incarner
-                            </Button>
-                          )}
                         </div>
                       </div>
                     );

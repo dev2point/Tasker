@@ -17,14 +17,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'PlanIt - Tâches, Calendrier & Rappels Intelligents',
+  title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
   description:
     'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif et au mode hors-ligne.',
-  applicationName: 'PlanIt',
+  applicationName: 'mfisca-tasks',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'PlanIt',
+    title: 'mfisca-tasks',
   },
   formatDetection: {
     telephone: false,
@@ -39,14 +39,14 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   openGraph: {
-    title: 'PlanIt - Tâches, Calendrier & Rappels Intelligents',
+    title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
     description:
       'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif et au mode hors-ligne.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PlanIt - Tâches, Calendrier & Rappels Intelligents',
+    title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
     description:
       'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif.',
   },
