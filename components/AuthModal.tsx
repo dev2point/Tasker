@@ -14,7 +14,6 @@ import {
   AlertCircle,
   KeyRound,
   Shield,
-  Sparkles,
   Database,
   Check,
 } from 'lucide-react';
@@ -215,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <div className="relative z-10 space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5" />
               <span>mfisca-tasks Sécurisé</span>
             </div>
             <div>

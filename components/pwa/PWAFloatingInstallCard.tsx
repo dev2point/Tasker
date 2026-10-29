@@ -27,12 +27,22 @@ export const PWAFloatingInstallCard: React.FC = () => {
     install,
   } = usePWAInstall();
 
-  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
+  const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     try {
-      return sessionStorage.getItem('planit_pwa_card_minimized') === 'true';
+      return localStorage.getItem('planit_pwa_dismissed') === 'true';
     } catch {
       return false;
+    }
+  });
+
+  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const val = sessionStorage.getItem('planit_pwa_card_minimized');
+      return val !== 'false'; // Default to true (minimized) so it never blocks the workspace
+    } catch {
+      return true;
     }
   });
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(false);
@@ -48,11 +58,21 @@ export const PWAFloatingInstallCard: React.FC = () => {
     }
   };
 
+  const handleDismissPermanently = () => {
+    soundManager.playClickSound();
+    setIsDismissed(true);
+    try {
+      localStorage.setItem('planit_pwa_dismissed', 'true');
+    } catch {
+      // ignore
+    }
+  };
+
   const handleExpand = () => {
     soundManager.playClickSound();
     setIsMinimized(false);
     try {
-      sessionStorage.removeItem('planit_pwa_card_minimized');
+      sessionStorage.setItem('planit_pwa_card_minimized', 'false');
     } catch {
       // ignore
     }
@@ -78,7 +98,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
     }
   };
 
-  if (isInstalled || !isCompatible) {
+  if (isDismissed || isInstalled || !isCompatible) {
     return null;
   }
 
@@ -104,17 +124,14 @@ export const PWAFloatingInstallCard: React.FC = () => {
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               title="Installer l'application PlanIt"
-              className="pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/40 shadow-2xl shadow-emerald-950/60 text-slate-100 hover:text-white hover:border-emerald-400 hover:bg-emerald-950/80 transition-all group"
+              className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/30 shadow-xl shadow-black/50 text-slate-200 hover:text-white hover:border-emerald-400 hover:bg-emerald-950/80 transition-all group cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center font-bold shadow-xs">
-                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                <Download className="w-3 h-3 stroke-[2.5]" />
               </div>
-              <div className="flex items-center gap-1.5 pr-1">
-                <span className="text-xs font-bold whitespace-nowrap text-emerald-200">
-                  Installer l&apos;application
-                </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
+              <span className="text-xs font-semibold whitespace-nowrap text-emerald-200">
+                Installer l&apos;App
+              </span>
             </motion.button>
           ) : (
             /* ============================================================ */
@@ -126,28 +143,23 @@ export const PWAFloatingInstallCard: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.95 }}
               transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-              className="pointer-events-auto w-[calc(100vw-2.5rem)] max-w-[320px] sm:max-w-[340px] bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/30 rounded-2xl shadow-2xl shadow-emerald-950/80 p-3.5 sm:p-4 text-slate-100 relative overflow-hidden"
+              className="pointer-events-auto w-[calc(100vw-2.5rem)] max-w-[320px] bg-[#071d15] backdrop-blur-2xl border border-emerald-500/30 rounded-xl shadow-2xl shadow-black/80 p-3.5 text-slate-100 relative overflow-hidden"
             >
-              {/* Subtle Top Accent Gradient */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300" />
+              {/* Subtle Top Accent */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500" />
 
               {/* Card Header */}
               <div className="flex items-start justify-between gap-2.5 pt-0.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center font-bold shadow-xs shrink-0">
-                    <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <CalendarIcon className="w-4 h-4 stroke-[2.2]" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="font-bold text-sm text-white leading-tight">
-                        PlanIt
-                      </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        {isDesktop ? `App ${platformName}` : 'Application'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-emerald-300/80 font-medium">
-                      Version installable disponible
+                    <h4 className="font-bold text-xs text-white leading-tight">
+                      PlanIt · {isDesktop ? `App ${platformName}` : 'Application'}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-medium">
+                      Accès direct & mode hors-ligne
                     </p>
                   </div>
                 </div>
@@ -157,56 +169,36 @@ export const PWAFloatingInstallCard: React.FC = () => {
                   onClick={handleMinimize}
                   aria-label="Réduire l'invitation"
                   title="Réduire"
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
+                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Card Body Message */}
-              <p className="mt-2.5 text-xs text-slate-300 leading-relaxed">
-                {isDesktop ? (
-                  <>
-                    Installez PlanIt sur votre <strong className="text-white">{platformName}</strong> pour un accès direct depuis le bureau, en plein écran et avec alertes garanties hors-ligne.
-                  </>
-                ) : (
-                  <>
-                    Ajoutez PlanIt à votre écran d&apos;accueil pour profiter d&apos;une expérience plein écran rapide et sans barre de navigation.
-                  </>
-                )}
+              <p className="mt-2 text-xs text-slate-300 leading-relaxed">
+                {isDesktop
+                  ? `Installez l'application sur votre bureau ${platformName} pour une utilisation rapide et des rappels garantis.`
+                  : "Ajoutez PlanIt sur votre écran d'accueil pour profiter d'une expérience plein écran."}
               </p>
 
-              {/* Feature Highlights Pills */}
-              <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold text-slate-300 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-200 border border-emerald-500/30">
-                  <Zap className="w-2.5 h-2.5 text-amber-400" />
-                  Accès instantané
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-200 border border-emerald-500/30">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
-                  Mode hors-ligne
-                </span>
-              </div>
-
               {/* Action Buttons */}
-              <div className="mt-3.5 flex items-center gap-2">
+              <div className="mt-3 flex items-center gap-2">
                 <button
                   type="button"
                   id="pwa-floating-install-action"
                   onClick={handleInstallClick}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-emerald-950 font-extrabold text-xs shadow-lg shadow-emerald-950/50 transition-all border border-emerald-400/50 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs shadow-xs transition-all cursor-pointer"
                 >
                   {isIOS ? (
                     <>
                       <Smartphone className="w-3.5 h-3.5" />
-                      <span>Installer sur iOS</span>
+                      <span>Installer</span>
                     </>
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5 stroke-[2.4]" />
-                      <span>
-                        {isDesktop ? `Installer sur ${platformName}` : 'Installer l\'application'}
-                      </span>
+                      <span>Installer</span>
                     </>
                   )}
                 </button>
@@ -214,9 +206,18 @@ export const PWAFloatingInstallCard: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleMinimize}
-                  className="py-2 px-2.5 rounded-xl border border-emerald-500/30 text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                  className="py-1.5 px-2.5 rounded-lg border border-emerald-500/25 text-xs font-medium text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-all cursor-pointer"
                 >
                   Plus tard
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDismissPermanently}
+                  title="Ne plus proposer"
+                  className="py-1.5 px-2 rounded-lg text-[11px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  Masquer
                 </button>
               </div>
             </motion.div>

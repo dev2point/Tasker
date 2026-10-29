@@ -73,6 +73,7 @@ export default function HomePage() {
   // Modals state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskModalMode, setTaskModalMode] = useState<'view' | 'edit'>('view');
   const [defaultDateForModal, setDefaultDateForModal] = useState<string | undefined>(undefined);
   const [activeReminderTask, setActiveReminderTask] = useState<Task | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
@@ -357,10 +358,11 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [isMounted, tasks, notifications, saveTasks, saveNotifications, persistTaskToDb]);
 
-  // Open Task Modal (Create or Edit)
-  const handleOpenTaskModal = (task?: Task, defaultDate?: string) => {
+  // Open Task Modal (Consultation view or Edit form)
+  const handleOpenTaskModal = (task?: Task | null, defaultDate?: string, mode?: 'view' | 'edit') => {
     setEditingTask(task || null);
     setDefaultDateForModal(defaultDate);
+    setTaskModalMode(mode || (task ? 'view' : 'edit'));
     setIsTaskModalOpen(true);
   };
 
@@ -853,23 +855,23 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-emerald-500 selection:text-slate-950 pb-24 md:pb-12 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-emerald-500 selection:text-slate-950 pb-24 md:pb-12 overflow-x-clip">
       {/* Ambient Radial Glass Light Orbs */}
       <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none z-0 animate-pulse duration-[10000ms]" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-emerald-600/12 blur-[140px] pointer-events-none z-0" />
       <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-teal-600/10 blur-[100px] pointer-events-none z-0" />
 
-      {/* Ambient Dotted Glow Canvas Background */}
+      {/* Ambient Dotted Glow Canvas Background (Subtle & High-Contrast) */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <DottedGlowBackground
           className="pointer-events-none w-full h-full"
-          gap={20}
-          radius={1.5}
-          color="rgba(16, 185, 129, 0.25)"
-          glowColor="rgba(52, 211, 153, 0.85)"
-          opacity={0.5}
-          speedMin={0.3}
-          speedMax={1.3}
+          gap={28}
+          radius={1}
+          color="rgba(16, 185, 129, 0.12)"
+          glowColor="rgba(52, 211, 153, 0.35)"
+          opacity={0.18}
+          speedMin={0.2}
+          speedMax={0.8}
         />
       </div>
 
@@ -944,7 +946,7 @@ export default function HomePage() {
         <OverdueReminderBanner
           overdueTasks={overdueTasks}
           dueTodayTasks={dueTodayTasks}
-          onOpenTask={handleOpenTaskModal}
+          onOpenTask={(task, mode) => handleOpenTaskModal(task, undefined, mode || 'view')}
           onCompleteTask={handleToggleComplete}
           onRescheduleToToday={handleRescheduleToToday}
           onPostponeTask={handlePostponeTask}
@@ -956,7 +958,7 @@ export default function HomePage() {
             tasks={visibleTasks}
             currentUser={currentUser}
             categories={categories}
-            onOpenTaskModal={handleOpenTaskModal}
+            onOpenTaskModal={(task, mode) => handleOpenTaskModal(task, undefined, mode)}
             onToggleComplete={handleToggleComplete}
             onDeleteTask={handleDeleteTask}
             onDuplicateTask={handleDuplicateTask}
@@ -1022,12 +1024,15 @@ export default function HomePage() {
 
       {/* Modals & Dialogs */}
 
-      {/* 1. Task Modal (Create & Edit) */}
+      {/* 1. Task Modal (Consultation & Edit) */}
       <TaskModal
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         onSaveTask={handleSaveTask}
         initialTask={editingTask}
+        initialMode={taskModalMode}
+        onToggleComplete={handleToggleComplete}
+        onPostponeTask={handlePostponeTask}
         categories={categories}
         teamUsers={teamUsers}
         defaultDate={defaultDateForModal}

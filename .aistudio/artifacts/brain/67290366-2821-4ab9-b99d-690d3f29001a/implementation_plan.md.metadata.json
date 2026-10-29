@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for redesigning AuthModal with a desktop split-screen layout, left welcome panel with mfisca-tasks branding, cabinet highlights, security and RGPD compliance, and right authentication/signup form.",
-  "updatedAt":  "2026-10-23T11:36:31.306063716Z",
+  "summary":  "Plan d'action architectural pour la refonte de la bannière des tâches en retard (largeur compacte max-w-xl, liste de tâches cliquables individuellement sans bouton 'Voir') et l'introduction d'un mode consultation dédié (lecture seule claire avec bouton de bascule vers l'édition).",
+  "updatedAt":  "2026-10-28T14:29:27.400689969Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

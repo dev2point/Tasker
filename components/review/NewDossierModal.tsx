@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Department, DossierPriority, ReviewDossier, WorkflowActor } from '@/types/review';
-import { X, Plus, FileText, Send, Sparkles } from 'lucide-react';
+import { X, Plus, FileText, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { soundManager } from '@/lib/sound';
 
@@ -159,7 +159,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
         <div className="flex items-center justify-between px-5 py-4 bg-emerald-950/80 border-b border-emerald-500/30 text-white">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-amber-400">
-              <Sparkles className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             </span>
             <h3 className="text-base font-bold text-white">Nouveau Dossier Métier &amp; Circuit de Revue</h3>
           </div>

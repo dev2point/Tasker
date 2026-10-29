@@ -353,7 +353,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-white">Membres de l'équipe</h4>
+                  <h4 className="text-xs font-bold text-white">Membres de l&apos;équipe</h4>
                   <p className="text-[11px] text-slate-300">
                     Liste des membres enregistrés et leurs rôles attribués.
                   </p>

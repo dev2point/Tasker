@@ -10,7 +10,6 @@ import {
   X,
   RotateCcw,
   CalendarDays,
-  Sparkles,
 } from 'lucide-react';
 import { Task } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';

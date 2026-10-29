@@ -23,7 +23,6 @@ import {
   Shield,
   GitPullRequest,
   LogOut,
-  Sparkles,
   Building,
   Gauge,
 } from 'lucide-react';
@@ -200,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-base sm:text-lg font-black tracking-tight text-white leading-none">
-                  Planit
+                  mfisca-tasks
                 </span>
                 {/* Minimalist Live Clock Pill */}
                 <div
@@ -566,10 +565,22 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsUserMenuOpen(false);
                             onOpenAuthModal();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors border-t border-emerald-500/20 mt-1 cursor-pointer"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors cursor-pointer"
                         >
-                          <UserIcon className="w-3.5 h-3.5 text-slate-300" />
-                          <span>Gérer le profil / Déconnexion</span>
+                          <UserIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Gérer le profil</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            onOpenAuthModal();
+                          }}
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-950/40 text-rose-300 font-semibold transition-colors border-t border-emerald-500/15 mt-1 cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Se déconnecter</span>
                         </button>
                       </div>
                     </div>

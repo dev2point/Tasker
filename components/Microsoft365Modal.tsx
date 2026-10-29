@@ -15,7 +15,6 @@ import {
   ExternalLink,
   ShieldCheck,
   Building,
-  Sparkles,
   HelpCircle,
   Download,
 } from 'lucide-react';
@@ -516,7 +515,7 @@ export const Microsoft365Modal: React.FC<Microsoft365ModalProps> = ({
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-emerald-500/15">
                 <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                   Synchronisation directe via Microsoft Graph API
                 </div>
                 <Button

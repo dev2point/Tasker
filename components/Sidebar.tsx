@@ -20,7 +20,6 @@ import {
   GitPullRequest,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   SlidersHorizontal,
   LogOut,
   ChevronDown,
@@ -184,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="main-desktop-sidebar"
-      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/90 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden z-30 ${
+      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/90 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-40 ${
         isVisuallyCollapsed ? 'w-20 shadow-xl shadow-black/50' : 'w-64 shadow-2xl shadow-emerald-950/40'
       }`}
     >
@@ -216,11 +215,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-lg font-black tracking-tight text-white leading-none whitespace-nowrap">
-                  Planit
+                <span className="text-base font-black tracking-tight text-white leading-none whitespace-nowrap">
+                  mfisca-tasks
                 </span>
-                <span className="text-[11px] font-medium text-emerald-300/70 truncate mt-0.5 whitespace-nowrap">
-                  Productivité & Agenda
+                <span className="text-[10px] font-medium text-emerald-400/80 truncate mt-1 whitespace-nowrap">
+                  Gestion & Revue Métier
                 </span>
               </div>
             </div>
@@ -362,7 +361,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Bot className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold text-white whitespace-nowrap">Assistant IA</span>
-                <Sparkles className="w-3 h-3 text-amber-400 ml-auto animate-pulse" />
               </div>
               <p className="text-[11px] text-slate-300 leading-tight mb-2.5">
                 Planification intelligente & création de tâches par Gemini.
@@ -624,14 +622,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {currentUser.name}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-emerald-300/80 truncate whitespace-nowrap">
-                          {currentUser.role}
+                        <span className={`text-[10px] truncate whitespace-nowrap ${
+                          currentUser.role === 'admin'
+                            ? 'text-purple-300 font-semibold'
+                            : 'text-slate-400 font-medium'
+                        }`}>
+                          {currentUser.role === 'admin' ? 'Administrateur' : currentUser.role}
                         </span>
-                        {currentUser.role === 'admin' && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 font-bold uppercase whitespace-nowrap">
-                            Admin
-                          </span>
-                        )}
                       </div>
                     </div>
                     <ChevronDown
@@ -660,8 +657,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Profile Popover Menu */}
             {isUserMenuOpen && currentUser && (
-              <div className="absolute left-full bottom-0 ml-2 w-64 bg-[#081F17]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2 z-50 animate-in fade-in slide-in-from-left-2 duration-150 text-white">
-                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/20 flex items-center gap-2.5">
+              <div
+                className={`absolute z-50 bg-[#061A13]/98 backdrop-blur-3xl rounded-2xl shadow-2xl border border-emerald-500/40 p-2 text-white animate-in fade-in duration-150 ${
+                  isVisuallyCollapsed
+                    ? 'left-full bottom-0 ml-2.5 w-64 slide-in-from-left-2'
+                    : 'bottom-full left-0 right-0 mb-2 w-full slide-in-from-bottom-2'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/25 flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-bold text-sm flex items-center justify-center shrink-0">
                     {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                   </div>
@@ -692,7 +695,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setIsUserMenuOpen(false);
                         onViewChange('admin');
                       }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-900/40 text-purple-200 font-semibold transition-colors"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-900/40 text-purple-200 font-semibold transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
                         <Shield className="w-3.5 h-3.5 text-purple-400" />
@@ -710,10 +713,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setIsUserMenuOpen(false);
                       onOpenAuthModal();
                     }}
-                    className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors border-t border-emerald-500/20 mt-1"
+                    className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors cursor-pointer"
                   >
-                    <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Gérer le profil / Déconnexion</span>
+                    <UserIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Gérer le profil</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onOpenAuthModal();
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-950/40 text-rose-300 font-semibold transition-colors border-t border-emerald-500/15 mt-1 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Se déconnecter</span>
                   </button>
                 </div>
               </div>

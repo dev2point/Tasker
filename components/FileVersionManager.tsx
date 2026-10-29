@@ -32,7 +32,6 @@ import {
   ChevronDown,
   ChevronRight,
   GitCommit,
-  Sparkles,
   Trash2,
   X,
   FileEdit,
