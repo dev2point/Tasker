@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan d'action architectural pour la refonte de la bannière des tâches en retard (largeur compacte max-w-xl, liste de tâches cliquables individuellement sans bouton 'Voir') et l'introduction d'un mode consultation dédié (lecture seule claire avec bouton de bascule vers l'édition).",
-  "updatedAt":  "2026-10-28T14:29:27.400689969Z",
+  "summary":  "Plan d'implémentation pour la refonte ergonomique du formulaire de création de tâche en 2 colonnes avec pied de page fixe et bloc d'échéance unifié.",
+  "updatedAt":  "2026-10-29T10:19:09.368731383Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

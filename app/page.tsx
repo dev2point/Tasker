@@ -1038,6 +1038,7 @@ export default function HomePage() {
         defaultDate={defaultDateForModal}
         onQuickCreateCategory={saveCategory}
         currentUser={currentUser}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 2. Active Reminder Ringing Popup */}
