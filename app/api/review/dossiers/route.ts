@@ -123,8 +123,30 @@ export async function PATCH(req: NextRequest) {
 
     const index = runtimeDossiers.findIndex((d) => d.id === dossierId);
     if (index >= 0) {
+      const existing = runtimeDossiers[index];
+      // SEC-05: RBAC check - Admin / Manager has global edit rights; Maker, assigned Checker, or Department colleagues have access
+      const isAdminOrManager = user.role === 'admin' || user.role === 'manager';
+      const isMaker = existing.maker?.id === user.id || existing.maker?.email === user.email;
+      const isChecker = existing.checker?.id === user.id || existing.checker?.email === user.email;
+      const isSameDepartment = Boolean(user.department && existing.department && user.department.toLowerCase() === existing.department.toLowerCase());
+
+      if (!isAdminOrManager && !isMaker && !isChecker && !isSameDepartment) {
+        return NextResponse.json(
+          { error: "Action non autorisée. Vous n'avez pas les droits pour modifier ce dossier." },
+          { status: 403 }
+        );
+      }
+
       runtimeDossiers[index] = updatedDossier;
     } else {
+      const isAdminOrManager = user.role === 'admin' || user.role === 'manager';
+      const isMaker = updatedDossier.maker?.id === user.id || updatedDossier.maker?.email === user.email;
+      if (!isAdminOrManager && !isMaker) {
+        return NextResponse.json(
+          { error: "Action non autorisée pour créer un dossier assigné à autrui." },
+          { status: 403 }
+        );
+      }
       runtimeDossiers = [updatedDossier, ...runtimeDossiers];
     }
 

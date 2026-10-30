@@ -9,8 +9,20 @@ const nextConfig: NextConfig = {
     '*.europe-west2.run.app',
     'localhost:3000',
     '127.0.0.1:3000',
-    'mails-leadership-sending-will.trycloudflare.com',
   ],
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
   typescript: {
     ignoreBuildErrors: false,
   },

@@ -275,4 +275,30 @@ describe('RBAC & Task Visibility Scoping Logic', () => {
       expect(bobNotifications[0].targetUserId).toBe('user-bob-no-dept');
     });
   });
+
+  describe('Rate Limiter (SEC-08)', () => {
+    it('allows requests within threshold and blocks requests exceeding limit', async () => {
+      const { checkRateLimit } = await import('@/lib/rate-limit');
+      const testKey = `test-user-${Date.now()}`;
+
+      // Max 3 requests in window
+      const res1 = checkRateLimit(testKey, { windowMs: 10000, max: 3 });
+      expect(res1.success).toBe(true);
+      expect(res1.remaining).toBe(2);
+
+      const res2 = checkRateLimit(testKey, { windowMs: 10000, max: 3 });
+      expect(res2.success).toBe(true);
+      expect(res2.remaining).toBe(1);
+
+      const res3 = checkRateLimit(testKey, { windowMs: 10000, max: 3 });
+      expect(res3.success).toBe(true);
+      expect(res3.remaining).toBe(0);
+
+      // 4th request must be blocked
+      const res4 = checkRateLimit(testKey, { windowMs: 10000, max: 3 });
+      expect(res4.success).toBe(false);
+      expect(res4.remaining).toBe(0);
+      expect(res4.resetMs).toBeGreaterThan(0);
+    });
+  });
 });

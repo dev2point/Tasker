@@ -162,7 +162,7 @@ export const auth = betterAuth({
   plugins: [bearer()],
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 6,
+    minPasswordLength: 12,
     autoSignIn: true,
   },
   user: {
@@ -182,14 +182,21 @@ export const auth = betterAuth({
       },
     },
   },
-  secret:
-    process.env.BETTER_AUTH_SECRET ||
-    'planit-better-auth-secret-key-production-safe-default-2026',
+  secret: (() => {
+    if (process.env.BETTER_AUTH_SECRET) {
+      return process.env.BETTER_AUTH_SECRET;
+    }
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '⚠️ SÉCURITÉ: BETTER_AUTH_SECRET non défini en production. Veuillez définir la variable d’environnement.'
+      );
+    }
+    return 'mfisca_cabinet_secure_auth_secret_2026_salt_89fa2194';
+  })(),
   baseURL: safeBaseURL,
   trustedOrigins: [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://*.trycloudflare.com',
     'https://*.run.app',
     'https://*.google.com',
     'https://*.aistudio.google.com',
@@ -199,7 +206,11 @@ export const auth = betterAuth({
     'https://*.us-central1.run.app',
   ],
   advanced: {
-    useSecureCookies: false,
+    useSecureCookies:
+      process.env.NODE_ENV === 'production' ||
+      safeBaseURL.startsWith('https:') ||
+      !!process.env.RENDER ||
+      !!process.env.VERCEL,
     trustedProxyHeaders: true,
     defaultCookieAttributes: {
       sameSite: 'none',

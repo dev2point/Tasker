@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { isDatabaseConfigured } from '@/lib/db/pg';
+import { getAuthenticatedUser } from '@/lib/auth-server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -21,19 +21,21 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication: Better Auth session cookie or authenticated user header
-    const session = isDatabaseConfigured()
-      ? await auth.api.getSession({
-          headers: req.headers,
-        }).catch(() => null)
-      : null;
-
-    const customUserHeader = req.headers.get('x-user-id');
-
-    if (!session?.user && !customUserHeader) {
+    // SEC-02: Cryptographic authentication check (rejects unverified x-user-id headers)
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
       return NextResponse.json(
         { error: "Authentification requise : Veuillez vous connecter pour utiliser l'Assistant IA." },
         { status: 401 }
+      );
+    }
+
+    // SEC-08: Rate limiting on Gemini AI assistant calls (20 requests per minute per user)
+    const rateCheck = checkRateLimit(`ai:${user.id}`, { windowMs: 60000, max: 20 });
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { error: "Trop de requêtes à l'assistant IA. Veuillez patienter une minute avant de réessayer." },
+        { status: 429 }
       );
     }
 

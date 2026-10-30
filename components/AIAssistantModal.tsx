@@ -86,7 +86,6 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(currentUser?.id ? { 'x-user-id': currentUser.id } : {}),
         },
         body: JSON.stringify({
           action: 'parse_task',
@@ -148,7 +147,6 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(currentUser?.id ? { 'x-user-id': currentUser.id } : {}),
         },
         body: JSON.stringify({
           action: 'daily_planner_advice',

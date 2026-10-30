@@ -115,8 +115,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    if (signUpPassword.length < 6) {
-      setErrorMessage('Le mot de passe doit contenir au moins 6 caractères.');
+    if (signUpPassword.length < 12) {
+      setErrorMessage('Le mot de passe doit contenir au moins 12 caractères pour des raisons de sécurité.');
       return;
     }
 

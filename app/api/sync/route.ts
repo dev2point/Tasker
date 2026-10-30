@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
 import { tasks, users } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: 'Non autorisé. Veuillez vous authentifier pour synchroniser vos tâches.' },
       { status: 401 }
+    );
+  }
+
+  // SEC-08: Rate limiting (60 sync requests per minute per user)
+  const rateLimitKey = `sync:${user.id}`;
+  const rateCheck = checkRateLimit(rateLimitKey, { windowMs: 60000, max: 60 });
+  if (!rateCheck.success) {
+    return NextResponse.json(
+      { error: 'Trop de requêtes de synchronisation. Veuillez patienter un instant.' },
+      { status: 429 }
     );
   }
 
@@ -52,9 +63,24 @@ export async function POST(req: NextRequest) {
         },
       });
 
+    const isAdmin = user.role === 'admin' || user.role === 'manager';
+
     if (Array.isArray(clientTasks) && clientTasks.length > 0) {
       for (const t of clientTasks) {
-        let validCreatorId = t.creatorId || user.id;
+        // SEC-01 RBAC check: Non-admins cannot overwrite or hijack tasks owned by someone else
+        const existingRows = await db.select().from(tasks).where(eq(tasks.id, t.id)).limit(1);
+        const existing = existingRows[0];
+
+        if (existing && !isAdmin) {
+          const isCreator = existing.creatorId === user.id;
+          const isAssignee = existing.assigneeId === user.id;
+          if (!isCreator && !isAssignee) {
+            // Skip unauthorized task modification
+            continue;
+          }
+        }
+
+        let validCreatorId = existing ? existing.creatorId : (isAdmin && t.creatorId ? t.creatorId : user.id);
         if (validCreatorId) {
           const creatorExists = await db.select().from(users).where(eq(users.id, validCreatorId)).limit(1);
           if (creatorExists.length === 0) {
@@ -117,8 +143,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Retrieve full synced dataset from PostgreSQL
-    const serverRows = await db.select().from(tasks);
+    // SEC-01: Retrieve RBAC-filtered synced dataset (Admins see all; regular members only see their own tasks)
+    let serverRows;
+    if (isAdmin) {
+      serverRows = await db.select().from(tasks);
+    } else {
+      serverRows = await db
+        .select()
+        .from(tasks)
+        .where(or(eq(tasks.creatorId, user.id), eq(tasks.assigneeId, user.id)));
+    }
     const syncedTasks: Task[] = serverRows.map((r) => ({
       id: r.id,
       title: r.title,
