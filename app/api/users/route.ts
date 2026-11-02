@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { users, user as authUser } from '@/src/db/schema';
+import { user as userTable } from '@/src/db/schema';
 import { eq } from 'drizzle-orm';
 import { User, UserRole } from '@/types/user';
 import { getAuthenticatedUser } from '@/lib/auth-server';
@@ -27,44 +27,20 @@ export async function GET(req: NextRequest) {
 
   try {
     await ensureDatabaseTables();
-    const [dbUsers, dbAuthUsers] = await Promise.all([
-      db.select().from(users).catch(() => []),
-      db.select().from(authUser).catch(() => []),
-    ]);
+    const dbUsers = await db.select().from(userTable);
 
-    const userMap = new Map<string, User>();
-
-    // Better Auth users (primary authenticated accounts)
-    for (const u of dbAuthUsers) {
-      userMap.set(u.email.toLowerCase(), {
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: (u.role as UserRole) || 'member',
-        department: u.department || undefined,
-        status: (u.status as 'active' | 'away' | 'offline') || 'active',
-        avatarUrl: u.image || undefined,
-        createdAt: u.createdAt.toISOString(),
-      });
-    }
-
-    // Additional team users
-    for (const u of dbUsers) {
-      if (!userMap.has(u.email.toLowerCase())) {
-        userMap.set(u.email.toLowerCase(), {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          role: (u.role as UserRole) || 'member',
-          department: u.department || undefined,
-          status: (u.status as 'active' | 'away' | 'offline') || 'active',
-          avatarUrl: u.avatarUrl || undefined,
-          createdAt: u.createdAt.toISOString(),
-        });
-      }
-    }
-
-    const formatted = Array.from(userMap.values());
+    const formatted: User[] = dbUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: (u.role as UserRole) || 'member',
+      department: u.department || undefined,
+      pole: u.pole || undefined,
+      grade: u.grade || undefined,
+      status: (u.status as 'active' | 'away' | 'offline') || 'active',
+      avatarUrl: u.image || undefined,
+      createdAt: u.createdAt.toISOString(),
+    }));
 
     return NextResponse.json({
       source: 'postgresql_supabase',
@@ -100,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, role, department } = body;
+    const { name, email, role, department, pole, grade } = body;
 
     if (!name || !email) {
       return NextResponse.json(
@@ -117,6 +93,8 @@ export async function POST(req: NextRequest) {
       email,
       role: validatedRole,
       department: department || 'Équipe',
+      pole: pole || undefined,
+      grade: grade || undefined,
       status: 'active',
       createdAt: new Date().toISOString(),
     };
@@ -124,23 +102,15 @@ export async function POST(req: NextRequest) {
     const db = getDrizzleDb();
     if (db && isDatabaseConfigured()) {
       await ensureDatabaseTables();
-      await db.insert(users).values({
+      await db.insert(userTable).values({
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
         department: newUser.department,
+        pole: newUser.pole,
+        grade: newUser.grade,
         status: newUser.status,
-      }).catch(async () => {
-        // If users fails, try authUser table
-        await db.insert(authUser).values({
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          department: newUser.department,
-          status: newUser.status,
-        });
       });
     }
 
@@ -171,7 +141,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, role, department, status, name } = body;
+    const { id, role, department, pole, grade, status, name } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 });
@@ -184,19 +154,18 @@ export async function PUT(req: NextRequest) {
     const db = getDrizzleDb();
     if (db && isDatabaseConfigured()) {
       await ensureDatabaseTables();
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, any> = { updatedAt: new Date() };
       if (role) updateData.role = role;
       if (department !== undefined) updateData.department = department;
+      if (pole !== undefined) updateData.pole = pole;
+      if (grade !== undefined) updateData.grade = grade;
       if (status) updateData.status = status;
       if (name) updateData.name = name;
 
-      await Promise.all([
-        db.update(users).set(updateData).where(eq(users.id, id)).catch(() => {}),
-        db.update(authUser).set(updateData).where(eq(authUser.id, id)).catch(() => {}),
-      ]);
+      await db.update(userTable).set(updateData).where(eq(userTable.id, id));
     }
 
-    return NextResponse.json({ success: true, updated: { id, role, department, status, name } });
+    return NextResponse.json({ success: true, updated: { id, role, department, pole, grade, status, name } });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erreur serveur' },
@@ -232,10 +201,7 @@ export async function DELETE(req: NextRequest) {
     const db = getDrizzleDb();
     if (db && isDatabaseConfigured()) {
       await ensureDatabaseTables();
-      await Promise.all([
-        db.delete(users).where(eq(users.id, id)).catch(() => {}),
-        db.delete(authUser).where(eq(authUser.id, id)).catch(() => {}),
-      ]);
+      await db.delete(userTable).where(eq(userTable.id, id));
     }
 
     return NextResponse.json({ success: true });

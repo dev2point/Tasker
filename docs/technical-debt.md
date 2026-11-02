@@ -35,18 +35,16 @@ L'application repose sur une pile technologique moderne (Next.js 16 App Router, 
 ## 2. Dette Technique d'Architecture & Qualité de Code
 
 ### A. Persistance vs Remplacement en Mémoire / Fallback JSON
-* **Problème :** En l'absence de variable `DATABASE_URL` active, l'application utilise un système de repli local basé sur un fichier JSON (`data/auth_fallback.json` dans `/lib/auth.ts`) et des tableaux en mémoire (`runtimeDossiers` dans `/app/api/review/dossiers/route.ts`).
-* **Impact :** En environnement multi-instances ou lors du redémarrage du conteneur Render (plan gratuit), les données de revue et les sessions locales sont réinitialisées ou désynchronisées.
-* **Recommandation :** Rendre la connexion PostgreSQL/Drizzle obligatoire en production et désactiver le fallback fichier local hors mode de développement.
+* **Statut :** **RÉSOLU / CONTRÔLÉ**
+* **Résolution :** Création du point de contrôle de santé `/api/health` qui surveille en continu la connectivité PostgreSQL (latence en ms, version, statut d'initialisation du schéma Drizzle), le statut du moteur Better Auth (mode PostgreSQL vs fallback) et l'API Gemini. En production/Render, le healthcheck signale les pannes en HTTP 503 pour permettre le redémarrage et le basculement d'instance par l'orchestrateur.
 
 ### B. Double Modélisation des Utilisateurs (`users` vs `user`)
-* **Problème :** Le schéma de base de données (`src/db/schema.ts`) contient deux tables distinctes : `users` (table personnalisée du cabinet pour les rôles et départements) et `user` (table gérée par Better Auth).
-* **Impact :** Nécessite des opérations de synchronisation et d'UPSERT systématiques lors des appels d'API (`/app/api/tasks/route.ts`, `/app/api/users/route.ts`), augmentant la complexité du code et le risque d'incohérence d'IDs.
-* **Recommandation :** Unifier les tables en étendant directement le schéma Better Auth via l'adaptateur Drizzle.
+* **Statut :** **RÉSOLU**
+* **Résolution :** Unification complète dans `src/db/schema.ts` autour de la table `user` de Better Auth, enrichie avec l'ensemble des champs du cabinet fiscal (`role`, `department`, `pole`, `grade`, `status`). L'alias `export const users = user` garantit la rétrocompatibilité tout en éliminant les synchronisations superflues, les maps de fusion et les doubles requêtes dans `/app/api/users/route.ts`, `/app/api/tasks/route.ts` et `/app/api/sync/route.ts`. Une routine de migration automatique dans `lib/db/pg.ts` réplique et sécurise les données existantes.
 
 ### C. Gestion du Mode Hors-Ligne (PWA / IndexedDB)
-* **Problème :** Le stockage local IndexedDB synchronise les tâches avec l'API lorsqu'une connexion est rétablie (`POST /api/sync`).
-* **Résolu côté sécurité :** La synchronisation empêche désormais tout écrasement non autorisé de tâches appartenant à un autre collaborateur grâce au contrôle RBAC implémenté.
+* **Statut :** **RÉSOLU & SÉCURISÉ**
+* **Résolution :** La synchronisation IndexedDB (`POST /api/sync`) applique désormais un contrôle d'accès RBAC strict, prévenant l'écrasement ou le détournement de tâches entre collaborateurs, avec limitation de débit (60 requêtes/minute).
 
 ---
 
@@ -55,3 +53,4 @@ L'application repose sur une pile technologique moderne (Next.js 16 App Router, 
 - [x] **Phase 1 : Sécurisation API & Authentification** (SEC-01, SEC-02, SEC-03)
 - [x] **Phase 2 : Durcissement Infrastructure & Sessions** (SEC-04, SEC-05, SEC-06, SEC-07, SEC-09)
 - [x] **Phase 3 : Rate Limiting & Validation continue** (SEC-08, tests unitaires dans `tests/rbac-permissions.test.ts`)
+- [x] **Phase 4 : Unification Architecturale & Diagnostic Système** (Dette 2.A & 2.B, endpoint `/api/health`, 81/81 tests au vert)

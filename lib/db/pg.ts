@@ -102,8 +102,24 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       END$$;
     `);
 
-    // 1. Users
+    // 1. Unified Better Auth & Application User Table
     await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS "user" (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        email_verified BOOLEAN NOT NULL DEFAULT false,
+        image TEXT,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        role user_role NOT NULL DEFAULT 'member',
+        department VARCHAR(128),
+        pole TEXT,
+        grade TEXT,
+        status VARCHAR(32) DEFAULT 'active'
+      );
+
+      -- Legacy users compatibility table
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(64) PRIMARY KEY,
         email VARCHAR(255) NOT NULL UNIQUE,
@@ -115,6 +131,23 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
+
+      -- Safe migration: synchronize any legacy users records into the unified "user" table
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users') THEN
+          INSERT INTO "user" (id, name, email, image, role, department, status, created_at, updated_at)
+          SELECT id, name, email, avatar_url,
+            CASE WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role ELSE 'member'::user_role END,
+            department, status, created_at, updated_at
+          FROM users
+          ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            department = COALESCE(EXCLUDED.department, "user".department),
+            status = COALESCE(EXCLUDED.status, "user".status);
+        END IF;
+      END$$;
     `);
 
     // 2. Workspaces
@@ -196,20 +229,8 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       );
     `;
 
-    // 7. Better Auth Tables: "user", "session", "account", "verification"
+    // 7. Better Auth Tables: "session", "account", "verification"
     await sql.unsafe(`
-      CREATE TABLE IF NOT EXISTS "user" (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        email_verified BOOLEAN NOT NULL DEFAULT false,
-        image TEXT,
-        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        role user_role NOT NULL DEFAULT 'member',
-        department VARCHAR(128),
-        status VARCHAR(32) DEFAULT 'active'
-      );
 
       CREATE TABLE IF NOT EXISTS "session" (
         id TEXT PRIMARY KEY,
@@ -383,6 +404,20 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
           WHERE table_name = 'categories' AND column_name = 'bg_light'
         ) THEN
           ALTER TABLE categories ALTER COLUMN bg_light TYPE TEXT;
+        END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'user' AND column_name = 'pole'
+        ) THEN
+          ALTER TABLE "user" ADD COLUMN pole TEXT;
+        END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'user' AND column_name = 'grade'
+        ) THEN
+          ALTER TABLE "user" ADD COLUMN grade TEXT;
         END IF;
       END
       $$;

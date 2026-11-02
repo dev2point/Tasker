@@ -7,6 +7,8 @@ export interface User {
   avatarUrl?: string;
   role: UserRole;
   department?: string;
+  pole?: string;
+  grade?: string;
   status?: 'active' | 'away' | 'offline';
   createdAt?: string;
 }

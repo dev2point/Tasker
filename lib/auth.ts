@@ -180,6 +180,14 @@ export const auth = betterAuth({
         type: 'string',
         defaultValue: 'active',
       },
+      pole: {
+        type: 'string',
+        required: false,
+      },
+      grade: {
+        type: 'string',
+        required: false,
+      },
     },
   },
   secret: (() => {

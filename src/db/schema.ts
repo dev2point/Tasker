@@ -4,40 +4,46 @@ import { relations, sql } from 'drizzle-orm';
 // PostgreSQL Enum for User Roles (provides strict validation & native dropdowns in Supabase Studio)
 export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'member', 'guest']);
 
-// 1. Users Table (with RLS policies)
-export const users = pgTable('users', {
-  id: varchar('id', { length: 64 }).primaryKey(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  name: varchar('name', { length: 255 }).notNull(),
-  avatarUrl: text('avatar_url'),
+// 1. Unified User Table (Better Auth & Core Domain Model)
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  image: text('image'),
   role: userRoleEnum('role').notNull().default('member'),
-  department: varchar('department', { length: 128 }),
-  status: varchar('status', { length: 32 }).default('active'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  department: text('department'),
+  pole: text('pole'),
+  grade: text('grade'),
+  status: text('status').default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, () => [
-  pgPolicy('users_select_policy', {
+  pgPolicy('user_select_policy', {
     for: 'select',
     to: 'public',
     using: sql`true`,
   }),
-  pgPolicy('users_insert_policy', {
+  pgPolicy('user_insert_policy', {
     for: 'insert',
     to: 'public',
     withCheck: sql`true`,
   }),
-  pgPolicy('users_update_policy', {
+  pgPolicy('user_update_policy', {
     for: 'update',
     to: 'public',
     using: sql`true`,
     withCheck: sql`true`,
   }),
-  pgPolicy('users_delete_policy', {
+  pgPolicy('user_delete_policy', {
     for: 'delete',
     to: 'public',
     using: sql`true`,
   }),
 ]).enableRLS();
+
+// Export users as alias of user for seamless backward-compatibility across codebase
+export const users = user;
 
 // 2. Workspaces / Organizations Table (with RLS policies)
 export const workspaces = pgTable('workspaces', {
@@ -269,18 +275,7 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 // BETTER AUTH TABLES (Authentication & Sessions)
 // ==========================================
 
-export const user = pgTable('user', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  image: text('image'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  role: userRoleEnum('role').default('member'),
-  department: text('department'),
-  status: text('status').default('active'),
-});
+// Better Auth maps to the unified 'user' table defined above.
 
 export const session = pgTable('session', {
   id: text('id').primaryKey(),

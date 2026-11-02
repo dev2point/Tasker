@@ -10,6 +10,8 @@ export interface AuthenticatedUser {
   email: string;
   role: string;
   department?: string;
+  pole?: string;
+  grade?: string;
   status?: string;
   image?: string;
 }
@@ -37,6 +39,8 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<Authentica
         email: u.email,
         role: u.role || 'member',
         department: u.department,
+        pole: u.pole,
+        grade: u.grade,
         status: u.status,
         image: u.image,
       };
@@ -88,6 +92,8 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<Authentica
                 email: u.email,
                 role: u.role || 'member',
                 department: u.department || undefined,
+                pole: u.pole || undefined,
+                grade: u.grade || undefined,
                 status: u.status || 'active',
                 image: u.image || undefined,
               };
