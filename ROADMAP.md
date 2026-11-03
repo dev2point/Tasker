@@ -56,9 +56,16 @@ Ce document répertorie l'état d'avancement du projet ainsi que la liste exhaus
 
 ---
 
+### 9. Module de Rapports Exécutifs & Export PDF Certifié
+- [x] **Génération Automatisée de Rapports PDF & Synthèses Métier** : Modèles de rapports consolidés prêts pour l'impression haute fidélité (`@media print` A4) et comités de direction.
+- [x] **Filtrage Multi-Pôles & Multi-Périodes** : Analyse configurable par département (**Fiscalité**, **Comptabilité**, **Juridique**, **R&D**) et échelle de temps (mois, trimestre, année, 30 jours).
+- [x] **Synthèse Exécutive & Matrice des Risques** : KPIs de conformité, volumétrie de charge, identification des dossiers bloqués et des tâches critiques avec recommandations stratégiques d'orientation.
+- [x] **Exports Multi-Formats** : Impression directe PDF, téléchargement HTML autonome avec styles intégrés et export Markdown pour comptes-rendus.
+
+---
+
 ## 🔮 Évolutions Futures Planifiées (Prochaines Versions)
 
+- [ ] **Notifications Push Web & Mobile** : Alertes en temps réel même lorsque l'application est en arrière-plan (PWA).
+- [ ] **Automatisations Personnalisées & Règles Métier** : Règles d'affectation automatique de dossiers/tâches selon des déclencheurs métier (ex. seuils, clôture fiscale).
 - [ ] **Synchronisation Calendriers Externes** : Intégration bidirectionnelle Google Calendar via OAuth Workspace.
-- [ ] **Génération Automatisée de Rapports PDF** : Modèles de rapports consolidés prêts pour l'impression et les comités de direction.
-- [ ] **Notifications Push Web & Mobile** : Alertes en temps réel même lorsque l'application est en arrière-plan.
-- [ ] **Automatisations Personnalisées** : Règles d'affectation automatique de tâches selon des déclencheurs métier.

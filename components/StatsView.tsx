@@ -11,12 +11,15 @@ import {
   Calendar,
   Layers,
   Flame,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { Task, Category, Priority } from '@/types/task';
 import { PRIORITY_CONFIG } from '@/lib/constants';
 import { isTaskOverdue, formatDueDateFrench, getReminderTriggerTime } from '@/lib/reminders';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 
@@ -24,12 +27,14 @@ interface StatsViewProps {
   tasks: Task[];
   categories: Category[];
   onOpenTaskModal: (task: Task) => void;
+  onOpenReportModal?: () => void;
 }
 
 export const StatsView: React.FC<StatsViewProps> = ({
   tasks,
   categories,
   onOpenTaskModal,
+  onOpenReportModal,
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -122,15 +127,29 @@ export const StatsView: React.FC<StatsViewProps> = ({
                 : `${totalTasks - completedTasks} tâche(s) restent à finaliser pour optimiser votre flux.`}
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
-            <div className="px-3 sm:px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
-              <div className="text-xl font-extrabold text-emerald-400">{completionRate}%</div>
-              <div className="text-[10px] font-medium text-slate-300 truncate">Succès global</div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <div className="px-3 sm:px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
+                <div className="text-xl font-extrabold text-emerald-400">{completionRate}%</div>
+                <div className="text-[10px] font-medium text-slate-300 truncate">Succès global</div>
+              </div>
+              <div className="px-3 sm:px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
+                <div className="text-xl font-extrabold text-emerald-300">{todayCompleted} / {todayTasks.length}</div>
+                <div className="text-[10px] font-medium text-slate-300 truncate">Aujourd&apos;hui</div>
+              </div>
             </div>
-            <div className="px-3 sm:px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
-              <div className="text-xl font-extrabold text-emerald-300">{todayCompleted} / {todayTasks.length}</div>
-              <div className="text-[10px] font-medium text-slate-300 truncate">Aujourd&apos;hui</div>
-            </div>
+
+            {onOpenReportModal && (
+              <Button
+                type="button"
+                onClick={onOpenReportModal}
+                size="sm"
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer h-9 px-3 rounded-xl shrink-0"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Rapport PDF Comité</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

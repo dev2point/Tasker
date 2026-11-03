@@ -21,6 +21,10 @@ import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { Microsoft365Modal } from '@/components/Microsoft365Modal';
 import { BenchmarkModal } from '@/components/BenchmarkModal';
+import { ExecutiveReportModal } from '@/components/ExecutiveReportModal';
+import { getStoredDossiers } from '@/lib/review-service';
+import { ReviewDossier, Department } from '@/types/review';
+import { ReportType } from '@/lib/report-generator';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
@@ -88,6 +92,30 @@ export default function HomePage() {
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState<boolean>(false);
   const [sandboxBackupTasks, setSandboxBackupTasks] = useState<Task[] | null>(null);
   const isSandboxActive = sandboxBackupTasks !== null;
+
+  // Executive Report & Committee PDF Modal State
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
+  const [reportModalType, setReportModalType] = useState<ReportType>('executive_board');
+  const [reportModalDepartment, setReportModalDepartment] = useState<'Tous' | Department>('Tous');
+  const [reviewDossiers, setReviewDossiers] = useState<ReviewDossier[]>(() => getStoredDossiers());
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setReviewDossiers(getStoredDossiers());
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const handleOpenReportModal = useCallback(
+    (type: ReportType = 'executive_board', dept: 'Tous' | Department = 'Tous') => {
+      setReviewDossiers(getStoredDossiers());
+      setReportModalType(type);
+      setReportModalDepartment(dept);
+      setIsReportModalOpen(true);
+    },
+    []
+  );
 
   const handleOpenCategoryTagManager = useCallback((initialTab: 'categories' | 'tags' = 'categories') => {
     setCategoryTagModalInitialTab(initialTab);
@@ -896,6 +924,7 @@ export default function HomePage() {
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
         onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
+        onOpenReportModal={() => handleOpenReportModal('executive_board')}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -927,6 +956,7 @@ export default function HomePage() {
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
         onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
+        onOpenReportModal={() => handleOpenReportModal('executive_board')}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
         activeRemindersCount={activeRemindersCount}
@@ -970,7 +1000,10 @@ export default function HomePage() {
         )}
 
         {currentView === 'review' && (
-          <CollaborativeReviewPlatform currentUser={currentUser} />
+          <CollaborativeReviewPlatform
+            currentUser={currentUser}
+            onOpenReportModal={(dept) => handleOpenReportModal('review_progress', dept || 'Tous')}
+          />
         )}
 
         {currentView === 'calendar' && (
@@ -996,6 +1029,7 @@ export default function HomePage() {
             tasks={visibleTasks}
             categories={categories}
             onOpenTaskModal={handleOpenTaskModal}
+            onOpenReportModal={() => handleOpenReportModal('executive_board')}
           />
         )}
 
@@ -1082,6 +1116,7 @@ export default function HomePage() {
         onClose={() => setIsExportModalOpen(false)}
         tasks={tasks}
         onOpenM365Modal={() => setIsM365ModalOpen(true)}
+        onOpenReportModal={() => handleOpenReportModal('executive_board')}
         onImportTasks={(imported) => {
           saveTasks(imported);
           fetch('/api/sync', {
@@ -1148,6 +1183,18 @@ export default function HomePage() {
         onInjectSandboxTasks={handleInjectSandboxTasks}
         onRestoreRealTasks={handleRestoreRealTasks}
         isSandboxActive={isSandboxActive}
+      />
+
+      {/* 10. Executive Report & Committee PDF Generator Modal */}
+      <ExecutiveReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        tasks={tasks}
+        categories={categories}
+        dossiers={reviewDossiers}
+        currentUser={currentUser}
+        initialType={reportModalType}
+        initialDepartment={reportModalDepartment}
       />
 
       {/* PWA Background Services, Offline Connectivity & Floating Install Card */}

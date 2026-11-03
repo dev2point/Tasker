@@ -38,6 +38,8 @@ import {
   Calculator,
   RefreshCw,
   Lightbulb,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,10 +53,12 @@ interface CollaborativeReviewPlatformProps {
     role?: string;
     department?: string;
   } | null;
+  onOpenReportModal?: (department?: 'Tous' | Department) => void;
 }
 
 export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformProps> = ({
   currentUser,
+  onOpenReportModal,
 }) => {
   const [dossiers, setDossiers] = useState<ReviewDossier[]>(() => getStoredDossiers());
   const [selectedDept, setSelectedDept] = useState<'Tous' | Department>('Tous');
@@ -223,13 +227,25 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onOpenReportModal && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenReportModal(selectedDept)}
+                className="border-emerald-500/40 bg-emerald-950/60 text-emerald-200 hover:bg-emerald-500/20 hover:text-white font-bold text-xs gap-1.5 shadow-md cursor-pointer transition-all rounded-xl"
+              >
+                <Printer className="w-4 h-4 text-emerald-300" />
+                <span>Rapport Revue (PDF)</span>
+              </Button>
+            )}
+
             <Button
               type="button"
               onClick={() => setIsNewModalOpen(true)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer transition-all"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer transition-all rounded-xl"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
-              Nouveau Dossier Métier
+              <span>Nouveau Dossier Métier</span>
             </Button>
           </div>
         </div>

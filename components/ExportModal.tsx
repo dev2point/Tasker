@@ -13,6 +13,8 @@ import {
   Smartphone,
   Building,
   FileSpreadsheet,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { Task } from '@/types/task';
 import { generateICalendar, downloadFile } from '@/lib/ical';
@@ -26,6 +28,7 @@ interface ExportModalProps {
   tasks: Task[];
   onImportTasks: (tasks: Task[]) => void;
   onOpenM365Modal?: () => void;
+  onOpenReportModal?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -34,6 +37,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   tasks,
   onImportTasks,
   onOpenM365Modal,
+  onOpenReportModal,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [successMsg, setSuccessMsg] = useState('');
@@ -144,7 +148,38 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
         {/* Action Blocks */}
         <div className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1">
-          {/* 0. Microsoft 365 Ecosystem */}
+          {/* 0a. Executive PDF & Committee Reports */}
+          {onOpenReportModal && (
+            <div className="p-4 rounded-2xl border border-emerald-500/50 bg-emerald-950/60 space-y-2.5 shadow-lg shadow-emerald-950/40">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/40">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-white">Rapport Exécutif &amp; Synthèse Comité</span>
+                </div>
+                <Badge className="bg-emerald-500 text-slate-950 font-bold text-[9px]">
+                  PDF Officiel
+                </Badge>
+              </div>
+              <p className="text-slate-300 leading-relaxed text-[11px]">
+                Générez la synthèse consolidée pour les comités de direction, la revue d&apos;avancement des pôles et imprimez directement au format A4 certifié.
+              </p>
+              <Button
+                onClick={() => {
+                  onClose();
+                  onOpenReportModal();
+                }}
+                size="sm"
+                className="w-full font-bold gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md cursor-pointer h-8 text-xs border border-emerald-400/50"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Ouvrir le Générateur de Rapports PDF</span>
+              </Button>
+            </div>
+          )}
+
+          {/* 0b. Microsoft 365 Ecosystem */}
           {onOpenM365Modal && (
             <div className="p-4 rounded-2xl border border-blue-500/40 bg-blue-950/30 space-y-2.5">
               <div className="flex items-center justify-between">

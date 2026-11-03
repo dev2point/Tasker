@@ -148,4 +148,56 @@ html, body {
   animation: border-beam-spin var(--duration, 8s) linear infinite;
 }
 
+/* ==========================================================================
+   Print Styles for Executive Reports & PDF Generation
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
 
+  /* Hide everything on the page except the printable report */
+  body * {
+    visibility: hidden;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  #printable-report-content,
+  #printable-report-content * {
+    visibility: visible;
+  }
+
+  #printable-report-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent awkward page breaks */
+  tr, .kpi-card, h3, .section-title {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #executive-report-modal-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+  }
+}

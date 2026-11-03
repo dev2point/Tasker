@@ -25,6 +25,8 @@ import {
   LogOut,
   Building,
   Gauge,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -46,6 +48,7 @@ interface HeaderProps {
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
   onOpenBenchmarkModal?: () => void;
+  onOpenReportModal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -66,6 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCategoryTagManager,
   onOpenM365Modal,
   onOpenBenchmarkModal,
+  onOpenReportModal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -398,6 +402,29 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Exporter l&apos;agenda (.ics)</span>
                       </button>
 
+                      {/* Executive Report & PDF */}
+                      {onOpenReportModal && (
+                        <button
+                          id="open-report-btn"
+                          type="button"
+                          onClick={() => {
+                            setIsDesktopToolsOpen(false);
+                            onOpenReportModal();
+                          }}
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-emerald-200 hover:text-white cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                              <Printer className="w-3.5 h-3.5" />
+                            </div>
+                            <span>Rapport &amp; Synthèse Comité</span>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            PDF
+                          </span>
+                        </button>
+                      )}
+
                       {/* Microsoft 365 Hub */}
                       {onOpenM365Modal && (
                         <button
@@ -715,6 +742,28 @@ export const Header: React.FC<HeaderProps> = ({
                             Agenda
                           </Badge>
                         </button>
+
+                        {/* Executive Report PDF */}
+                        {onOpenReportModal && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenReportModal();
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-emerald-200"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                                <Printer className="w-3.5 h-3.5" />
+                              </div>
+                              <span>Rapport &amp; Synthèse Comité</span>
+                            </div>
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              PDF
+                            </span>
+                          </button>
+                        )}
 
                         {/* Microsoft 365 Hub */}
                         {onOpenM365Modal && (

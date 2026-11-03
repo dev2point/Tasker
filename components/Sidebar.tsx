@@ -26,6 +26,8 @@ import {
   Lock,
   Building,
   Gauge,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -46,6 +48,7 @@ export interface SidebarProps {
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
   onOpenBenchmarkModal?: () => void;
+  onOpenReportModal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
   activeRemindersCount: number;
@@ -68,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenCategoryTagManager,
   onOpenM365Modal,
   onOpenBenchmarkModal,
+  onOpenReportModal,
   currentUser,
   unreadNotificationsCount,
   activeRemindersCount,
@@ -438,6 +442,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-200 shrink-0" />
               {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Exporter (.ics)</span>}
             </button>
+
+            {/* Executive Report & PDF Button */}
+            {onOpenReportModal && (
+              <button
+                id="open-report-sidebar-btn"
+                type="button"
+                onClick={() => {
+                  soundManager.playClickSound();
+                  onOpenReportModal();
+                }}
+                title={isVisuallyCollapsed ? 'Rapport & Synthèse Comité (PDF)' : undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-200 hover:text-white hover:bg-emerald-500/20 transition-colors group cursor-pointer ${
+                  isVisuallyCollapsed ? 'justify-center px-2' : ''
+                }`}
+              >
+                <Printer className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 shrink-0" />
+                {!isVisuallyCollapsed && (
+                  <>
+                    <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">
+                      Rapport &amp; Synthèse
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                      PDF
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Microsoft 365 Hub */}
             {onOpenM365Modal && (
