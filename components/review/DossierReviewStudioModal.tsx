@@ -37,6 +37,9 @@ import {
   Archive,
   Eye,
   Edit3,
+  ShieldAlert,
+  RefreshCw,
+  GitCompare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +50,18 @@ interface DossierReviewStudioModalProps {
   onClose: () => void;
   dossier: ReviewDossier | null;
   currentUser: WorkflowActor;
-  onUpdateDossier: (updated: ReviewDossier) => void;
+  onUpdateDossier: (
+    updated: ReviewDossier,
+    options?: { force?: boolean }
+  ) => Promise<{
+    success: boolean;
+    conflict?: boolean;
+    serverDossier?: ReviewDossier;
+    serverVersion?: number;
+    clientVersion?: number;
+    dossier?: ReviewDossier;
+    message?: string;
+  }> | void;
   activeViewers?: Array<{ userName: string; department: Department; status: string }>;
 }
 
@@ -76,12 +90,24 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
   const [isCorrectionsModalOpen, setIsCorrectionsModalOpen] = useState(false);
   const [correctionsInput, setCorrectionsInput] = useState('');
 
+  // Optimistic Concurrency Control (OCC) conflict resolution state
+  const [conflictState, setConflictState] = useState<{
+    isOpen: boolean;
+    serverDossier: ReviewDossier;
+    serverVersion: number;
+    clientVersion: number;
+    message: string;
+    pendingUpdate: ReviewDossier;
+  } | null>(null);
+  const [showConflictDiff, setShowConflictDiff] = useState(false);
+
   if (dossier && dossier.id !== prevDossierId) {
     setPrevDossierId(dossier.id);
     setDraftContent(dossier.textDocument.currentContent);
     setIsEditingContent(false);
     setAmendmentNote('');
     setCorrectionsInput('');
+    setConflictState(null);
   }
 
   if (!isOpen || !dossier) return null;
@@ -95,6 +121,54 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
     currentUser.role === 'manager' ||
     currentUser.role === 'associe' ||
     currentUser.role === 'admin';
+
+  // Centralized update dispatcher with OCC conflict interception
+  const applyDossierUpdate = async (
+    candidate: ReviewDossier,
+    options?: { force?: boolean }
+  ): Promise<boolean> => {
+    try {
+      const res = await onUpdateDossier(candidate, options);
+      if (res && res.conflict && res.serverDossier) {
+        soundManager.playReminderChime();
+        setConflictState({
+          isOpen: true,
+          serverDossier: res.serverDossier,
+          serverVersion: res.serverVersion || res.serverDossier.version || 1,
+          clientVersion: res.clientVersion || candidate.version || 1,
+          message:
+            res.message ||
+            'Conflit de concurrence détecté : le dossier a été modifié par un autre intervenant.',
+          pendingUpdate: candidate,
+        });
+        return false;
+      }
+      return true;
+    } catch (e: any) {
+      console.warn('Erreur mise à jour dossier:', e);
+      return false;
+    }
+  };
+
+  const handleAcceptServerVersion = () => {
+    if (!conflictState) return;
+    soundManager.playClickSound();
+    setDraftContent(conflictState.serverDossier.textDocument.currentContent);
+    setIsEditingContent(false);
+    onUpdateDossier(conflictState.serverDossier);
+    setConflictState(null);
+    setShowConflictDiff(false);
+  };
+
+  const handleForceApplyChanges = async () => {
+    if (!conflictState) return;
+    soundManager.playClickSound();
+    const success = await applyDossierUpdate(conflictState.pendingUpdate, { force: true });
+    if (success) {
+      setConflictState(null);
+      setShowConflictDiff(false);
+    }
+  };
 
   // State transitions handlers
   const handleTransition = (
@@ -112,7 +186,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
     });
 
     if (res.success) {
-      onUpdateDossier(res.dossier);
+      applyDossierUpdate(res.dossier);
     } else {
       alert(res.error || 'Erreur de transition de workflow');
     }
@@ -127,7 +201,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
       newLockState,
       newLockState ? 'Révision active par le superviseur' : undefined
     );
-    onUpdateDossier(updated);
+    applyDossierUpdate(updated);
   };
 
   const handleSaveDraftAmendments = () => {
@@ -164,7 +238,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
         ...dossier.auditTrail,
       ],
     };
-    onUpdateDossier(updated);
+    applyDossierUpdate(updated);
   };
 
   const handleUpdateInterDepStatus = (
@@ -202,7 +276,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
         ...dossier.auditTrail,
       ],
     };
-    onUpdateDossier(updated);
+    applyDossierUpdate(updated);
   };
 
   const handleUpdateTrackedFiles = (updatedFiles: TrackedFile[]) => {
@@ -225,7 +299,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
         ...dossier.auditTrail,
       ],
     };
-    onUpdateDossier(updated);
+    applyDossierUpdate(updated);
   };
 
   // Get current active step index in workflow
@@ -242,6 +316,15 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
           <div className="flex flex-wrap items-center gap-2.5 min-w-0">
             <span className="font-mono text-xs font-black bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-md">
               {dossier.ref}
+            </span>
+
+            {/* OCC Version indicator badge */}
+            <span
+              title={`Version actuelle du livrable : v${dossier.version || 1} (Contrôle de concurrence optimiste)`}
+              className="font-mono text-[11px] font-bold bg-emerald-900/50 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-inner"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              v{dossier.version || 1} • OCC
             </span>
 
             <span
@@ -701,6 +784,118 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
               >
                 Transmettre les consignes
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OCC Conflict Resolution Modal */}
+      {conflictState?.isOpen && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div className="w-full max-w-xl bg-[#071F17] rounded-2xl shadow-2xl p-6 border-2 border-amber-500/50 text-slate-100 flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-base font-bold text-white">
+                    Conflit de Concurrence Détecté (OCC)
+                  </h4>
+                  <Badge variant="outline" className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] font-mono">
+                    v{conflictState.clientVersion} ➔ v{conflictState.serverVersion}
+                  </Badge>
+                </div>
+                <p className="text-xs text-amber-200/90 mt-1 leading-relaxed">
+                  Le dossier <span className="font-mono font-bold text-white">{dossier.ref}</span> a été modifié simultanément par un autre intervenant ou dans une autre session pendant vos travaux.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Dernier enregistrement serveur :</span>
+                <span className="font-semibold text-white">
+                  {conflictState.serverDossier.auditTrail?.[0]?.actorName || 'Superviseur'} (v{conflictState.serverVersion})
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Heure de modification distante :</span>
+                <span className="font-mono text-emerald-300">
+                  {new Date(conflictState.serverDossier.updatedAt).toLocaleTimeString('fr-FR')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Statut actuel sur le serveur :</span>
+                <span className="font-bold text-amber-300 uppercase text-[11px]">
+                  {conflictState.serverDossier.status}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Votre action en attente :</span>
+                <span className="font-bold text-rose-300 uppercase text-[11px]">
+                  {conflictState.pendingUpdate.status !== conflictState.serverDossier.status
+                    ? `Passage vers ${conflictState.pendingUpdate.status}`
+                    : 'Sauvegarde d’amendements & notes'}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Diff View toggle if comparing */}
+            {showConflictDiff && (
+              <div className="p-3 bg-black/40 rounded-xl border border-emerald-500/20 max-h-48 overflow-y-auto space-y-2 text-xs font-mono">
+                <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider font-sans">
+                  Comparaison du texte :
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2 rounded bg-rose-950/30 border border-rose-500/30 text-rose-200">
+                    <span className="block font-bold text-rose-300 mb-1 font-sans">
+                      Texte Distant (Serveur v{conflictState.serverVersion}) :
+                    </span>
+                    <pre className="whitespace-pre-wrap">{conflictState.serverDossier.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
+                  </div>
+                  <div className="p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-emerald-200">
+                    <span className="block font-bold text-emerald-300 mb-1 font-sans">Votre Texte Local :</span>
+                    <pre className="whitespace-pre-wrap">{conflictState.pendingUpdate.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-500/20">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowConflictDiff(!showConflictDiff)}
+                className="text-xs text-slate-300 hover:text-white gap-1.5 cursor-pointer"
+              >
+                <GitCompare className="w-3.5 h-3.5 text-amber-400" />
+                {showConflictDiff ? 'Masquer la comparaison' : 'Comparer les textes'}
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAcceptServerVersion}
+                  className="text-xs font-bold bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                  Recharger la version serveur
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleForceApplyChanges}
+                  className="text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white gap-1.5 cursor-pointer shadow-lg shadow-amber-900/30"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  Forcer mes modifications (v{conflictState.serverVersion + 1})
+                </Button>
+              </div>
             </div>
           </div>
         </div>

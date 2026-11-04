@@ -42,6 +42,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDueDateFrench, isTaskOverdue } from '@/lib/reminders';
 import { canUserCompleteTask, canUserEditTask } from '@/lib/rbac';
+import {
+  getDefaultDueDateTime,
+  getMinDateStr,
+  getMinTimeForDate,
+  isDueDateTimeInPast,
+  formatLocalDate,
+} from '@/lib/due-date-utils';
 
 export interface TaskModalProps {
   isOpen: boolean;
@@ -87,8 +94,9 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
 
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
-  const [dueDate, setDueDate] = useState(initialTask?.dueDate || defaultDate || getTodayStr());
-  const [dueTime, setDueTime] = useState(initialTask?.dueTime || '14:00');
+  const defaultDue = useMemo(() => getDefaultDueDateTime(), []);
+  const [dueDate, setDueDate] = useState(initialTask?.dueDate || defaultDate || defaultDue.dueDate);
+  const [dueTime, setDueTime] = useState(initialTask?.dueTime || defaultDue.dueTime);
   const [hasTime, setHasTime] = useState(Boolean(initialTask?.dueTime || !initialTask));
   const [priority, setPriority] = useState<Priority>(initialTask?.priority || 'medium');
   const [category, setCategory] = useState(initialTask?.category || (categories[0]?.id || 'fiscalite'));
@@ -162,10 +170,18 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
       const diff = (1 + 7 - day) % 7 || 7;
       d.setDate(d.getDate() + diff);
     }
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    setDueDate(`${yyyy}-${mm}-${dd}`);
+    const formatted = formatLocalDate(d);
+    setDueDate(formatted);
+    setErrorMsg('');
+
+    // If today is chosen for a new task and current time is past dueTime, adapt dueTime to +2h
+    if (formatted === getMinDateStr()) {
+      if (!dueTime || isDueDateTimeInPast(formatted, dueTime)) {
+        const fresh = getDefaultDueDateTime();
+        setDueTime(fresh.dueTime);
+        setHasTime(true);
+      }
+    }
   };
 
   const handleAddSubtask = () => {
@@ -282,6 +298,12 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
     e.preventDefault();
     if (!title.trim()) {
       setErrorMsg('Le titre de la tâche est obligatoire.');
+      return;
+    }
+
+    // Strict constraint: no past date or time allowed for new tasks
+    if (!initialTask && isDueDateTimeInPast(dueDate, hasTime ? dueTime : undefined)) {
+      setErrorMsg("L'échéance d'une nouvelle tâche ne peut pas être fixée dans le passé.");
       return;
     }
 
@@ -1213,17 +1235,25 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                         <div>
                           <input
                             type="date"
+                            min={!initialTask ? getMinDateStr() : undefined}
                             value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
+                            onChange={(e) => {
+                              setDueDate(e.target.value);
+                              setErrorMsg('');
+                            }}
                             className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-xs text-white focus:ring-2 focus:ring-emerald-400/50 outline-hidden font-medium"
                           />
                         </div>
                         <div className="flex items-center gap-2">
                           <input
                             type="time"
+                            min={!initialTask ? getMinTimeForDate(dueDate) : undefined}
                             value={dueTime}
                             disabled={!hasTime}
-                            onChange={(e) => setDueTime(e.target.value)}
+                            onChange={(e) => {
+                              setDueTime(e.target.value);
+                              setErrorMsg('');
+                            }}
                             className="flex-1 px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-xs text-white disabled:opacity-40 focus:ring-2 focus:ring-emerald-400/50 outline-hidden font-medium"
                           />
                           <label className="flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer shrink-0">

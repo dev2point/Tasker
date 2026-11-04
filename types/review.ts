@@ -115,6 +115,9 @@ export interface ReviewDossier {
   priority: DossierPriority;
   status: ReviewStatus;
   
+  // Versioning & Optimistic Concurrency Control (OCC)
+  version: number; // Incremented sequentially upon each modification (v1, v2, v3...)
+  
   // Maker-Checker Attribution
   maker: WorkflowActor;
   checker?: WorkflowActor;

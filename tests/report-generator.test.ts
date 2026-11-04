@@ -78,6 +78,7 @@ describe('Report Generator & Executive PDF Module', () => {
         role: 'collaborateur',
       },
       status: 'valide',
+      version: 2,
       priority: 'urgent',
       createdAt: '2026-11-01T08:00:00Z',
       updatedAt: '2026-11-02T08:00:00Z',

@@ -1,6 +1,6 @@
 ---
-Jour: Lundi 2 Novembre 2026 (2026-11-02)
-Heure de la dernière modif: 00:52:00 PST (08:52:00 UTC)
+Jour: Mardi 3 Novembre 2026 (2026-11-03)
+Heure de la dernière modif: 09:39:00 PST (17:39:00 UTC)
 Auteur: niceboy
 Module: Gestion Opérationnelle des Tâches & Vues Métier
 ---
@@ -69,10 +69,20 @@ Le module de gestion des tâches constitue le cœur opérationnel de **mfisca-ta
 - **Phase 2 :** Intégration du bandeau d'alerte des échéances dépassées (`OverdueReminderBanner.tsx`) et calcul dynamique de l'indice d'urgence.
 - **Phase 3 :** Harmonisation avec le modèle de données unifié PostgreSQL / Drizzle pour éviter la disparité des identifiants (IDs alphanumériques vs entiers).
 - **Phase 4 :** Ajout de la gestion de versions de pièces jointes (`FileVersionManager.tsx`) permettant de consigner les brouillons d'actes et liasses fiscales révisées.
+- **Phase 5 :** Résolution du défaut d'échéance par défaut et verrouillage strict des dates et heures passées :
+  - Règle d'échéance par défaut dynamique : heure actuelle + 2h arrondie à l'heure pleine (`getDefaultDueDateTime`).
+  - Blocage immédiat de toute sélection de date ou heure révolue (`min` conditionnel sur `<input type="date">` et `<input type="time">`, message d'alerte explicite).
+  - Validation serveur dans `POST /api/tasks` avec rejet `HTTP 400` en cas de tentative d'affectation d'une échéance antérieure à la date de création.
+  - Couverture par 14 tests unitaires dédiés dans `tests/due-date-validation.test.ts`.
 
 ---
 
 ## 4. ⚠️ Dettes Techniques & Points d'Attention Identifiés
+
+### DT-TSK-04 : [RÉSOLU] Échéance par défaut statique à 14h00 et saisie autorisée de dates passées
+- **Statut :** Résolu le 03/11/2026.
+- **Description antérieure :** Lors de la création d'une tâche après 14h00, l'échéance par défaut restait fixée à 14h00 le jour même, classant la tâche directement dans « En retard » dès sa création.
+- **Solution appliquée :** Module `lib/due-date-utils.ts`, initialisations dynamiques dans `TaskModal.tsx` et `ListView.tsx`, contraintes `min` et rejets `HTTP 400` côté API.
 
 ### DT-TSK-01 : Absence de virtualisation sur la vue Liste pour grands volumes
 - **Description :** Le composant `ListView.tsx` rend tous les éléments du tableau dans le DOM sans virtualisation (ex. `react-virtual` ou `@tanstack/react-virtual`).

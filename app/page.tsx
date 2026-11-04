@@ -53,6 +53,7 @@ import {
 } from '@/lib/reminders';
 import { soundManager } from '@/lib/sound';
 import { usePlanitStore } from '@/lib/usePlanitStore';
+import { getDefaultDueDateTime, isDueDateTimeInPast } from '@/lib/due-date-utils';
 
 export default function HomePage() {
   const {
@@ -458,13 +459,26 @@ export default function HomePage() {
       }
       saveTasks(updated);
     } else {
-      // Create new: automatically attach creatorId and creatorName
+      // Create new: strictly forbid past dates and times
+      const defaultDue = getDefaultDueDateTime();
+      const finalDueDate = taskPayload.dueDate || defaultDue.dueDate;
+      const finalDueTime = taskPayload.dueTime !== undefined ? taskPayload.dueTime : defaultDue.dueTime;
+
+      if (isDueDateTimeInPast(finalDueDate, finalDueTime)) {
+        soundManager.playClickSound();
+        sendBrowserNotification("Erreur d'échéance", {
+          body: "L'échéance d'une nouvelle tâche ne peut pas être fixée dans le passé.",
+        });
+        return;
+      }
+
+      // Automatically attach creatorId and creatorName
       const newTask: Task = {
         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
         title: taskPayload.title || 'Nouvelle tâche',
         description: taskPayload.description || '',
-        dueDate: taskPayload.dueDate || new Date().toISOString().split('T')[0],
-        dueTime: taskPayload.dueTime,
+        dueDate: finalDueDate,
+        dueTime: finalDueTime,
         priority: taskPayload.priority || 'medium',
         category: taskPayload.category || 'fiscalite',
         completed: Boolean(taskPayload.completed),
@@ -641,13 +655,25 @@ export default function HomePage() {
     dueTime?: string,
     category: string = 'fiscalite'
   ) => {
+    const defaultDue = getDefaultDueDateTime();
+    const finalDueDate = dueDate || defaultDue.dueDate;
+    const finalDueTime = dueTime || (finalDueDate === defaultDue.dueDate ? defaultDue.dueTime : undefined);
+
+    if (isDueDateTimeInPast(finalDueDate, finalDueTime)) {
+      soundManager.playClickSound();
+      sendBrowserNotification("Erreur d'échéance", {
+        body: "L'échéance d'une nouvelle tâche ne peut pas être fixée dans le passé.",
+      });
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const newTask: Task = {
       id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
       title,
       description: '',
-      dueDate,
-      dueTime,
+      dueDate: finalDueDate,
+      dueTime: finalDueTime,
       priority: 'medium',
       category,
       completed: false,

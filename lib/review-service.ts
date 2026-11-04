@@ -136,6 +136,7 @@ export function executeWorkflowTransition(
 
   const updatedDossier: ReviewDossier = {
     ...dossier,
+    version: (dossier.version || 1) + 1,
     status: targetStatus,
     updatedAt: now,
     submittedAt: targetStatus === 'soumis' ? now : dossier.submittedAt,
@@ -208,6 +209,7 @@ export function togglePreventiveLock(
 
   return {
     ...dossier,
+    version: (dossier.version || 1) + 1,
     lock: {
       isLocked: lock,
       lockedBy: lock ? actor : undefined,

@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan d'implémentation pour la refonte ergonomique du formulaire de création de tâche en 2 colonnes avec pied de page fixe et bloc d'échéance unifié.",
-  "updatedAt":  "2026-10-29T10:19:09.368731383Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Plan d'implémentation pour le calcul d'échéance par défaut (+2h arrondie) et l'interdiction stricte des dates/heures passées pour toute nouvelle tâche.",
+  "updatedAt": "2026-11-03T17:31:31.863844018Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

@@ -90,6 +90,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       typology,
       priority,
       status: 'brouillon',
+      version: 1,
       maker: currentUser,
       lock: {
         isLocked: false,

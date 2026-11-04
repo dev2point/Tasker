@@ -4,6 +4,7 @@ import { tasks, users, activityLogs } from '@/src/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
+import { isDueDateTimeInPast } from '@/lib/due-date-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -161,6 +162,14 @@ export async function POST(req: NextRequest) {
         } catch (logErr) {
           console.warn('Activity log insert skipped:', logErr);
         }
+      }
+    } else {
+      // Nouvelle tâche : interdiction stricte d'associer une date/heure passée
+      if (isDueDateTimeInPast(taskData.dueDate, taskData.dueTime)) {
+        return NextResponse.json(
+          { error: "L'échéance d'une nouvelle tâche ne peut pas être fixée dans le passé." },
+          { status: 400 }
+        );
       }
     }
 

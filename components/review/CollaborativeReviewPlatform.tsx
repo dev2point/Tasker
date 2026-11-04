@@ -16,7 +16,9 @@ import {
   getActivePresence,
   pingPresence,
   subscribePresence,
+  updatePresenceFromRemote,
 } from '@/lib/presence-service';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 import { DossierReviewStudioModal } from './DossierReviewStudioModal';
 import { NewDossierModal } from './NewDossierModal';
 import {
@@ -40,6 +42,9 @@ import {
   Lightbulb,
   FileText,
   Printer,
+  Radio,
+  BellRing,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -82,6 +87,30 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     };
   }, [currentUser]);
 
+  // Real-time Server-Sent Events (SSE) hook
+  const { status: sseStatus, alerts, dismissAlert } = useRealtimeEvents({
+    onDossierUpdate: (remoteDossier) => {
+      setDossiers((prev) => {
+        const index = prev.findIndex((d) => d.id === remoteDossier.id);
+        let next: ReviewDossier[];
+        if (index >= 0) {
+          next = prev.map((d) => (d.id === remoteDossier.id ? remoteDossier : d));
+        } else {
+          next = [remoteDossier, ...prev];
+        }
+        saveStoredDossiers(next);
+        return next;
+      });
+
+      // Synchronize currently opened studio modal if same dossier
+      setActiveDossier((cur) => (cur && cur.id === remoteDossier.id ? remoteDossier : cur));
+    },
+    onPresenceUpdate: (remoteMembers) => {
+      setPresenceMembers(remoteMembers);
+      updatePresenceFromRemote(remoteMembers);
+    },
+  });
+
   // Load dossiers from persistence
   useEffect(() => {
     // Initial presence ping
@@ -104,27 +133,102 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     };
   }, [actor]);
 
-  // Update a dossier & persist
+  // Update a dossier & persist + broadcast to server SSE hub with OCC verification
   const handleUpdateDossier = useCallback(
-    (updated: ReviewDossier) => {
-      setDossiers((prev) => {
-        const next = prev.map((d) => (d.id === updated.id ? updated : d));
-        saveStoredDossiers(next);
-        return next;
-      });
-      setActiveDossier(updated);
+    async (
+      updated: ReviewDossier,
+      options?: { force?: boolean }
+    ): Promise<{
+      success: boolean;
+      conflict?: boolean;
+      serverDossier?: ReviewDossier;
+      serverVersion?: number;
+      clientVersion?: number;
+      dossier?: ReviewDossier;
+      message?: string;
+    }> => {
+      // Async broadcast to server SSE endpoint with expected version for OCC validation
+      try {
+        const res = await fetch('/api/review/dossiers', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dossierId: updated.id,
+            expectedVersion: updated.version || 1,
+            updatedDossier: updated,
+            force: options?.force,
+          }),
+        });
+
+        if (res.status === 409) {
+          const data = await res.json();
+          return {
+            success: false,
+            conflict: true,
+            serverDossier: data.serverDossier,
+            serverVersion: data.serverVersion,
+            clientVersion: data.clientVersion,
+            message: data.error,
+          };
+        }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          return {
+            success: false,
+            message: errData.error || 'Erreur lors de la mise à jour du dossier.',
+          };
+        }
+
+        const data = await res.json();
+        const finalized: ReviewDossier = data.dossier || updated;
+
+        setDossiers((prev) => {
+          const next = prev.map((d) => (d.id === finalized.id ? finalized : d));
+          saveStoredDossiers(next);
+          return next;
+        });
+        setActiveDossier(finalized);
+
+        return { success: true, dossier: finalized };
+      } catch {
+        // Safe offline fallback: bump version locally
+        const fallbackDossier: ReviewDossier = {
+          ...updated,
+          version: (updated.version || 1) + 1,
+          updatedAt: new Date().toISOString(),
+        };
+        setDossiers((prev) => {
+          const next = prev.map((d) => (d.id === fallbackDossier.id ? fallbackDossier : d));
+          saveStoredDossiers(next);
+          return next;
+        });
+        setActiveDossier(fallbackDossier);
+        return { success: true, dossier: fallbackDossier };
+      }
     },
     []
   );
 
-  // Create a new dossier
-  const handleCreateDossier = useCallback((newDossier: ReviewDossier) => {
+  // Create a new dossier & persist + broadcast
+  const handleCreateDossier = useCallback(async (newDossier: ReviewDossier) => {
     setDossiers((prev) => {
       const next = [newDossier, ...prev];
       saveStoredDossiers(next);
       return next;
     });
     setActiveDossier(newDossier);
+
+    // Async broadcast to server SSE endpoint
+    try {
+      await fetch('/api/review/dossiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDossier),
+      });
+    } catch {
+      // Safe offline fallback
+    }
   }, []);
 
   // Filtered dossiers list
@@ -250,16 +354,38 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           </div>
         </div>
 
-        {/* Real-time Phoenix Presence Live Bar */}
+        {/* Real-time Phoenix Presence & SSE Live Bar */}
         <div className="relative z-10 mt-5 pt-4 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span className="font-bold text-slate-200">
-              Membres actifs en direct (Phoenix Presence) :
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="font-bold text-slate-200">
+                Membres actifs en direct (Phoenix Presence) :
+              </span>
+            </div>
+
+            {/* Real-time SSE Connection Indicator */}
+            <div
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                sseStatus === 'connected'
+                  ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+                  : sseStatus === 'connecting'
+                  ? 'bg-amber-950/80 border-amber-500/40 text-amber-300'
+                  : 'bg-slate-900 border-slate-700 text-slate-400'
+              }`}
+            >
+              <Radio className={`w-3 h-3 ${sseStatus === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+              <span>
+                {sseStatus === 'connected'
+                  ? 'SSE Push Connecté'
+                  : sseStatus === 'connecting'
+                  ? 'Connexion SSE...'
+                  : 'Mode Reconnexion'}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -295,6 +421,85 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           </div>
         </div>
       </div>
+
+      {/* Real-time Collaborative Alerts Banner (Server-Sent Events) */}
+      {alerts.length > 0 && (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          {alerts.slice(0, 2).map((alert) => (
+            <div
+              key={alert.id}
+              className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-xl ${
+                alert.type === 'DOSSIER_VALIDATED'
+                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-100'
+                  : alert.type === 'DOSSIER_REJECTED'
+                  ? 'bg-rose-950/80 border-rose-500/50 text-rose-100'
+                  : alert.type === 'DOSSIER_SUBMITTED'
+                  ? 'bg-purple-950/80 border-purple-500/50 text-purple-100'
+                  : 'bg-slate-900/90 border-cyan-500/40 text-cyan-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                    alert.type === 'DOSSIER_VALIDATED'
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : alert.type === 'DOSSIER_REJECTED'
+                      ? 'bg-rose-500/20 text-rose-300'
+                      : alert.type === 'DOSSIER_SUBMITTED'
+                      ? 'bg-purple-500/20 text-purple-300'
+                      : 'bg-cyan-500/20 text-cyan-300'
+                  }`}
+                >
+                  <BellRing className="w-4 h-4 animate-bounce" />
+                </div>
+                <div className="truncate">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-white uppercase text-[10px] tracking-wider">
+                      {alert.type.replace('DOSSIER_', '').replace('_', ' ')}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                      {new Date(alert.timestamp).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <p className="font-medium text-xs truncate">{alert.message}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {alert.targetId && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const target = dossiers.find((d) => d.id === alert.targetId);
+                      if (target) {
+                        handleOpenStudio(target);
+                        dismissAlert(alert.id);
+                      }
+                    }}
+                    className="h-7 px-2.5 text-[11px] font-bold border-white/20 bg-white/10 hover:bg-white/20 text-white rounded-lg cursor-pointer"
+                  >
+                    Ouvrir le dossier
+                  </Button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => dismissAlert(alert.id)}
+                  className="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Fermer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 2. Top Metrics Overview Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -593,7 +798,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       {activeDossier && (
         <DossierReviewStudioModal
           isOpen={Boolean(activeDossier)}
-          onClose={() => setActiveDossier(null)}
+          onClose={() => {
+            setActiveDossier(null);
+            pingPresence(actor, undefined, 'viewing');
+          }}
           dossier={activeDossier}
           currentUser={actor}
           onUpdateDossier={handleUpdateDossier}

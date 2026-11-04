@@ -80,9 +80,55 @@ export function pingPresence(
     }
     window.dispatchEvent(new CustomEvent('planit_presence_change', { detail: updatedList }));
 
+    // Non-blocking asynchronous sync with server-side SSE hub (in browser environment)
+    if (typeof window !== 'undefined' && (!process?.env?.VITEST)) {
+      try {
+        fetch('/api/review/presence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedMember),
+        }).catch(() => {});
+      } catch {
+        // Offline fallback
+      }
+    }
+
     return updatedList;
   } catch {
     return [];
+  }
+}
+
+/**
+ * Updates presence state from remote SSE events
+ */
+export function updatePresenceFromRemote(members: PresenceMember[]) {
+  if (typeof window === 'undefined' || !Array.isArray(members)) return;
+  try {
+    localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(members));
+    window.dispatchEvent(new CustomEvent('planit_presence_change', { detail: members }));
+  } catch {
+    // Ignore storage issues
+  }
+}
+
+/**
+ * Removes user from active presence session
+ */
+export function leavePresence(userId: string) {
+  if (typeof window === 'undefined' || !userId) return;
+  try {
+    const list = getActivePresence().filter((m) => m.userId !== userId);
+    localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent('planit_presence_change', { detail: list }));
+
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(`/api/review/presence?userId=${encodeURIComponent(userId)}`);
+    } else {
+      fetch(`/api/review/presence?userId=${encodeURIComponent(userId)}`, { method: 'DELETE' }).catch(() => {});
+    }
+  } catch {
+    // Ignore
   }
 }
 

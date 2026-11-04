@@ -42,6 +42,7 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
       typology: 'Liasse Fiscale & Crédit Impôt Recherche',
       priority: 'urgent',
       status: 'brouillon',
+      version: 1,
       maker: mockMaker,
       checker: mockChecker,
       lock: { isLocked: false },

@@ -31,7 +31,8 @@ describe('Health & Database Schema Architecture', () => {
     const res = await getHealth();
     expect(res.status).toBe(200);
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text);
     expect(data).toHaveProperty('status');
     expect(['healthy', 'degraded', 'unhealthy']).toContain(data.status);
     expect(data).toHaveProperty('timestamp');

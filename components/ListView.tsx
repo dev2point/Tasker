@@ -37,6 +37,12 @@ import { Progress } from '@/components/ui/progress';
 import { TaskScrollList } from '@/components/TaskScrollList';
 import { User } from '@/types/user';
 import { canUserCompleteTask, canUserDeleteTask } from '@/lib/rbac';
+import {
+  getDefaultDueDateTime,
+  getMinDateStr,
+  getMinTimeForDate,
+  isDueDateTimeInPast,
+} from '@/lib/due-date-utils';
 
 interface ListViewProps {
   tasks: Task[];
@@ -75,11 +81,13 @@ export const ListView: React.FC<ListViewProps> = ({
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
 
   // Quick inline add state
+  const defaultDue = useMemo(() => getDefaultDueDateTime(), []);
   const [quickTitle, setQuickTitle] = useState('');
-  const [quickDate, setQuickDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [quickTime, setQuickTime] = useState('14:00');
+  const [quickDate, setQuickDate] = useState(defaultDue.dueDate);
+  const [quickTime, setQuickTime] = useState(defaultDue.dueTime);
   const [quickCategory, setQuickCategory] = useState(categories[0]?.id || 'fiscalite');
   const [showAdvancedQuickAdd, setShowAdvancedQuickAdd] = useState(false);
+  const [quickAddError, setQuickAddError] = useState<string | null>(null);
 
   // Compute all available tags across tasks
   const allAvailableTags = useMemo(() => {
@@ -132,6 +140,13 @@ export const ListView: React.FC<ListViewProps> = ({
     e.preventDefault();
     if (!quickTitle.trim()) return;
 
+    if (isDueDateTimeInPast(quickDate, quickTime)) {
+      soundManager.playClickSound();
+      setQuickAddError("L'échéance d'une nouvelle tâche ne peut pas être fixée dans le passé.");
+      return;
+    }
+
+    setQuickAddError(null);
     soundManager.playClickSound();
     onQuickAdd(
       quickTitle.trim(),
@@ -140,6 +155,9 @@ export const ListView: React.FC<ListViewProps> = ({
       quickCategory
     );
     setQuickTitle('');
+    const nextDefault = getDefaultDueDateTime();
+    setQuickDate(nextDefault.dueDate);
+    setQuickTime(nextDefault.dueTime);
     setShowAdvancedQuickAdd(false);
   };
 
@@ -420,6 +438,14 @@ export const ListView: React.FC<ListViewProps> = ({
           </Button>
         </div>
 
+        {/* Quick Add Error banner */}
+        {quickAddError && (
+          <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+            <span>{quickAddError}</span>
+          </div>
+        )}
+
         {/* Expandable options row */}
         {showAdvancedQuickAdd && (
           <div className="flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-emerald-500/15 text-xs animate-in fade-in-50 duration-150">
@@ -427,8 +453,12 @@ export const ListView: React.FC<ListViewProps> = ({
               <Calendar className="w-3.5 h-3.5 text-emerald-400" />
               <input
                 type="date"
+                min={getMinDateStr()}
                 value={quickDate}
-                onChange={(e) => setQuickDate(e.target.value)}
+                onChange={(e) => {
+                  setQuickDate(e.target.value);
+                  setQuickAddError(null);
+                }}
                 className="bg-transparent text-xs font-semibold text-white outline-hidden cursor-pointer"
               />
             </div>
@@ -437,8 +467,12 @@ export const ListView: React.FC<ListViewProps> = ({
               <Clock className="w-3.5 h-3.5 text-emerald-400" />
               <input
                 type="time"
+                min={getMinTimeForDate(quickDate)}
                 value={quickTime}
-                onChange={(e) => setQuickTime(e.target.value)}
+                onChange={(e) => {
+                  setQuickTime(e.target.value);
+                  setQuickAddError(null);
+                }}
                 className="bg-transparent text-xs font-semibold text-white outline-hidden cursor-pointer"
               />
             </div>

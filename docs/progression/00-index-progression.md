@@ -1,6 +1,6 @@
 ---
-Jour: Lundi 2 Novembre 2026 (2026-11-02)
-Heure de la dernière modif: 00:52:00 PST (08:52:00 UTC)
+Jour: Mardi 3 Novembre 2026 (2026-11-03)
+Heure de la dernière modif: 09:41:00 PST (17:41:00 UTC)
 Auteur: niceboy
 Module: Index Général & Cartographie de Progression
 ---
@@ -16,10 +16,10 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 ## 🧭 Sommaire du Dossier de Progression
 
 | N° | Fichier / Document | Domaine Fonctionnel & Technique | Statut Général | Niveau de Dette |
-| :---: | :--- | :--- | :---: | :---: |
-| **00** | [`00-index-progression.md`](./00-index-progression.md) | Synthèse générale, métriques globales & matrice de maturité | **À Jour** | Faible |
+| :---: | :--- | :--- | :--- | :---: |
+| **00** | [`00-index-progression.md`](./00-index-progression.md) | Synthèse générale, métriques globales & matrice de maturité | **À Jour** | Très Faible |
 | **01** | [`01-gestion-taches-et-vues.md`](./01-gestion-taches-et-vues.md) | Modèle de tâche, Kanban, Listes, Calendrier, Filtrage & Priorités | **Opérationnel** | Faible / Modérée |
-| **02** | [`02-circuit-revue-maker-checker.md`](./02-circuit-revue-maker-checker.md) | Workflow collaboratif Maker-Checker, Dossiers, Studio de révision & Passerelle | **Opérationnel** | Modérée |
+| **02** | [`02-circuit-revue-maker-checker.md`](./02-circuit-revue-maker-checker.md) | Workflow collaboratif Maker-Checker, Dossiers, Studio de révision, SSE & OCC | **Opérationnel, SSE & OCC Actifs** | Très Faible |
 | **03** | [`03-moteur-rapports-et-synthese-pdf.md`](./03-moteur-rapports-et-synthese-pdf.md) | Moteur de reporting exécutif, génération PDF A4, métriques fiscales & exports | **Opérationnel** | Modérée |
 | **04** | [`04-metriques-kpis-et-benchmark.md`](./04-metriques-kpis-et-benchmark.md) | Statistiques temps réel, moteur de benchmark sectoriel, calculs de productivité | **Opérationnel** | Faible |
 | **05** | [`05-persistance-bdd-et-synchronisation.md`](./05-persistance-bdd-et-synchronisation.md) | Architecture hybride PostgreSQL/Drizzle, API Sync, IndexedDB & Healthcheck | **Opérationnel** | Modérée |
@@ -31,10 +31,12 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 ## 📊 Matrice de Maturité & Indicateurs Qualité
 
 ```
-[Qualité & Tests]       ████████████████████  100% (85/85 tests Vitest passants)
+[Qualité & Tests]       ████████████████████  100% (108/108 tests Vitest passants sur 14 suites)
 [Sécurité & RBAC]       ████████████████████  100% (Vulnérabilités SEC-01 à SEC-09 corrigées)
+[Collaboration SSE]     ████████████████████  100% (Hub Server-Sent Events & diffusion push)
+[Contrôle Concurrence]  ████████████████████  100% (OCC Optimistic Concurrency v1...vN + 409 Conflict)
+[Moteur de Revue]       ████████████████████  100% (Maker-Checker, Studio Diff, Inter-départements, OCC)
 [Vues & Ergonomie]      ██████████████████░░   90% (Kanban, Calendrier, Liste, Rapport Exécutif)
-[Moteur de Revue]       ██████████████████░░   90% (Maker-Checker, Studio Diff, Inter-départements)
 [Persistance Hybride]   ████████████████░░░░   85% (PostgreSQL + Synchronisation locale résiliente)
 [Intégrations Tiers]    ██████████████░░░░░░   75% (M365, iCal, PWA)
 ```
@@ -54,5 +56,5 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 | ID Dette | Intitulé & Description | Composants Affectés | Impact Métier / Tech | Stratégie de Remédiation |
 | :--- | :--- | :--- | :--- | :--- |
 | **DT-GLO-01** | **Absence de tests E2E automatisés (Playwright/Cypress)** | Parcours complets d'authentification, modales complexes et impression PDF | Risque de régression visuelle ou de rupture de flux utilisateur lors de refactorisations majeures. | Mettre en place une suite Playwright ciblant les 5 flux critiques (création tâche, soumission dossier, approbation checker, export rapport, login). |
-| **DT-GLO-02** | **Synchronisation temps réel par polling vs WebSockets** | `presence-service.ts`, `CollaborativeReviewPlatform.tsx` | Latence de mise à jour des présences (10-30s) et requêtes HTTP récurrentes superflues sur le serveur. | Évolution vers Server-Sent Events (SSE) ou WebSocket léger pour les événements de présence et de notification de revue. |
+| **DT-GLO-02** | **Synchronisation temps réel par Server-Sent Events (SSE)** | `lib/realtime-hub.ts`, `/app/api/events`, `use-realtime-events.ts` | Élimination de la latence de polling et diffusion instantanée des alertes Maker-Checker et des présences. | **✅ Résolu (03/11/2026) :** Hub SSE temps réel opérationnel, diffusion push instantanée aux relecteurs et reconnexion automatique. |
 | **DT-GLO-03** | **Rendu PDF vectoriel côté client (`window.print`)** | `ExecutiveReportModal.tsx`, `lib/report-generator.ts` | Dépendance vis-à-vis du navigateur client ; incapacité à générer des rapports PDF par lot la nuit en tâche de fond (cron). | Développer un endpoint API dédié `/api/reports/pdf` utilisant `@react-pdf/renderer` ou Chromium headless pour la distribution automatisée par e-mail. |
