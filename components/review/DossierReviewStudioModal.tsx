@@ -63,6 +63,7 @@ interface DossierReviewStudioModalProps {
     message?: string;
   }> | void;
   activeViewers?: Array<{ userName: string; department: Department; status: string }>;
+  isSidebarCollapsed?: boolean;
 }
 
 const WORKFLOW_STEPS: Array<{ id: ReviewStatus; label: string; stage: string }> = [
@@ -81,6 +82,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
   currentUser,
   onUpdateDossier,
   activeViewers = [],
+  isSidebarCollapsed = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'diff' | 'data' | 'files' | 'gateway' | 'audit'>('diff');
   const [isEditingContent, setIsEditingContent] = useState(false);
@@ -309,7 +311,11 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
       : WORKFLOW_STEPS.findIndex((s) => s.id === dossier.status);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
+    >
       <div className="relative w-full max-w-6xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 flex flex-col max-h-[92vh] overflow-hidden my-auto text-slate-100">
         {/* 1. Modal Top Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-b border-emerald-500/30">

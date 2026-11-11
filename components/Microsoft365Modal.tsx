@@ -43,12 +43,14 @@ interface Microsoft365ModalProps {
   isOpen: boolean;
   onClose: () => void;
   tasks: Task[];
+  isSidebarCollapsed?: boolean;
 }
 
 export const Microsoft365Modal: React.FC<Microsoft365ModalProps> = ({
   isOpen,
   onClose,
   tasks,
+  isSidebarCollapsed = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'docs' | 'outlook' | 'onedrive' | 'config'>('docs');
   const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
@@ -242,7 +244,9 @@ export const Microsoft365Modal: React.FC<Microsoft365ModalProps> = ({
   const tasksWithDueDatesCount = tasks.filter((t) => t.dueDate).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+    }`}>
       <div
         role="dialog"
         aria-modal="true"
@@ -599,15 +603,27 @@ export const Microsoft365Modal: React.FC<Microsoft365ModalProps> = ({
               
               <ol className="list-decimal pl-4 space-y-2 text-slate-300">
                 <li>
-                  Rendez-vous sur le{' '}
+                  Connectez-vous avec un <strong>compte professionnel Microsoft 365</strong> sur{' '}
                   <a
-                    href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
+                    href="https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
                     target="_blank"
                     rel="noreferrer"
                     className="text-emerald-400 font-bold underline inline-flex items-center gap-0.5"
                   >
-                    Portail Azure &gt; Inscriptions d&apos;applications <ExternalLink className="w-3 h-3" />
-                  </a>.
+                    Microsoft Entra admin center <ExternalLink className="w-3 h-3" />
+                  </a>{' '}
+                  <span className="text-[11px] text-slate-400">
+                    (Pas de compte pro ? Obtenez un tenant gratuit via le{' '}
+                    <a
+                      href="https://developer.microsoft.com/microsoft-365/dev-program"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-amber-300 underline"
+                    >
+                      M365 Developer Program
+                    </a>
+                    ).
+                  </span>
                 </li>
                 <li>
                   Créez une nouvelle application (ex: <em>« Cabinet Applet M365 »</em>) et sélectionnez <em>« Comptes dans un annuaire organisationnel »</em>.
@@ -629,9 +645,13 @@ export const Microsoft365Modal: React.FC<Microsoft365ModalProps> = ({
                   </div>
                 </li>
                 <li>
-                  Copiez l&apos;<strong>ID d’application (client)</strong> et déclarez-le dans vos variables d&apos;environnement :
-                  <div className="mt-1 p-2 bg-black/50 rounded-lg font-mono text-[11px] text-slate-200">
-                    NEXT_PUBLIC_AZURE_CLIENT_ID=&quot;votre-client-id-azure&quot;
+                  Copiez l&apos;<strong>ID d’application (client)</strong> et l&apos;<strong>ID de l&apos;annuaire (locataire)</strong> puis déclarez-les dans votre fichier <code>.env</code> :
+                  <div className="mt-1 p-2 bg-black/50 rounded-lg font-mono text-[11px] text-slate-200 space-y-1">
+                    <div>NEXT_PUBLIC_AZURE_CLIENT_ID=&quot;votre-client-id-azure&quot;</div>
+                    <div>NEXT_PUBLIC_AZURE_TENANT_ID=&quot;common&quot; <span className="text-slate-400 font-sans text-[10px]">(ou l&apos;ID de locataire de votre cabinet)</span></div>
+                  </div>
+                  <div className="mt-1.5 text-[11px] text-emerald-300">
+                    Consultez également le guide complet dans <code>docs/guides/azure-entra-id-setup.md</code>.
                   </div>
                 </li>
               </ol>

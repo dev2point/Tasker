@@ -1,6 +1,6 @@
 ---
-Jour: Lundi 2 Novembre 2026 (2026-11-02)
-Heure de la dernière modif: 00:52:00 PST (08:52:00 UTC)
+Jour: Mercredi 11 Novembre 2026 (2026-11-11)
+Heure de la dernière modif: 08:00:00 PST (16:00:00 UTC)
 Auteur: niceboy
 Module: Intégrations Externes, PWA & Écosystème Microsoft 365
 ---
@@ -41,7 +41,8 @@ Le module d'intégrations externes et d'accessibilité mobile assure :
 ```
 
 ### Fichiers Clés du Module :
-- `/components/Microsoft365Modal.tsx` : Interface de paramétrage de la synchronisation avec le tenant Microsoft 365 de l'organisation.
+- `/docs/guides/azure-entra-id-setup.md` : Guide pas-à-pas complet d'inscription d'application Azure Entra ID pour obtenir `NEXT_PUBLIC_AZURE_CLIENT_ID` et `NEXT_PUBLIC_AZURE_TENANT_ID`.
+- `/components/Microsoft365Modal.tsx` : Interface de paramétrage de la synchronisation avec le tenant Microsoft 365 de l'organisation et guide intégré.
 - `/lib/microsoft/` : Bibliothèque de communication avec l'API Microsoft Graph (gestion des autorisations, création d'événements de calendrier, envoi de cartes adaptatives Teams).
 - `/lib/ical.ts` : Générateur conforme à la norme iCalendar RFC 5545 produisant des fichiers `.ics` avec alarmes de rappel configurées.
 - `/components/pwa/` : Composants de détection de support PWA, bannière d'installation personnalisée et gestion du cycle de vie du Service Worker.
@@ -54,6 +55,7 @@ Le module d'intégrations externes et d'accessibilité mobile assure :
 - **Phase 2 :** Mise en place du module `Microsoft365Modal.tsx` avec sélection des flux à synchroniser (toutes les tâches, uniquement les tâches critiques, uniquement les échéances du département).
 - **Phase 3 :** Enregistrement du Web App Manifest (`manifest.json`) et configuration des icônes vectorielles adaptées pour l'installation sur écran d'accueil.
 - **Phase 4 :** Prise en charge des rappels automatiques avec calcul du préavis avant l'échéance légale (alerte à J-7, J-2 et J-0).
+- **Phase 5 :** Rédaction et publication du guide technique d'intégration Azure Entra ID (`/docs/guides/azure-entra-id-setup.md`) explicitant l'obtention des clés `NEXT_PUBLIC_AZURE_CLIENT_ID` et `NEXT_PUBLIC_AZURE_TENANT_ID`, la configuration SPA / PKCE et les autorisations déléguées Microsoft Graph (`User.Read`, `Calendars.ReadWrite`).
 
 ---
 

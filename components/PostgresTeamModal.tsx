@@ -27,6 +27,7 @@ interface PostgresTeamModalProps {
   onSelectUser: (user: User) => void;
   tasks: Task[];
   onTasksSynced?: (tasks: Task[]) => void;
+  isSidebarCollapsed?: boolean;
 }
 
 export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
@@ -36,6 +37,7 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
   onSelectUser,
   tasks,
   onTasksSynced,
+  isSidebarCollapsed = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'db' | 'team' | 'roles' | 'schema'>('db');
   const [dbStatus, setDbStatus] = useState<{
@@ -167,7 +169,9 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
       role="dialog"
       aria-modal="true"
     >

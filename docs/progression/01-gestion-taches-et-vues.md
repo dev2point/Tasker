@@ -1,6 +1,6 @@
 ---
-Jour: Mardi 3 Novembre 2026 (2026-11-03)
-Heure de la dernière modif: 09:39:00 PST (17:39:00 UTC)
+Jour: Mercredi 4 Novembre 2026 (2026-11-04)
+Heure de la dernière modif: 07:12:00 PST (15:12:00 UTC)
 Auteur: niceboy
 Module: Gestion Opérationnelle des Tâches & Vues Métier
 ---
@@ -74,10 +74,18 @@ Le module de gestion des tâches constitue le cœur opérationnel de **mfisca-ta
   - Blocage immédiat de toute sélection de date ou heure révolue (`min` conditionnel sur `<input type="date">` et `<input type="time">`, message d'alerte explicite).
   - Validation serveur dans `POST /api/tasks` avec rejet `HTTP 400` en cas de tentative d'affectation d'une échéance antérieure à la date de création.
   - Couverture par 14 tests unitaires dédiés dans `tests/due-date-validation.test.ts`.
+- **Phase 6 :** Ergonomie UX des modales & indicateur visuel ambre de l'onglet actif :
+  - **Centrage des modales dans l'espace utile à droite de la barre latérale** : application d'un padding adaptatif réactif (`md:pl-64` en mode déployé, `md:pl-20` en mode replié) avec transition fluide sur les backdrops de toutes les modales (`ExecutiveReportModal`, `TaskModal`, `CategoryTagManagerModal`, `Microsoft365Modal`, `AIAssistantModal`, `ExportModal`, `PostgresTeamModal`, `AuthModal`, `ActiveReminderModal`, `DossierReviewStudioModal`, `NewDossierModal`). Élimine tout rognage ou masquage causé par la sidebar fixe.
+  - **Mise en valeur ambre dorée de l'onglet ou outil actif** : prop `activeModal` sur `Sidebar.tsx` stylisant l'élément ouvert avec fond ambre doré semi-transparent (`bg-amber-500/15`), bordure lumineuse (`border-amber-500/50`), halo ring (`ring-1 ring-amber-500/30`), texte et icône ambre (`text-amber-200`, `text-amber-400`) et badges ambre contrastés.
 
 ---
 
 ## 4. ⚠️ Dettes Techniques & Points d'Attention Identifiés
+
+### DT-UI-01 : [RÉSOLU] Rognage des modales par la sidebar fixe et absence de retour visuel sur l'onglet actif
+- **Statut :** Résolu le 04/11/2026.
+- **Description antérieure :** Les modales s'ouvraient en superposition plein écran (`fixed inset-0`), positionnant leur centre géométrique au milieu de l'écran physique sans tenir compte des 256px de la barre latérale fixe, entraînant le chevauchement ou le masquage de la partie gauche des formulaires et rapports de comité (`ExecutiveReportModal`). De plus, aucun retour visuel n'indiquait quel outil de la sidebar était actif.
+- **Solution appliquée :** Contrainte de centrage adaptatif par décalage `transition-[padding] duration-300 ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'}` et synchronisation de l'état `activeModal` dans `Sidebar.tsx` avec thème ambre doré premium conforme au design system.
 
 ### DT-TSK-04 : [RÉSOLU] Échéance par défaut statique à 14h00 et saisie autorisée de dates passées
 - **Statut :** Résolu le 03/11/2026.

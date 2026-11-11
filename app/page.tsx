@@ -20,7 +20,6 @@ import { AuthModal } from '@/components/AuthModal';
 import { AuthGate } from '@/components/AuthGate';
 import { CategoryTagManagerModal } from '@/components/CategoryTagManagerModal';
 import { Microsoft365Modal } from '@/components/Microsoft365Modal';
-import { BenchmarkModal } from '@/components/BenchmarkModal';
 import { ExecutiveReportModal } from '@/components/ExecutiveReportModal';
 import { getStoredDossiers } from '@/lib/review-service';
 import { ReviewDossier, Department } from '@/types/review';
@@ -90,9 +89,6 @@ export default function HomePage() {
   const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
   const [categoryTagModalInitialTab, setCategoryTagModalInitialTab] = useState<'categories' | 'tags'>('categories');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
-  const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState<boolean>(false);
-  const [sandboxBackupTasks, setSandboxBackupTasks] = useState<Task[] | null>(null);
-  const isSandboxActive = sandboxBackupTasks !== null;
 
   // Executive Report & Committee PDF Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
@@ -304,24 +300,6 @@ export default function HomePage() {
   const saveTasks = useCallback((updatedTasks: Task[]) => {
     setTasks(updatedTasks);
   }, [setTasks]);
-
-  // Sandbox load test handlers
-  const handleInjectSandboxTasks = useCallback(
-    (sandboxTasks: Task[]) => {
-      if (sandboxBackupTasks === null) {
-        setSandboxBackupTasks(tasks);
-      }
-      saveTasks(sandboxTasks);
-    },
-    [sandboxBackupTasks, tasks, saveTasks]
-  );
-
-  const handleRestoreRealTasks = useCallback(() => {
-    if (sandboxBackupTasks !== null) {
-      saveTasks(sandboxBackupTasks);
-      setSandboxBackupTasks(null);
-    }
-  }, [sandboxBackupTasks, saveTasks]);
 
   // Save notifications helper
   const saveNotifications = useCallback((updatedNotifs: TaskNotification[]) => {
@@ -908,6 +886,21 @@ export default function HomePage() {
     return <AuthGate onAuthSuccess={handleAuthSuccess} />;
   }
 
+  // Active modal tracked for golden amber UX indicator in Sidebar
+  const activeModal = isReportModalOpen
+    ? 'report'
+    : isCategoryTagModalOpen
+    ? 'categories'
+    : isM365ModalOpen
+    ? 'm365'
+    : isAIModalOpen
+    ? 'ai'
+    : isExportModalOpen
+    ? 'export'
+    : isPostgresModalOpen
+    ? 'postgres'
+    : null;
+
   return (
     <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-emerald-500 selection:text-slate-950 pb-24 md:pb-12 overflow-x-clip">
       {/* Ambient Radial Glass Light Orbs */}
@@ -933,6 +926,7 @@ export default function HomePage() {
       <Sidebar
         currentView={currentView}
         onViewChange={handleViewChange}
+        activeModal={activeModal}
         onOpenNewTaskModal={() => handleOpenTaskModal()}
         onOpenAIModal={() => {
           if (!currentUser) {
@@ -949,7 +943,6 @@ export default function HomePage() {
         }
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
-        onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
         onOpenReportModal={() => handleOpenReportModal('executive_board')}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
@@ -981,7 +974,6 @@ export default function HomePage() {
         }
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenCategoryTagManager={() => handleOpenCategoryTagManager('categories')}
-        onOpenBenchmarkModal={() => setIsBenchmarkModalOpen(true)}
         onOpenReportModal={() => handleOpenReportModal('executive_board')}
         currentUser={currentUser}
         unreadNotificationsCount={unreadNotificationsCount}
@@ -1029,6 +1021,7 @@ export default function HomePage() {
           <CollaborativeReviewPlatform
             currentUser={currentUser}
             onOpenReportModal={(dept) => handleOpenReportModal('review_progress', dept || 'Tous')}
+            isSidebarCollapsed={isSidebarCollapsed}
           />
         )}
 
@@ -1112,6 +1105,7 @@ export default function HomePage() {
         onSnooze={handleSnoozeReminder}
         onSnoozeTomorrow={handleSnoozeReminderTomorrow}
         onPostponeDueDate={handlePostponeTask}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 3. Notifications Center Dropdown */}
@@ -1134,6 +1128,7 @@ export default function HomePage() {
         categories={categories}
         currentUser={currentUser}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 5. iCal & JSON Export/Import Modal */}
@@ -1151,6 +1146,7 @@ export default function HomePage() {
             body: JSON.stringify(imported),
           }).catch(console.error);
         }}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 5b. Microsoft 365 Integration Hub (Excel, Word, Outlook, OneDrive) */}
@@ -1158,6 +1154,7 @@ export default function HomePage() {
         isOpen={isM365ModalOpen}
         onClose={() => setIsM365ModalOpen(false)}
         tasks={tasks}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 6. PostgreSQL Supabase & Team / Roles (RBAC) Modal - Réservé exclusivement aux administrateurs */}
@@ -1169,6 +1166,7 @@ export default function HomePage() {
           onSelectUser={(u) => setSelectedFallbackUser(u)}
           tasks={tasks}
           onTasksSynced={(synced) => saveTasks(synced)}
+          isSidebarCollapsed={isSidebarCollapsed}
         />
       )}
 
@@ -1185,6 +1183,7 @@ export default function HomePage() {
         onAuthSuccess={() => {
           refreshUsers();
         }}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* 8. Category and Tag Manager Modal */}
@@ -1199,19 +1198,10 @@ export default function HomePage() {
         onResetDefaultCategories={resetCategories}
         onRenameTag={renameTag}
         onDeleteTag={deleteTag}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
-      {/* 9. Benchmark & Load Testing Studio Modal */}
-      <BenchmarkModal
-        isOpen={isBenchmarkModalOpen}
-        onClose={() => setIsBenchmarkModalOpen(false)}
-        currentTasks={tasks}
-        onInjectSandboxTasks={handleInjectSandboxTasks}
-        onRestoreRealTasks={handleRestoreRealTasks}
-        isSandboxActive={isSandboxActive}
-      />
-
-      {/* 10. Executive Report & Committee PDF Generator Modal */}
+      {/* 9. Executive Report & Committee PDF Generator Modal */}
       <ExecutiveReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
@@ -1221,6 +1211,7 @@ export default function HomePage() {
         currentUser={currentUser}
         initialType={reportModalType}
         initialDepartment={reportModalDepartment}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
 
       {/* PWA Background Services, Offline Connectivity & Floating Install Card */}

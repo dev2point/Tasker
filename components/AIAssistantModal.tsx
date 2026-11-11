@@ -33,6 +33,7 @@ interface AIAssistantModalProps {
   categories: Category[];
   currentUser?: User | null;
   onOpenAuthModal?: () => void;
+  isSidebarCollapsed?: boolean;
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
@@ -43,6 +44,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   categories,
   currentUser,
   onOpenAuthModal,
+  isSidebarCollapsed = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'plan'>('create');
   const [naturalPrompt, setNaturalPrompt] = useState('');
@@ -169,7 +171,9 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+    }`}>
       <div
         role="dialog"
         aria-modal="true"

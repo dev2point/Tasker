@@ -1,6 +1,6 @@
 ---
-Jour: Lundi 2 Novembre 2026 (2026-11-02)
-Heure de la dernière modif: 00:52:00 PST (08:52:00 UTC)
+Jour: Mercredi 4 Novembre 2026 (2026-11-04)
+Heure de la dernière modif: 06:40:00 PST (14:40:00 UTC)
 Auteur: niceboy
 Module: Métriques Métier, KPIs & Benchmark de Performance
 ---
@@ -48,8 +48,8 @@ Dans un contexte fiscal soumis à une forte saisonnalité (période fiscale de c
 
 ### Fichiers Clés du Module :
 - `/components/StatsView.tsx` : Tableau de bord analytique interactif avec cartes d'indicateurs de performance clés (KPIs) et visualisations graphiques.
-- `/components/BenchmarkModal.tsx` : Fenêtre d'analyse comparative détaillée positionnant l'efficacité du cabinet face aux standards du secteur.
-- `/lib/benchmark-engine.ts` : Moteur de calcul statistique modélisant les percentiles de performance, les taux d'effort et les ratios de conformité.
+- `/lib/benchmark-engine.ts` : Moteur de calcul statistique modélisant les percentiles de performance, les taux d'effort et les tests de charge volumétriques (1 000 à 50 000 éléments).
+- `/tests/load-performance.test.ts` : Suite de tests automatisée Vitest pour l'évaluation de charge en backend et intégration continue CI/CD.
 
 ---
 
@@ -59,6 +59,10 @@ Dans un contexte fiscal soumis à une forte saisonnalité (période fiscale de c
 - **Phase 2 :** Implémentation du moteur `benchmark-engine.ts` intégrant des seuils de référence empiriques (délai moyen de revue < 48h, taux de conformité cible > 95%).
 - **Phase 3 :** Ajout des filtres transversaux par département permettant d'isoler la performance du pôle Conseil Fiscal de celle du Contentieux Juridique.
 - **Phase 4 :** Intégration du bouton d'export de rapport exécutif directement depuis le tableau de bord de statistiques.
+- **Phase 5 :** Assainissement de l'UI et confinement des tests de charge au backend :
+  - Suppression de l'onglet et du bouton « Tests de charge » de la Sidebar et du Header.
+  - Suppression du composant d'interface `BenchmarkModal.tsx`.
+  - Confinement de la validation volumétrique au backend et à la suite automatisée Vitest (`tests/load-performance.test.ts`).
 
 ---
 

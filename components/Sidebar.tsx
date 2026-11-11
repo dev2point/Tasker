@@ -25,7 +25,6 @@ import {
   ChevronDown,
   Lock,
   Building,
-  Gauge,
   FileText,
   Printer,
 } from 'lucide-react';
@@ -39,6 +38,7 @@ import { usePWAInstall } from '@/components/pwa/usePWAInstall';
 export interface SidebarProps {
   currentView: ViewMode;
   onViewChange: (view: ViewMode) => void;
+  activeModal?: 'report' | 'categories' | 'm365' | 'ai' | 'export' | 'postgres' | null;
   onOpenNewTaskModal: () => void;
   onOpenAIModal: () => void;
   onOpenExportModal: () => void;
@@ -47,7 +47,6 @@ export interface SidebarProps {
   onOpenAuthModal?: () => void;
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
-  onOpenBenchmarkModal?: () => void;
   onOpenReportModal?: () => void;
   currentUser?: User | null;
   unreadNotificationsCount: number;
@@ -62,6 +61,7 @@ export interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   onViewChange,
+  activeModal = null,
   onOpenNewTaskModal,
   onOpenAIModal,
   onOpenExportModal,
@@ -70,7 +70,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAuthModal,
   onOpenCategoryTagManager,
   onOpenM365Modal,
-  onOpenBenchmarkModal,
   onOpenReportModal,
   currentUser,
   unreadNotificationsCount,
@@ -313,23 +312,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onViewChange(item.id);
                   }}
                   title={isVisuallyCollapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
                     active
-                      ? item.special
-                        ? 'bg-purple-900/40 text-purple-200 border border-purple-500/40 font-bold shadow-lg shadow-purple-950/40 backdrop-blur-md'
-                        : 'bg-emerald-500/20 text-white border border-emerald-500/40 font-bold shadow-lg shadow-emerald-950/50 backdrop-blur-md'
+                      ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 backdrop-blur-md ring-1 ring-amber-500/30'
                       : item.special
-                        ? 'text-purple-300 hover:text-white hover:bg-purple-900/25'
-                        : 'text-slate-300 hover:text-white hover:bg-emerald-500/15'
+                        ? 'text-purple-300 hover:text-white hover:bg-purple-900/25 border border-transparent hover:border-purple-500/30'
+                        : 'text-slate-300 hover:text-white hover:bg-emerald-500/15 border border-transparent hover:border-emerald-500/25'
                   } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
                 >
                   <div
                     className={`transition-colors shrink-0 ${
                       active
-                        ? item.special
-                          ? 'text-purple-300'
-                          : 'text-emerald-400'
-                        : 'text-slate-400 group-hover:text-emerald-300'
+                        ? 'text-amber-400'
+                        : item.special
+                          ? 'text-purple-400 group-hover:text-purple-300'
+                          : 'text-slate-400 group-hover:text-emerald-300'
                     }`}
                   >
                     {item.icon}
@@ -343,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span
                       className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 animate-in fade-in duration-200 ${
                         active
-                          ? 'bg-emerald-500 text-slate-950 font-black'
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
                           : 'bg-emerald-950/80 text-emerald-200 border border-emerald-500/30 group-hover:bg-emerald-900'
                       }`}
                     >
@@ -359,7 +356,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* AI Assistant Banner / Button */}
         <div>
           {!isVisuallyCollapsed ? (
-            <div className="p-3 rounded-2xl bg-[#0a231b]/80 border border-emerald-500/30 shadow-xl backdrop-blur-xl animate-in fade-in duration-200">
+            <div className={`p-3 rounded-2xl shadow-xl backdrop-blur-xl animate-in fade-in duration-200 transition-all ${
+              activeModal === 'ai'
+                ? 'bg-amber-950/40 border-2 border-amber-500/80 shadow-amber-950/50 ring-1 ring-amber-500/30'
+                : 'bg-[#0a231b]/80 border border-emerald-500/30'
+            }`}>
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
                   <Bot className="w-3.5 h-3.5" />
@@ -380,7 +381,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onOpenAIModal();
                   }
                 }}
-                className="w-full h-8 text-xs font-bold border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 rounded-lg shadow-sm gap-1.5 whitespace-nowrap"
+                className={`w-full h-8 text-xs font-bold rounded-lg shadow-sm gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
+                  activeModal === 'ai'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 font-black shadow-md'
+                    : 'border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200'
+                }`}
               >
                 <span>Ouvrir l&apos;assistant</span>
                 {!currentUser && <Lock className="w-2.5 h-2.5 text-slate-400" />}
@@ -398,9 +403,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
               }}
               title="Assistant IA Gemini"
-              className="w-full h-10 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 flex items-center justify-center transition-colors"
+              className={`w-full h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                activeModal === 'ai'
+                  ? 'bg-amber-500 text-slate-950 border-2 border-amber-300 shadow-md ring-1 ring-amber-400'
+                  : 'bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30'
+              }`}
             >
-              <Bot className="w-4 h-4 text-amber-300" />
+              <Bot className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -420,12 +429,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={onOpenCategoryTagManager}
                 title={isVisuallyCollapsed ? 'Catégories & Tags' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-colors group ${
-                  isVisuallyCollapsed ? 'justify-center px-2' : ''
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
+                  activeModal === 'categories'
+                    ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/30'
+                    : 'text-slate-300 hover:text-white hover:bg-emerald-500/15 border border-transparent hover:border-emerald-500/25'
+                } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
               >
-                <FolderPlus className="w-4 h-4 text-slate-400 group-hover:text-emerald-300 shrink-0" />
-                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Catégories & Tags</span>}
+                <FolderPlus className={`w-4 h-4 shrink-0 transition-colors ${
+                  activeModal === 'categories' ? 'text-amber-400' : 'text-slate-400 group-hover:text-emerald-300'
+                }`} />
+                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Catégories &amp; Tags</span>}
               </button>
             )}
 
@@ -435,11 +448,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onOpenExportModal}
               title={isVisuallyCollapsed ? 'Exporter (.ics)' : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-colors group ${
-                isVisuallyCollapsed ? 'justify-center px-2' : ''
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
+                activeModal === 'export'
+                  ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/30'
+                  : 'text-slate-300 hover:text-white hover:bg-emerald-500/15 border border-transparent hover:border-emerald-500/25'
+              } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
             >
-              <Download className="w-4 h-4 text-slate-400 group-hover:text-slate-200 shrink-0" />
+              <Download className={`w-4 h-4 shrink-0 transition-colors ${
+                activeModal === 'export' ? 'text-amber-400' : 'text-slate-400 group-hover:text-slate-200'
+              }`} />
               {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Exporter (.ics)</span>}
             </button>
 
@@ -453,17 +470,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onOpenReportModal();
                 }}
                 title={isVisuallyCollapsed ? 'Rapport & Synthèse Comité (PDF)' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-200 hover:text-white hover:bg-emerald-500/20 transition-colors group cursor-pointer ${
-                  isVisuallyCollapsed ? 'justify-center px-2' : ''
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
+                  activeModal === 'report'
+                    ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/30'
+                    : 'text-emerald-200 hover:text-white hover:bg-emerald-500/20 border border-transparent hover:border-emerald-500/25'
+                } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
               >
-                <Printer className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 shrink-0" />
+                <Printer className={`w-4 h-4 shrink-0 transition-colors ${
+                  activeModal === 'report' ? 'text-amber-400' : 'text-emerald-400 group-hover:text-emerald-300'
+                }`} />
                 {!isVisuallyCollapsed && (
                   <>
                     <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">
                       Rapport &amp; Synthèse
                     </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 border transition-colors ${
+                      activeModal === 'report'
+                        ? 'bg-amber-500/30 text-amber-200 border-amber-500/50 font-black'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
                       PDF
                     </span>
                   </>
@@ -478,15 +503,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={onOpenM365Modal}
                 title={isVisuallyCollapsed ? 'Microsoft 365 (Office, Outlook)' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-200 hover:text-white hover:bg-blue-900/30 transition-colors group ${
-                  isVisuallyCollapsed ? 'justify-center px-2' : ''
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
+                  activeModal === 'm365'
+                    ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/30'
+                    : 'text-blue-200 hover:text-white hover:bg-blue-900/30 border border-transparent hover:border-blue-500/25'
+                } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
               >
-                <Building className="w-4 h-4 text-blue-400 group-hover:text-blue-300 shrink-0" />
+                <Building className={`w-4 h-4 shrink-0 transition-colors ${
+                  activeModal === 'm365' ? 'text-amber-400' : 'text-blue-400 group-hover:text-blue-300'
+                }`} />
                 {!isVisuallyCollapsed && (
                   <>
                     <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Microsoft 365</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40 shrink-0">
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 border transition-colors ${
+                      activeModal === 'm365'
+                        ? 'bg-amber-500/30 text-amber-200 border-amber-500/50 font-black'
+                        : 'bg-blue-900/60 text-blue-200 border border-blue-500/40'
+                    }`}>
                       M365
                     </span>
                   </>
@@ -560,37 +593,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={onOpenPostgresModal}
                 title={isVisuallyCollapsed ? 'Diagnostic Base SQL' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-sky-500/20 transition-colors group ${
-                  isVisuallyCollapsed ? 'justify-center px-2' : ''
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
+                  activeModal === 'postgres'
+                    ? 'bg-amber-500/15 text-amber-200 border border-amber-500/50 font-bold shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/30'
+                    : 'text-sky-300 hover:text-white hover:bg-sky-500/20 border border-sky-500/20'
+                } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
               >
-                <Database className="w-4 h-4 text-sky-400 shrink-0" />
+                <Database className={`w-4 h-4 shrink-0 transition-colors ${
+                  activeModal === 'postgres' ? 'text-amber-400' : 'text-sky-400'
+                }`} />
                 {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Diagnostic Base SQL</span>}
-              </button>
-            )}
-
-            {/* Load Test & Bench Studio */}
-            {onOpenBenchmarkModal && (
-              <button
-                id="open-benchmark-btn"
-                type="button"
-                onClick={onOpenBenchmarkModal}
-                title={isVisuallyCollapsed ? 'Tests de charge & Bench volumétrique' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/20 transition-all group ${
-                  isVisuallyCollapsed ? 'justify-center px-2' : ''
-                }`}
-              >
-                <Gauge className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 shrink-0" />
-                {!isVisuallyCollapsed && (
-                  <>
-                    <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">
-                      Tests de charge
-                    </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
-                      Bench
-                    </span>
-                  </>
-                )}
               </button>
             )}
           </div>

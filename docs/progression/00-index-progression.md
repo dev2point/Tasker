@@ -1,6 +1,6 @@
 ---
-Jour: Mardi 3 Novembre 2026 (2026-11-03)
-Heure de la dernière modif: 09:41:00 PST (17:41:00 UTC)
+Jour: Mercredi 4 Novembre 2026 (2026-11-04)
+Heure de la dernière modif: 07:15:00 PST (15:15:00 UTC)
 Auteur: niceboy
 Module: Index Général & Cartographie de Progression
 ---
@@ -36,7 +36,7 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 [Collaboration SSE]     ████████████████████  100% (Hub Server-Sent Events & diffusion push)
 [Contrôle Concurrence]  ████████████████████  100% (OCC Optimistic Concurrency v1...vN + 409 Conflict)
 [Moteur de Revue]       ████████████████████  100% (Maker-Checker, Studio Diff, Inter-départements, OCC)
-[Vues & Ergonomie]      ██████████████████░░   90% (Kanban, Calendrier, Liste, Rapport Exécutif)
+[Vues & Ergonomie]      ███████████████████░   95% (Kanban, Calendrier, Centrage Modales, Indicateur Ambre)
 [Persistance Hybride]   ████████████████░░░░   85% (PostgreSQL + Synchronisation locale résiliente)
 [Intégrations Tiers]    ██████████████░░░░░░   75% (M365, iCal, PWA)
 ```

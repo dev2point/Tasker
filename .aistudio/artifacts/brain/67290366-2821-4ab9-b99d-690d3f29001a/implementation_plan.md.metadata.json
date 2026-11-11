@@ -1,6 +1,0 @@
-{
-  "summary": "Plan d'implémentation pour le calcul d'échéance par défaut (+2h arrondie) et l'interdiction stricte des dates/heures passées pour toute nouvelle tâche.",
-  "updatedAt": "2026-11-03T17:31:31.863844018Z",
-  "requestFeedback": true,
-  "userFacing": true
-}

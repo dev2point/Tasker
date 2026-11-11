@@ -11,6 +11,7 @@ interface NewDossierModalProps {
   onClose: () => void;
   currentUser: WorkflowActor;
   onCreateDossier: (newDossier: ReviewDossier) => void;
+  isSidebarCollapsed?: boolean;
 }
 
 const TYPOLOGIES_PER_DEPT: Record<Department, string[]> = {
@@ -48,6 +49,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   onClose,
   currentUser,
   onCreateDossier,
+  isSidebarCollapsed = false,
 }) => {
   const [department, setDepartment] = useState<Department>(
     (currentUser.department as Department) || 'Fiscalité'
@@ -155,7 +157,11 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div
+      className={`fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
+    >
       <div className="relative w-full max-w-2xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden my-auto text-slate-100">
         <div className="flex items-center justify-between px-5 py-4 bg-emerald-950/80 border-b border-emerald-500/30 text-white">
           <div className="flex items-center gap-2">

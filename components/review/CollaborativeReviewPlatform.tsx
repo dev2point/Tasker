@@ -59,11 +59,13 @@ interface CollaborativeReviewPlatformProps {
     department?: string;
   } | null;
   onOpenReportModal?: (department?: 'Tous' | Department) => void;
+  isSidebarCollapsed?: boolean;
 }
 
 export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformProps> = ({
   currentUser,
   onOpenReportModal,
+  isSidebarCollapsed = false,
 }) => {
   const [dossiers, setDossiers] = useState<ReviewDossier[]>(() => getStoredDossiers());
   const [selectedDept, setSelectedDept] = useState<'Tous' | Department>('Tous');
@@ -806,6 +808,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           currentUser={actor}
           onUpdateDossier={handleUpdateDossier}
           activeViewers={presenceMembers.filter((m) => m.dossierId === activeDossier.id)}
+          isSidebarCollapsed={isSidebarCollapsed}
         />
       )}
 
@@ -815,6 +818,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         onClose={() => setIsNewModalOpen(false)}
         currentUser={actor}
         onCreateDossier={handleCreateDossier}
+        isSidebarCollapsed={isSidebarCollapsed}
       />
     </div>
   );

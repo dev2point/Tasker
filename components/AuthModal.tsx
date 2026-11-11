@@ -31,6 +31,7 @@ interface AuthModalProps {
   currentUser?: User | null;
   onSignOut?: () => void;
   onViewChange?: (view: ViewMode) => void;
+  isSidebarCollapsed?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -40,6 +41,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   currentUser: propCurrentUser,
   onSignOut,
   onViewChange,
+  isSidebarCollapsed = false,
 }) => {
   const { data: session, isPending: isSessionLoading } = useSession();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -197,7 +199,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div
       id="auth-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
       onClick={onClose}
     >
       <div

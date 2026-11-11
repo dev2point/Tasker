@@ -40,6 +40,7 @@ interface CategoryTagManagerModalProps {
   onDeleteTag: (tagToDelete: string) => void;
   onAddCustomTag?: (newTag: string, color?: string) => void;
   initialTab?: 'categories' | 'tags';
+  isSidebarCollapsed?: boolean;
 }
 
 export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = ({
@@ -54,6 +55,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
   onDeleteTag,
   onAddCustomTag,
   initialTab = 'categories',
+  isSidebarCollapsed = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'categories' | 'tags'>(initialTab);
 
@@ -234,7 +236,9 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
   return (
     <div
       id="category-tag-manager-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
