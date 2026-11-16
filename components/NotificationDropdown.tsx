@@ -37,17 +37,31 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onClearAll,
   onSelectTask,
 }) => {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
+    <div
+      id="notifications-modal-backdrop"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-start justify-end p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Centre de notifications"
-        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-150 mt-12 sm:mt-14 text-slate-100"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-150 mt-12 sm:mt-14 text-slate-100 cursor-default"
       >
         {/* Header */}
         <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between bg-emerald-950/40">

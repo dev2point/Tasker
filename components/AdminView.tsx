@@ -1270,11 +1270,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {/* MODAL: Add New Member */}
       {showAddUserModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-150"
+          onClick={() => setShowAddUserModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-150 cursor-pointer"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden text-slate-100">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden text-slate-100 cursor-default"
+          >
             <div className="bg-emerald-950/60 border-b border-emerald-500/20 p-4 sm:p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shrink-0">

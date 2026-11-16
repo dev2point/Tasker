@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import {
   TrackedFile,
   FileVersionSnapshot,
+  SpreadsheetSheet,
 } from '@/types/file-version';
 import {
   formatBytes,
@@ -12,8 +13,14 @@ import {
   addNewFileVersion,
   restoreFileVersion,
   downloadSnapshotFile,
+  updateSnapshotModeration,
 } from '@/lib/file-version-service';
 import { computeLineDiff } from '@/lib/review-service';
+import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-parser';
+import { SpreadsheetDiffViewer } from '@/components/review/SpreadsheetDiffViewer';
+import { WordDocxDiffViewer } from '@/components/review/WordDocxDiffViewer';
+import { ModerationDecisionModal } from '@/components/review/ModerationDecisionModal';
+import { sendBrowserNotification } from '@/lib/reminders';
 import {
   FileText,
   FileSpreadsheet,
@@ -39,6 +46,7 @@ import {
   Layers,
   Check,
   Copy,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -84,34 +92,62 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
   const [formSummary, setFormSummary] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formTextContent, setFormTextContent] = useState('');
+  const [formGridData, setFormGridData] = useState<SpreadsheetSheet[] | undefined>();
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [formIsMajor, setFormIsMajor] = useState(false);
   const [uploadedBase64, setUploadedBase64] = useState<string | undefined>();
   const [uploadedSize, setUploadedSize] = useState<number>(0);
   const [uploadedName, setUploadedName] = useState<string>('');
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
+  const [moderationTarget, setModerationTarget] = useState<{
+    file: TrackedFile;
+    snapshot: FileVersionSnapshot;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newVersionInputRef = useRef<HTMLInputElement>(null);
 
   const selectedFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
 
-  // Handle local file picking for New Document
-  const handleLocalFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local file picking for New Document (with automated Word/Excel extraction)
+  const handleLocalFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadedName(file.name);
     setUploadedSize(file.size);
     setFormFileName(file.name);
+    setIsExtracting(true);
 
-    // Read file
-    if (file.type.startsWith('text/') || file.name.endsWith('.md') || file.name.endsWith('.txt') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        setFormTextContent(text || '');
-      };
-      reader.readAsText(file);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext === 'docx') {
+        const buffer = await file.arrayBuffer();
+        const text = await extractDocxText(buffer);
+        setFormTextContent(text);
+        setFormGridData(undefined);
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const buffer = await file.arrayBuffer();
+        const sheets = await extractXlsxData(buffer);
+        setFormGridData(sheets);
+        const summaryText = sheets
+          .map((s) => `--- Feuille : ${s.name} (${s.rowCount} lignes) ---\n` + s.rows.map((r) => r.join(' | ')).join('\n'))
+          .join('\n\n');
+        setFormTextContent(summaryText);
+      } else if (ext === 'csv') {
+        const text = await file.text();
+        const sheet = extractCsvData(text, file.name);
+        setFormGridData([sheet]);
+        setFormTextContent(text);
+      } else if (file.type.startsWith('text/') || ext === 'md' || ext === 'txt' || ext === 'json') {
+        const text = await file.text();
+        setFormTextContent(text);
+        setFormGridData(undefined);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la lecture du fichier Office :', err);
+    } finally {
+      setIsExtracting(false);
     }
 
     const readerData = new FileReader();
@@ -135,6 +171,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       sizeBytes: size,
       contentUrl: uploadedBase64,
       textContent: formTextContent || undefined,
+      gridData: formGridData,
       authorName: currentUser.name,
       authorEmail: currentUser.email,
       authorRole: currentUser.role,
@@ -153,6 +190,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormSummary('');
     setFormDescription('');
     setFormTextContent('');
+    setFormGridData(undefined);
     setUploadedBase64(undefined);
     setUploadedSize(0);
     setUploadedName('');
@@ -173,6 +211,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       sizeBytes: size,
       contentUrl: uploadedBase64 || uploadFileTarget.versions[0]?.contentUrl,
       textContent: formTextContent || uploadFileTarget.versions[0]?.textContent,
+      gridData: formGridData || uploadFileTarget.versions[0]?.gridData,
       authorName: currentUser.name,
       authorEmail: currentUser.email,
       authorRole: currentUser.role,
@@ -190,10 +229,36 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormFileName('');
     setFormSummary('');
     setFormTextContent('');
+    setFormGridData(undefined);
     setUploadedBase64(undefined);
     setUploadedSize(0);
     setUploadedName('');
     setFormIsMajor(false);
+  };
+
+  // Moderation decision confirmed by supervisor
+  const handleConfirmModeration = (decision: { status: 'approved' | 'rejected'; note: string }) => {
+    if (!moderationTarget) return;
+
+    soundManager.playCompleteSound();
+    const updated = updateSnapshotModeration(
+      moderationTarget.file,
+      moderationTarget.snapshot.id,
+      decision.status,
+      decision.note,
+      currentUser
+    );
+
+    const nextFiles = files.map((f) => (f.id === updated.id ? updated : f));
+    onChangeFiles(nextFiles);
+
+    // Send browser notification
+    const actionLabel = decision.status === 'approved' ? 'Validé' : 'Renvoyé pour corrections';
+    sendBrowserNotification(`Modération : ${actionLabel}`, {
+      body: `Le document ${moderationTarget.file.name} (${moderationTarget.snapshot.versionNumber}) a été ${actionLabel.toLowerCase()} par ${currentUser.name}.\nMotif: "${decision.note}"`,
+    });
+
+    setModerationTarget(null);
   };
 
   // Restore previous version
@@ -475,6 +540,23 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                                 Restauration de {snapshot.restoredFromVersion}
                               </Badge>
                             )}
+                            {snapshot.moderationStatus === 'approved' && (
+                              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                Validé par {snapshot.moderatedBy || 'Superviseur'}
+                              </Badge>
+                            )}
+                            {snapshot.moderationStatus === 'rejected' && (
+                              <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold gap-1">
+                                <RotateCcw className="w-3 h-3 text-amber-400" />
+                                Corrections requises
+                              </Badge>
+                            )}
+                            {(!snapshot.moderationStatus || snapshot.moderationStatus === 'pending') && (
+                              <Badge variant="outline" className="text-[10px] bg-slate-800/60 text-slate-400 border-slate-700/50">
+                                En attente de revue
+                              </Badge>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 text-[11px] text-slate-400">
@@ -499,6 +581,12 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                           <p className="text-xs font-semibold text-white">
                             {snapshot.summary}
                           </p>
+                          {snapshot.moderationNote && (
+                            <div className="p-2 rounded-lg bg-black/40 border border-emerald-500/20 text-[11px] text-slate-300 mt-0.5">
+                              <span className="font-bold text-amber-400 mr-1.5">Note du modérateur :</span>
+                              <span>« {snapshot.moderationNote} »</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3 text-emerald-400" />
@@ -576,6 +664,21 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                             </Button>
                           )}
 
+                          {/* Moderate button for supervisor */}
+                          {!readOnly && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setModerationTarget({ file: selectedFile, snapshot })}
+                              className="h-6 px-2 text-[11px] font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-500/20 gap-1"
+                              title="Valider ou demander des corrections avec motif obligatoire"
+                            >
+                              <ShieldCheck className="w-3 h-3 text-amber-400" />
+                              <span>Modérer</span>
+                            </Button>
+                          )}
+
                           {/* Restore button if not latest */}
                           {!isLatest && !readOnly && (
                             <Button
@@ -583,9 +686,9 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRestore(selectedFile, snapshot)}
-                              className="h-6 px-2 text-[11px] font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-500/20 gap-1 ml-auto"
+                              className="h-6 px-2 text-[11px] font-bold text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/20 gap-1 ml-auto"
                             >
-                              <RotateCcw className="w-3 h-3 text-amber-400" />
+                              <RotateCcw className="w-3 h-3 text-emerald-400" />
                               <span>Restaurer cette version</span>
                             </Button>
                           )}
@@ -641,11 +744,16 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                     <Upload className="w-3.5 h-3.5" />
                     <span>Parcourir l&apos;ordinateur</span>
                   </Button>
-                  {uploadedName && (
+                  {isExtracting ? (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extraction automatique du contenu Word/Excel...</span>
+                    </div>
+                  ) : uploadedName ? (
                     <span className="text-xs text-emerald-300 font-semibold truncate max-w-[200px]">
                       {uploadedName} ({formatBytes(uploadedSize)})
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -776,11 +884,16 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                     <Upload className="w-3.5 h-3.5" />
                     <span>Choisir le nouveau fichier</span>
                   </Button>
-                  {uploadedName && (
+                  {isExtracting ? (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extraction automatique du contenu Word/Excel...</span>
+                    </div>
+                  ) : uploadedName ? (
                     <span className="text-xs text-emerald-300 font-semibold truncate max-w-[200px]">
                       {uploadedName} ({formatBytes(uploadedSize)})
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -945,8 +1058,8 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
       {/* Modal: Diff comparison between two versions */}
       {diffComparison && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-3xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-5xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-4 sm:p-5 text-slate-100 flex flex-col gap-4 max-h-[92vh] overflow-hidden my-auto">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-amber-400" />
@@ -957,7 +1070,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               <button
                 type="button"
                 onClick={() => setDiffComparison(null)}
-                className="text-slate-400 hover:text-white"
+                className="p-1 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -989,46 +1102,65 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 </div>
               </div>
 
-              {/* Text diff rendering if text available */}
-              {diffComparison.v1.textContent !== undefined && diffComparison.v2.textContent !== undefined ? (
-                <div>
-                  <span className="font-bold text-slate-300 block mb-1">Différence de texte</span>
-                  <div className="p-3 rounded-xl bg-black/60 border border-emerald-500/20 font-mono text-[11px] max-h-72 overflow-y-auto space-y-0.5">
-                    {computeLineDiff(diffComparison.v1.textContent, diffComparison.v2.textContent).map((line, lIdx) => {
-                      if (line.type === 'added') {
-                        return (
-                          <div key={lIdx} className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">
-                            + {line.content}
-                          </div>
-                        );
-                      }
-                      if (line.type === 'removed') {
-                        return (
-                          <div key={lIdx} className="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded">
-                            - {line.content}
-                          </div>
-                        );
-                      }
-                      return (
-                        <div key={lIdx} className="text-slate-400 px-2 py-0.5">
-                          &nbsp;&nbsp;{line.content}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              {/* 1. If Spreadsheet (.xlsx, .csv or has gridData): Dual table side-by-side */}
+              {Boolean(
+                diffComparison.v1.gridData ||
+                  diffComparison.v2.gridData ||
+                  selectedFile.fileType === 'xlsx' ||
+                  selectedFile.name.endsWith('.xlsx') ||
+                  selectedFile.name.endsWith('.csv')
+              ) ? (
+                <SpreadsheetDiffViewer
+                  previousSheets={diffComparison.v1.gridData}
+                  currentSheets={diffComparison.v2.gridData}
+                  fileName={selectedFile.name}
+                  versionOldLabel={`v${diffComparison.v1.versionNumber} (${diffComparison.v1.authorName})`}
+                  versionNewLabel={`v${diffComparison.v2.versionNumber} (${diffComparison.v2.authorName})`}
+                />
+              ) : Boolean(
+                  /* 2. If Word (.docx, text, markdown or has textContent): Word-by-word diff */
+                  diffComparison.v1.textContent !== undefined ||
+                    diffComparison.v2.textContent !== undefined ||
+                    selectedFile.fileType === 'docx' ||
+                    selectedFile.name.endsWith('.docx')
+                ) ? (
+                <WordDocxDiffViewer
+                  previousText={diffComparison.v1.textContent}
+                  currentText={diffComparison.v2.textContent}
+                  fileName={selectedFile.name}
+                  versionOldLabel={`v${diffComparison.v1.versionNumber} (${diffComparison.v1.authorName})`}
+                  versionNewLabel={`v${diffComparison.v2.versionNumber} (${diffComparison.v2.authorName})`}
+                  authorName={diffComparison.v2.authorName}
+                  amendmentNotes={diffComparison.v2.summary}
+                />
               ) : (
-                <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-center text-slate-400 text-xs">
-                  <p className="mb-1 font-bold text-white">Fichiers binaires (Word / Excel / PDF / Image)</p>
+                /* Fallback for other binary formats */
+                <div className="p-6 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-center text-slate-400 text-xs">
+                  <p className="mb-1 font-bold text-white">Fichiers binaires non textuels</p>
                   <p>
-                    La comparaison textuelle directe n&apos;est pas disponible pour ce type de fichier.
-                    Vous pouvez télécharger chaque version séparément pour inspection locale.
+                    La comparaison automatique s&apos;applique aux documents Word (.docx), classeurs Excel (.xlsx), fichiers CSV et documents texte.
+                    Pour les images ou formats personnalisés, téléchargez chaque version pour vérification.
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end pt-2 border-t border-emerald-500/20">
+            <div className="flex items-center justify-between pt-2 border-t border-emerald-500/20">
+              {!readOnly && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setModerationTarget({ file: selectedFile, snapshot: diffComparison.v2 });
+                    }}
+                    className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Modérer cette version ({diffComparison.v2.versionNumber})</span>
+                  </Button>
+                </div>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -1041,6 +1173,18 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal: Moderation Decision with mandatory motive */}
+      {moderationTarget && (
+        <ModerationDecisionModal
+          isOpen={Boolean(moderationTarget)}
+          onClose={() => setModerationTarget(null)}
+          documentTitle={moderationTarget.file.name}
+          versionNumber={moderationTarget.snapshot.versionNumber}
+          authorName={moderationTarget.snapshot.authorName}
+          onConfirmDecision={handleConfirmModeration}
+        />
       )}
     </div>
   );

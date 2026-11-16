@@ -1,6 +1,6 @@
 ---
-Jour: Mardi 3 Novembre 2026 (2026-11-03)
-Heure de la dernière modif: 09:18:00 PST (17:18:00 UTC)
+Jour: Mercredi 11 Novembre 2026 (2026-11-11)
+Heure de la dernière modif: 17:15:00 CET (16:15:00 UTC)
 Auteur: niceboy
 Module: Circuit de Revue & Validation Collaborative (Maker-Checker)
 ---
@@ -68,6 +68,12 @@ Aucun document fiscal ayant une incidence financière ou juridique (mémo de str
 - **Phase 4 :** Intégration de la passerelle inter-pôles pour les dossiers fiscaux complexes requérant l'aval conjoint du département Contentieux et du département Conseil.
 - **Phase 5 (Temps Réel & Server-Sent Events) :** Résolution complète de la dette de synchronisation par la mise en place d'un hub SSE natif (`/api/events`). Diffusion push instantanée des soumissions de dossiers, validations, demandes de corrections, présences d'édition et verrous concurrents sans polling.
 - **Phase 6 (Contrôle de Concurrence Optimiste - OCC & Anti-Écrasement) :** Résolution complète de la dette `DT-REV-01`. Ajout du champ incrémental atomique `version` sur les dossiers de revue, validation stricte côté serveur avec rejet `HTTP 409 Conflict` en cas de modification concurrente dépassée, broadcast d'alertes SSE `DOSSIER_CONFLICT`, et modale interactive de résolution permettant le rechargement de la version distante, l'écrasement forcé ou la comparaison visuelle des textes en conflit.
+- **Phase 7 (Lecture & Comparaison Visuelle Automatique Word .docx et Excel .xlsx) :** 
+  - **Exigences Métier :** Le consultant modifie ses fichiers sur son poste local (Word, Excel) et les soumet dans le studio de revue. Le superviseur examine visuellement les modifications réelles sans aucun compte cloud externe Microsoft 365 ou Azure.
+  - **Moteur d'Extraction Autonome (`/lib/office-parser.ts`) :** Extraction textuelle des `.docx` via `mammoth`, parsing multi-feuilles et extraction matricielle des `.xlsx` via `exceljs` avec prise en charge des exports CSV.
+  - **Visualiseur Excel Double Tableau Côte à Côte (`SpreadsheetDiffViewer.tsx`) :** Affichage synchronisé avant/après avec repérage des cellules modifiées (halo ambre, infobulle de transition de valeur), sélecteur d'onglets de classeur et filtre "Lignes modifiées".
+  - **Visualiseur Word Mot à Mot (`WordDocxDiffViewer.tsx`) :** Comparaison mot à mot (algorithme LCS adapté aux caractères accentués et à la ponctuation française) avec surlignage vert des ajouts, rouge barré des retraits, et bascule vue unifiée / vue scindée.
+  - **Modération Structurée à Motif Obligatoire (`ModerationDecisionModal.tsx`) :** Le superviseur motive obligatoirement ses validations ou ses demandes de correction ($\ge 5$ caractères) avec notification push immédiate au consultant.
 
 ---
 

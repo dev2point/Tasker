@@ -101,14 +101,18 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-      isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-    }`}>
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-modal-title"
-        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 text-slate-100"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 text-slate-100 cursor-default"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">

@@ -67,6 +67,7 @@ export function createTrackedFile(params: {
   fileType?: string;
   contentUrl?: string;
   textContent?: string;
+  gridData?: import('@/types/file-version').SpreadsheetSheet[];
   authorName: string;
   authorEmail?: string;
   authorRole?: string;
@@ -96,8 +97,10 @@ export function createTrackedFile(params: {
     fileType: type,
     contentUrl: params.contentUrl,
     textContent: params.textContent,
+    gridData: params.gridData,
     isCurrent: true,
     checksum,
+    moderationStatus: 'pending',
   };
 
   return {
@@ -123,6 +126,7 @@ export function addNewFileVersion(
     sizeBytes: number;
     contentUrl?: string;
     textContent?: string;
+    gridData?: import('@/types/file-version').SpreadsheetSheet[];
     authorName: string;
     authorEmail?: string;
     authorRole?: string;
@@ -154,8 +158,10 @@ export function addNewFileVersion(
     fileType: type,
     contentUrl: params.contentUrl || trackedFile.versions[0]?.contentUrl,
     textContent: params.textContent,
+    gridData: params.gridData,
     isCurrent: true,
     checksum,
+    moderationStatus: 'pending',
   };
 
   // Mark all older versions as not current
@@ -170,6 +176,37 @@ export function addNewFileVersion(
     updatedAt: now,
     currentVersion: nextVer,
     versions: [newSnapshot, ...updatedOldVersions],
+  };
+}
+
+/**
+ * Update the moderation status of a specific snapshot (approved or rejected with mandatory note)
+ */
+export function updateSnapshotModeration(
+  trackedFile: TrackedFile,
+  snapshotId: string,
+  status: 'approved' | 'rejected',
+  note: string,
+  moderator: { name: string; role?: string }
+): TrackedFile {
+  const now = new Date().toISOString();
+  const updatedVersions = trackedFile.versions.map((v) => {
+    if (v.id === snapshotId) {
+      return {
+        ...v,
+        moderationStatus: status,
+        moderationNote: note.trim(),
+        moderatedBy: moderator.name,
+        moderatedAt: now,
+      };
+    }
+    return v;
+  });
+
+  return {
+    ...trackedFile,
+    updatedAt: now,
+    versions: updatedVersions,
   };
 }
 

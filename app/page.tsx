@@ -313,9 +313,24 @@ export default function HomePage() {
     soundManager.setEnabled(newSound);
   };
 
-  // Switch View Mode
+  // Close all floating modals and dialogs
+  const closeAllModals = useCallback(() => {
+    setIsNotificationsOpen(false);
+    setIsTaskModalOpen(false);
+    setActiveReminderTask(null);
+    setIsAIModalOpen(false);
+    setIsExportModalOpen(false);
+    setIsM365ModalOpen(false);
+    setIsPostgresModalOpen(false);
+    setIsAuthModalOpen(false);
+    setIsCategoryTagModalOpen(false);
+    setIsReportModalOpen(false);
+  }, []);
+
+  // Switch View Mode & close any overlapping modals
   const handleViewChange = (view: ViewMode) => {
     console.log(`[Planit Page] Switching view mode to: "${view}"`);
+    closeAllModals();
     setCurrentView(view);
   };
 
@@ -937,7 +952,7 @@ export default function HomePage() {
         }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenM365Modal={() => setIsM365ModalOpen(true)}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen((prev) => !prev)}
         onOpenPostgresModal={
           currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
         }
@@ -968,7 +983,7 @@ export default function HomePage() {
         }}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenM365Modal={() => setIsM365ModalOpen(true)}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen((prev) => !prev)}
         onOpenPostgresModal={
           currentUser?.role === 'admin' ? () => setIsPostgresModalOpen(true) : undefined
         }

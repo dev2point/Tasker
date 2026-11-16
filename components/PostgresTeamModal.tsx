@@ -169,13 +169,17 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
         isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
       }`}
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-2xl rounded-2xl bg-[#061A13]/95 text-slate-100 shadow-2xl border border-emerald-500/30 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl rounded-2xl bg-[#061A13]/95 text-slate-100 shadow-2xl border border-emerald-500/30 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 cursor-default"
+      >
         {/* Header */}
         <div className="bg-[#03140E]/80 border-b border-emerald-500/20 p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">

@@ -171,14 +171,18 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-      isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-    }`}>
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
+        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+      }`}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-assistant-title"
-        className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 text-slate-100"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 text-slate-100 cursor-default"
       >
         {/* Header */}
         <div className="bg-emerald-950/40 border-b border-emerald-500/20 p-4 sm:p-5 flex items-center justify-between">

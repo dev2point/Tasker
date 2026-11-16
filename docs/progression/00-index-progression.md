@@ -1,6 +1,6 @@
 ---
-Jour: Mercredi 4 Novembre 2026 (2026-11-04)
-Heure de la dernière modif: 07:15:00 PST (15:15:00 UTC)
+Jour: Mercredi 11 Novembre 2026 (2026-11-11)
+Heure de la dernière modif: 17:20:00 CET (16:20:00 UTC)
 Auteur: niceboy
 Module: Index Général & Cartographie de Progression
 ---
@@ -19,7 +19,7 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 | :---: | :--- | :--- | :--- | :---: |
 | **00** | [`00-index-progression.md`](./00-index-progression.md) | Synthèse générale, métriques globales & matrice de maturité | **À Jour** | Très Faible |
 | **01** | [`01-gestion-taches-et-vues.md`](./01-gestion-taches-et-vues.md) | Modèle de tâche, Kanban, Listes, Calendrier, Filtrage & Priorités | **Opérationnel** | Faible / Modérée |
-| **02** | [`02-circuit-revue-maker-checker.md`](./02-circuit-revue-maker-checker.md) | Workflow collaboratif Maker-Checker, Dossiers, Studio de révision, SSE & OCC | **Opérationnel, SSE & OCC Actifs** | Très Faible |
+| **02** | [`02-circuit-revue-maker-checker.md`](./02-circuit-revue-maker-checker.md) | Workflow Maker-Checker, Studio Diff Word .docx & Excel .xlsx, OCC & Modération | **Opérationnel, Diff Office & OCC Actifs** | Très Faible |
 | **03** | [`03-moteur-rapports-et-synthese-pdf.md`](./03-moteur-rapports-et-synthese-pdf.md) | Moteur de reporting exécutif, génération PDF A4, métriques fiscales & exports | **Opérationnel** | Modérée |
 | **04** | [`04-metriques-kpis-et-benchmark.md`](./04-metriques-kpis-et-benchmark.md) | Statistiques temps réel, moteur de benchmark sectoriel, calculs de productivité | **Opérationnel** | Faible |
 | **05** | [`05-persistance-bdd-et-synchronisation.md`](./05-persistance-bdd-et-synchronisation.md) | Architecture hybride PostgreSQL/Drizzle, API Sync, IndexedDB & Healthcheck | **Opérationnel** | Modérée |
@@ -31,11 +31,11 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 ## 📊 Matrice de Maturité & Indicateurs Qualité
 
 ```
-[Qualité & Tests]       ████████████████████  100% (108/108 tests Vitest passants sur 14 suites)
+[Qualité & Tests]       ████████████████████  100% (116/116 tests Vitest passants sur 15 suites)
 [Sécurité & RBAC]       ████████████████████  100% (Vulnérabilités SEC-01 à SEC-09 corrigées)
 [Collaboration SSE]     ████████████████████  100% (Hub Server-Sent Events & diffusion push)
 [Contrôle Concurrence]  ████████████████████  100% (OCC Optimistic Concurrency v1...vN + 409 Conflict)
-[Moteur de Revue]       ████████████████████  100% (Maker-Checker, Studio Diff, Inter-départements, OCC)
+[Moteur de Revue & Diff]████████████████████  100% (Diff Word mot à mot, Excel double grille, Modération motif)
 [Vues & Ergonomie]      ███████████████████░   95% (Kanban, Calendrier, Centrage Modales, Indicateur Ambre)
 [Persistance Hybride]   ████████████████░░░░   85% (PostgreSQL + Synchronisation locale résiliente)
 [Intégrations Tiers]    ██████████████░░░░░░   75% (M365, iCal, PWA)
