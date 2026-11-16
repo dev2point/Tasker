@@ -165,11 +165,20 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
       return;
     }
     try {
-      await authClient.signOut().catch(() => {});
-      await fetch('/api/auth/sign-out', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      }).catch(() => {});
+      let signedOut = false;
+      try {
+        const res = await authClient.signOut();
+        signedOut = !res?.error;
+      } catch {
+        signedOut = false;
+      }
+      if (!signedOut) {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }).catch(() => {});
+      }
       try {
         localStorage.removeItem('planit_auth_token');
         localStorage.removeItem('better-auth.session_token');

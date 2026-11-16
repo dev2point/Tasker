@@ -2,10 +2,14 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/src/db/schema';
 
-let client: postgres.Sql | null = null;
+const globalForPg = globalThis as unknown as {
+  __pgClient?: postgres.Sql | null;
+  __pgTablesInitialized?: boolean;
+  __pgTablesEnsuredPromise?: Promise<{ success: boolean; message: string }> | null;
+};
+
+let client: postgres.Sql | null = globalForPg.__pgClient ?? null;
 let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
-let tablesInitialized = false;
-let tablesEnsuredPromise: Promise<{ success: boolean; message: string }> | null = null;
 
 export function getDatabaseUrl(): string | undefined {
   let url = process.env.DATABASE_URL;
@@ -51,6 +55,7 @@ export function getPostgresClient(): postgres.Sql | null {
       prepare: false, // Essential for Supabase pooler / PgBouncer transaction mode
       ssl: isRemote ? 'require' : undefined,
     });
+    globalForPg.__pgClient = client;
   }
 
   return client;
@@ -75,16 +80,17 @@ export function getDrizzleDb() {
  * Safe to call on first connection; memoized to run at most once per process.
  */
 export async function ensureDatabaseTables(): Promise<{ success: boolean; message: string }> {
-  if (tablesInitialized) {
+  if (globalForPg.__pgTablesInitialized) {
     return { success: true, message: 'PostgreSQL schema already initialized.' };
   }
-  if (tablesEnsuredPromise) {
-    return tablesEnsuredPromise;
+  if (globalForPg.__pgTablesEnsuredPromise) {
+    return globalForPg.__pgTablesEnsuredPromise;
   }
 
-  tablesEnsuredPromise = (async () => {
+  globalForPg.__pgTablesEnsuredPromise = (async () => {
     const sql = getPostgresClient();
     if (!sql) {
+      globalForPg.__pgTablesEnsuredPromise = null;
       return {
         success: false,
         message: 'DATABASE_URL is not configured.',
@@ -139,13 +145,9 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
           INSERT INTO "user" (id, name, email, image, role, department, status, created_at, updated_at)
           SELECT id, name, email, avatar_url,
             CASE WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role ELSE 'member'::user_role END,
-            department, status, created_at, updated_at
+            department, status, COALESCE(created_at, NOW()), COALESCE(updated_at, NOW())
           FROM users
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            role = EXCLUDED.role,
-            department = COALESCE(EXCLUDED.department, "user".department),
-            status = COALESCE(EXCLUDED.status, "user".status);
+          ON CONFLICT DO NOTHING;
         END IF;
       END$$;
     `);
@@ -156,7 +158,7 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        owner_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+        owner_id VARCHAR(64) REFERENCES "user"(id) ON DELETE CASCADE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -167,7 +169,7 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       CREATE TABLE IF NOT EXISTS workspace_members (
         id VARCHAR(64) PRIMARY KEY,
         workspace_id VARCHAR(64) NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-        user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_id VARCHAR(64) NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
         role user_role NOT NULL DEFAULT 'member',
         joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -201,8 +203,8 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         completed BOOLEAN DEFAULT false,
         completed_at TIMESTAMP WITH TIME ZONE,
         workspace_id VARCHAR(64) REFERENCES workspaces(id) ON DELETE CASCADE,
-        creator_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
-        assignee_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+        creator_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
+        assignee_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
         reminder_minutes_before INTEGER DEFAULT 15,
         reminder_triggered BOOLEAN DEFAULT false,
         reminder_dismissed BOOLEAN DEFAULT false,
@@ -221,7 +223,7 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
       CREATE TABLE IF NOT EXISTS activity_logs (
         id VARCHAR(64) PRIMARY KEY,
         task_id VARCHAR(64) REFERENCES tasks(id) ON DELETE CASCADE,
-        user_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+        user_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
         user_name VARCHAR(255) NOT NULL,
         action VARCHAR(64) NOT NULL,
         details TEXT NOT NULL,
@@ -419,17 +421,154 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         ) THEN
           ALTER TABLE "user" ADD COLUMN grade TEXT;
         END IF;
+
+        -- Migrate legacy foreign keys pointing to "users" so they point to unified "user" table
+        IF to_regclass('public.users') IS NOT NULL AND to_regclass('public."user"') IS NOT NULL THEN
+          DECLARE
+            fk RECORD;
+          BEGIN
+            FOR fk IN
+              SELECT
+                c.conname,
+                c.conrelid::regclass::text AS table_name
+              FROM pg_constraint c
+              WHERE c.contype = 'f'
+                AND c.confrelid = to_regclass('public.users')
+                AND c.connamespace = 'public'::regnamespace
+            LOOP
+              EXECUTE format('ALTER TABLE %s DROP CONSTRAINT IF EXISTS %I', fk.table_name, fk.conname);
+            END LOOP;
+          END;
+
+          IF to_regclass('public.tasks') IS NOT NULL THEN
+            UPDATE tasks SET creator_id = NULL
+            WHERE creator_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = tasks.creator_id);
+
+            UPDATE tasks SET assignee_id = NULL
+            WHERE assignee_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = tasks.assignee_id);
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.tasks')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'tasks_creator_id_user_id_fk'
+                  OR (
+                    c.confrelid = to_regclass('public."user"')
+                    AND EXISTS (
+                      SELECT 1 FROM pg_attribute a
+                      WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attname = 'creator_id'
+                    )
+                  )
+                )
+            ) THEN
+              ALTER TABLE tasks ADD CONSTRAINT tasks_creator_id_user_id_fk
+                FOREIGN KEY (creator_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.tasks')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'tasks_assignee_id_user_id_fk'
+                  OR (
+                    c.confrelid = to_regclass('public."user"')
+                    AND EXISTS (
+                      SELECT 1 FROM pg_attribute a
+                      WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attname = 'assignee_id'
+                    )
+                  )
+                )
+            ) THEN
+              ALTER TABLE tasks ADD CONSTRAINT tasks_assignee_id_user_id_fk
+                FOREIGN KEY (assignee_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+          END IF;
+
+          IF to_regclass('public.activity_logs') IS NOT NULL THEN
+            UPDATE activity_logs SET user_id = NULL
+            WHERE user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = activity_logs.user_id);
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.activity_logs')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'activity_logs_user_id_user_id_fk'
+                  OR c.confrelid = to_regclass('public."user"')
+                )
+            ) THEN
+              ALTER TABLE activity_logs ADD CONSTRAINT activity_logs_user_id_user_id_fk
+                FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+          END IF;
+
+          IF to_regclass('public.workspaces') IS NOT NULL THEN
+            DELETE FROM workspaces
+            WHERE owner_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = workspaces.owner_id);
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.workspaces')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'workspaces_owner_id_user_id_fk'
+                  OR c.confrelid = to_regclass('public."user"')
+                )
+            ) THEN
+              ALTER TABLE workspaces ADD CONSTRAINT workspaces_owner_id_user_id_fk
+                FOREIGN KEY (owner_id) REFERENCES "user"(id) ON DELETE CASCADE;
+            END IF;
+          END IF;
+
+          IF to_regclass('public.workspace_members') IS NOT NULL THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'workspace_members' AND column_name = 'user_id') THEN
+              DELETE FROM workspace_members wm
+              WHERE NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = wm.user_id);
+
+              IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint c
+                WHERE c.conrelid = to_regclass('public.workspace_members')
+                  AND c.contype = 'f'
+                  AND (
+                    lower(c.conname) IN ('workspace_members_user_id_user_id_fk', 'workspace_members_userid_user_id_fk')
+                    OR c.confrelid = to_regclass('public."user"')
+                  )
+              ) THEN
+                ALTER TABLE workspace_members ADD CONSTRAINT workspace_members_user_id_user_id_fk
+                  FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE;
+              END IF;
+            ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'workspace_members' AND column_name = 'userId') THEN
+              DELETE FROM workspace_members wm
+              WHERE NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = wm."userId");
+
+              IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint c
+                WHERE c.conrelid = to_regclass('public.workspace_members')
+                  AND c.contype = 'f'
+                  AND (
+                    lower(c.conname) IN ('workspace_members_userid_user_id_fk', 'workspace_members_user_id_user_id_fk')
+                    OR c.confrelid = to_regclass('public."user"')
+                  )
+              ) THEN
+                ALTER TABLE workspace_members ADD CONSTRAINT workspace_members_userid_user_id_fk
+                  FOREIGN KEY ("userId") REFERENCES "user"(id) ON DELETE CASCADE;
+              END IF;
+            END IF;
+          END IF;
+        END IF;
       END
       $$;
     `);
 
-      tablesInitialized = true;
+      globalForPg.__pgTablesInitialized = true;
       return {
         success: true,
         message: 'PostgreSQL schema verified and initialized successfully with RLS policies.',
       };
     } catch (error) {
-      tablesEnsuredPromise = null;
+      globalForPg.__pgTablesEnsuredPromise = null;
       console.warn('Error creating PostgreSQL tables:', error);
       return {
         success: false,
@@ -438,5 +577,5 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
     }
   })();
 
-  return tablesEnsuredPromise;
+  return globalForPg.__pgTablesEnsuredPromise;
 }

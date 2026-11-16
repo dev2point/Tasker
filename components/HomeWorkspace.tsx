@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { ListView } from '@/components/ListView';
@@ -68,7 +67,6 @@ export interface HomeWorkspaceProps {
 }
 
 export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) => {
-  const router = useRouter();
   const {
     isMounted,
     tasks,
@@ -268,9 +266,8 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         .catch(() => {});
 
       refreshUsers();
-      router.refresh();
     },
-    [currentView, refreshUsers, router, setCurrentView]
+    [currentView, refreshUsers, setCurrentView]
   );
 
   // Centralized 1-Click Flash-Free Sign-Out Transition
@@ -295,23 +292,31 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       } catch {}
     }
 
-    // 3. Execute server sign-out alongside a minimum veil duration so the transition feels deliberate
-    await Promise.allSettled([
-      authClient.signOut().catch((err) => console.warn('authClient.signOut error:', err)),
-      fetch('/api/auth/sign-out', {
+    // 3. Execute server sign-out cleanly once alongside a minimum veil duration
+    const performServerSignOut = async () => {
+      try {
+        const res = await authClient.signOut();
+        if (!res?.error) return;
+      } catch (err) {
+        console.warn('authClient.signOut error:', err);
+      }
+      await fetch('/api/auth/sign-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-      }).catch(() => {}),
+      }).catch(() => {});
+    };
+
+    await Promise.allSettled([
+      performServerSignOut(),
       new Promise((resolve) => setTimeout(resolve, 360)),
     ]);
 
-    // 4. Finalize transition directly into AuthGate (zero workspace flash, no window.location.reload)
+    // 4. Finalize transition directly into AuthGate (zero workspace flash, no RSC Flight abort)
     setExplicitSessionUser(null);
     setAuthPhase((prev) => resolveSessionTransition(prev, { type: 'FINISH_SIGN_OUT' }));
     isSigningOutRef.current = false;
-    router.refresh();
-  }, [clearStore, closeAllModals, router, setCurrentView]);
+  }, [clearStore, closeAllModals, setCurrentView]);
 
   // Derived active user
   const currentUser: User | null = useMemo(() => {

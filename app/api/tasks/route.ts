@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { tasks, users, activityLogs } from '@/src/db/schema';
+import { tasks, users, workspaces, activityLogs } from '@/src/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { isDueDateTimeInPast } from '@/lib/due-date-utils';
+import { sanitizeTaskForPostgres } from '@/lib/db/task-sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,28 +108,45 @@ export async function POST(req: NextRequest) {
     await ensureDatabaseTables();
     const taskData: Task = await req.json();
 
-    // Ensure authenticated user exists in the users table to satisfy foreign key constraints
-    await db
-      .insert(users)
-      .values({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: (user.role as any) || 'member',
-        department: user.department || null,
-        status: user.status || 'active',
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
+    // Ensure authenticated user exists in the unified "user" table without tripping email unique constraints
+    const existingAuthUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+
+    let resolvedAuthUserId: string | null = existingAuthUser[0]?.id ?? null;
+
+    if (!resolvedAuthUserId) {
+      await db
+        .insert(users)
+        .values({
+          id: user.id,
           email: user.email,
           name: user.name,
           role: (user.role as any) || 'member',
           department: user.department || null,
           status: user.status || 'active',
-          updatedAt: new Date(),
-        },
-      });
+        })
+        .onConflictDoNothing();
+
+      const afterInsert = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+
+      if (afterInsert[0]?.id) {
+        resolvedAuthUserId = afterInsert[0].id;
+      } else if (user.email) {
+        const byEmail = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, user.email))
+          .limit(1);
+        resolvedAuthUserId = byEmail[0]?.id ?? null;
+      }
+    }
 
     // Check if task exists to verify RBAC rights on update
     const existingRows = await db.select().from(tasks).where(eq(tasks.id, taskData.id)).limit(1);
@@ -136,8 +154,8 @@ export async function POST(req: NextRequest) {
     const isAdmin = user.role === 'admin';
 
     if (existing) {
-      const isCreator = existing.creatorId === user.id;
-      const isAssignee = existing.assigneeId === user.id;
+      const isCreator = existing.creatorId === user.id || (resolvedAuthUserId && existing.creatorId === resolvedAuthUserId);
+      const isAssignee = existing.assigneeId === user.id || (resolvedAuthUserId && existing.assigneeId === resolvedAuthUserId);
 
       if (!isAdmin && !isCreator && !isAssignee) {
         return NextResponse.json(
@@ -153,7 +171,7 @@ export async function POST(req: NextRequest) {
           await db.insert(activityLogs).values({
             id: 'act-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
             taskId: existing.id,
-            userId: user.id,
+            userId: resolvedAuthUserId,
             userName: user.name,
             action: actionKind,
             details: `L'administrateur ${user.name} a ${actionKind === 'completed' ? 'marqué comme terminée' : 'modifié'} la tâche « ${existing.title} »`,
@@ -173,72 +191,84 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let validCreatorId = existing ? existing.creatorId : (taskData.creatorId || user.id);
+    let validCreatorId: string | null = existing
+      ? existing.creatorId
+      : (taskData.creatorId || resolvedAuthUserId || user.id);
     if (validCreatorId) {
-      const creatorExists = await db.select().from(users).where(eq(users.id, validCreatorId)).limit(1);
+      const creatorExists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, validCreatorId))
+        .limit(1);
       if (creatorExists.length === 0) {
-        validCreatorId = user.id;
+        validCreatorId = resolvedAuthUserId;
       }
     }
 
-    let validAssigneeId = taskData.assigneeId || null;
+    let validAssigneeId: string | null = taskData.assigneeId || null;
     if (validAssigneeId) {
-      const assigneeExists = await db.select().from(users).where(eq(users.id, validAssigneeId)).limit(1);
+      const assigneeExists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, validAssigneeId))
+        .limit(1);
       if (assigneeExists.length === 0) {
         validAssigneeId = null;
       }
     }
 
+    let validWorkspaceId: string | null = taskData.workspaceId || null;
+    if (validWorkspaceId) {
+      const wsExists = await db
+        .select({ id: workspaces.id })
+        .from(workspaces)
+        .where(eq(workspaces.id, validWorkspaceId))
+        .limit(1);
+      if (wsExists.length === 0) {
+        validWorkspaceId = null;
+      }
+    }
+
+    const pgTask = sanitizeTaskForPostgres(taskData, {
+      workspaceId: validWorkspaceId,
+      creatorId: validCreatorId,
+      assigneeId: validAssigneeId,
+    });
+
     await db
       .insert(tasks)
-      .values({
-        id: taskData.id,
-        title: taskData.title,
-        description: taskData.description || null,
-        dueDate: taskData.dueDate,
-        dueTime: taskData.dueTime || null,
-        priority: taskData.priority,
-        status: taskData.status || (taskData.completed ? 'completed' : 'todo'),
-        category: taskData.category,
-        completed: taskData.completed,
-        completedAt: taskData.completedAt ? new Date(taskData.completedAt) : null,
-        workspaceId: taskData.workspaceId || null,
-        creatorId: validCreatorId,
-        assigneeId: validAssigneeId,
-        reminderMinutesBefore: taskData.reminderMinutesBefore ?? 15,
-        reminderTriggered: taskData.reminderTriggered || false,
-        reminderDismissed: taskData.reminderDismissed || false,
-        recurrence: taskData.recurrence || 'none',
-        tags: taskData.tags || [],
-        subtasks: taskData.subtasks || [],
-        color: taskData.color || null,
-        createdAt: taskData.createdAt ? new Date(taskData.createdAt) : new Date(),
-        updatedAt: new Date(),
-      })
+      .values(pgTask)
       .onConflictDoUpdate({
         target: tasks.id,
         set: {
-          title: taskData.title,
-          description: taskData.description || null,
-          dueDate: taskData.dueDate,
-          dueTime: taskData.dueTime || null,
-          priority: taskData.priority,
-          status: taskData.status || (taskData.completed ? 'completed' : 'todo'),
-          category: taskData.category,
-          completed: taskData.completed,
-          completedAt: taskData.completedAt ? new Date(taskData.completedAt) : null,
-          assigneeId: validAssigneeId,
-          subtasks: taskData.subtasks || [],
-          tags: taskData.tags || [],
-          updatedAt: new Date(),
+          title: pgTask.title,
+          description: pgTask.description,
+          dueDate: pgTask.dueDate,
+          dueTime: pgTask.dueTime,
+          priority: pgTask.priority,
+          status: pgTask.status,
+          category: pgTask.category,
+          completed: pgTask.completed,
+          completedAt: pgTask.completedAt,
+          assigneeId: pgTask.assigneeId,
+          reminderMinutesBefore: pgTask.reminderMinutesBefore,
+          reminderTriggered: pgTask.reminderTriggered,
+          reminderDismissed: pgTask.reminderDismissed,
+          reminderTriggeredAt: pgTask.reminderTriggeredAt,
+          recurrence: pgTask.recurrence,
+          subtasks: pgTask.subtasks,
+          tags: pgTask.tags,
+          color: pgTask.color,
+          updatedAt: pgTask.updatedAt,
         },
       });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error saving task to PostgreSQL:', error);
+  } catch (error: any) {
+    const causeDetail = error?.cause?.message || error?.detail || undefined;
+    console.error('Error saving task to PostgreSQL:', error, causeDetail ? { causeDetail } : '');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Database error' },
+      { error: causeDetail || (error instanceof Error ? error.message : 'Database error') },
       { status: 500 }
     );
   }

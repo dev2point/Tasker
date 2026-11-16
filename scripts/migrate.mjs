@@ -46,6 +46,21 @@ async function runSafeMigration() {
 
     console.log('📋 2/4 - Création idempotente des tables relationnelles & Better Auth...');
     await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS "user" (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        image TEXT,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        role user_role NOT NULL DEFAULT 'member',
+        department VARCHAR(128),
+        pole TEXT,
+        grade TEXT,
+        status VARCHAR(32) DEFAULT 'active'
+      );
+
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(64) PRIMARY KEY,
         email VARCHAR(255) NOT NULL UNIQUE,
@@ -62,7 +77,7 @@ async function runSafeMigration() {
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        owner_id VARCHAR(64),
+        owner_id VARCHAR(64) REFERENCES "user"(id) ON DELETE CASCADE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -70,7 +85,7 @@ async function runSafeMigration() {
       CREATE TABLE IF NOT EXISTS workspace_members (
         id VARCHAR(64) PRIMARY KEY,
         workspace_id VARCHAR(64) NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-        "userId" VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        "userId" VARCHAR(64) NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
         role user_role NOT NULL DEFAULT 'member',
         joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -79,7 +94,7 @@ async function runSafeMigration() {
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(128) NOT NULL,
         color VARCHAR(32) NOT NULL,
-        bg_light VARCHAR(32) NOT NULL,
+        bg_light TEXT NOT NULL,
         icon_name VARCHAR(64) NOT NULL,
         workspace_id VARCHAR(64) REFERENCES workspaces(id) ON DELETE CASCADE,
         is_default BOOLEAN NOT NULL DEFAULT FALSE,
@@ -98,8 +113,8 @@ async function runSafeMigration() {
         completed BOOLEAN NOT NULL DEFAULT FALSE,
         completed_at TIMESTAMP WITH TIME ZONE,
         workspace_id VARCHAR(64) REFERENCES workspaces(id) ON DELETE CASCADE,
-        creator_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
-        assignee_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+        creator_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
+        assignee_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
         reminder_minutes_before INTEGER NOT NULL DEFAULT 15,
         reminder_triggered BOOLEAN DEFAULT FALSE,
         reminder_dismissed BOOLEAN DEFAULT FALSE,
@@ -115,24 +130,11 @@ async function runSafeMigration() {
       CREATE TABLE IF NOT EXISTS activity_logs (
         id VARCHAR(64) PRIMARY KEY,
         task_id VARCHAR(64) REFERENCES tasks(id) ON DELETE CASCADE,
-        user_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+        user_id VARCHAR(64) REFERENCES "user"(id) ON DELETE SET NULL,
         user_name VARCHAR(255) NOT NULL,
         action VARCHAR(64) NOT NULL,
         details TEXT NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS "user" (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-        image TEXT,
-        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        role user_role NOT NULL DEFAULT 'member',
-        department VARCHAR(128),
-        status VARCHAR(32) DEFAULT 'active'
       );
 
       CREATE TABLE IF NOT EXISTS session (
@@ -302,6 +304,85 @@ async function runSafeMigration() {
             END
           );
           ALTER TABLE workspace_members ALTER COLUMN role SET DEFAULT 'member'::user_role;
+        END IF;
+
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users') THEN
+          INSERT INTO "user" (id, name, email, image, role, department, status, created_at, updated_at)
+          SELECT id, name, email, avatar_url,
+            CASE WHEN role IN ('admin', 'manager', 'member', 'guest') THEN role::user_role ELSE 'member'::user_role END,
+            department, status, COALESCE(created_at, NOW()), COALESCE(updated_at, NOW())
+          FROM users
+          ON CONFLICT DO NOTHING;
+        END IF;
+
+        IF to_regclass('public.users') IS NOT NULL AND to_regclass('public."user"') IS NOT NULL THEN
+          DECLARE
+            fk RECORD;
+          BEGIN
+            FOR fk IN
+              SELECT c.conname, c.conrelid::regclass::text AS table_name
+              FROM pg_constraint c
+              WHERE c.contype = 'f'
+                AND c.confrelid = to_regclass('public.users')
+                AND c.connamespace = 'public'::regnamespace
+            LOOP
+              EXECUTE format('ALTER TABLE %s DROP CONSTRAINT IF EXISTS %I', fk.table_name, fk.conname);
+            END LOOP;
+          END;
+
+          IF to_regclass('public.tasks') IS NOT NULL THEN
+            UPDATE tasks SET creator_id = NULL WHERE creator_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = tasks.creator_id);
+            UPDATE tasks SET assignee_id = NULL WHERE assignee_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = tasks.assignee_id);
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.tasks')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'tasks_creator_id_user_id_fk'
+                  OR (
+                    c.confrelid = to_regclass('public."user"')
+                    AND EXISTS (
+                      SELECT 1 FROM pg_attribute a
+                      WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attname = 'creator_id'
+                    )
+                  )
+                )
+            ) THEN
+              ALTER TABLE tasks ADD CONSTRAINT tasks_creator_id_user_id_fk FOREIGN KEY (creator_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.tasks')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'tasks_assignee_id_user_id_fk'
+                  OR (
+                    c.confrelid = to_regclass('public."user"')
+                    AND EXISTS (
+                      SELECT 1 FROM pg_attribute a
+                      WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attname = 'assignee_id'
+                    )
+                  )
+                )
+            ) THEN
+              ALTER TABLE tasks ADD CONSTRAINT tasks_assignee_id_user_id_fk FOREIGN KEY (assignee_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+          END IF;
+
+          IF to_regclass('public.activity_logs') IS NOT NULL THEN
+            UPDATE activity_logs SET user_id = NULL WHERE user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = activity_logs.user_id);
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_constraint c
+              WHERE c.conrelid = to_regclass('public.activity_logs')
+                AND c.contype = 'f'
+                AND (
+                  lower(c.conname) = 'activity_logs_user_id_user_id_fk'
+                  OR c.confrelid = to_regclass('public."user"')
+                )
+            ) THEN
+              ALTER TABLE activity_logs ADD CONSTRAINT activity_logs_user_id_user_id_fk FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE SET NULL;
+            END IF;
+          END IF;
         END IF;
       END$$;
     `);

@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import * as schema from '@/src/db/schema';
 import { GET as getHealth } from '@/app/api/health/route';
 
@@ -27,6 +29,20 @@ describe('Health & Database Schema Architecture', () => {
     expect(schema.usersRelations).toBeDefined();
   });
 
+  it('targets unified "user"(id) for foreign keys and migrates legacy users FKs', () => {
+    const pgInit = readFileSync(resolve(process.cwd(), 'lib/db/pg.ts'), 'utf8');
+    const migrateScript = readFileSync(resolve(process.cwd(), 'scripts/migrate.mjs'), 'utf8');
+
+    for (const source of [pgInit, migrateScript]) {
+      expect(source).toContain('REFERENCES "user"(id)');
+      expect(source).not.toContain('REFERENCES users(id)');
+      expect(source).not.toContain('workspace_members_userId_user_id_fk');
+      expect(source).toContain("to_regclass('public.users')");
+      expect(source).toContain('tasks_creator_id_user_id_fk');
+      expect(source).toContain('tasks_assignee_id_user_id_fk');
+    }
+  });
+
   it('responds with system diagnostics from /api/health route', async () => {
     const res = await getHealth();
     expect(res.status).toBe(200);
@@ -44,3 +60,4 @@ describe('Health & Database Schema Architecture', () => {
     expect(data.services.database.driver).toContain('PostgreSQL');
   });
 });
+

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { tasks, users } from '@/src/db/schema';
+import { tasks, users, workspaces } from '@/src/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { Task } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sanitizeTaskForPostgres } from '@/lib/db/task-sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,28 +41,45 @@ export async function POST(req: NextRequest) {
     await ensureDatabaseTables();
     const clientTasks: Task[] = await req.json();
 
-    // Ensure authenticated user exists in the users table to satisfy foreign key constraints
-    await db
-      .insert(users)
-      .values({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: (user.role as any) || 'member',
-        department: user.department || null,
-        status: user.status || 'active',
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
+    // Ensure authenticated user exists in the unified "user" table without tripping email unique constraints
+    const existingAuthUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+
+    let resolvedAuthUserId: string | null = existingAuthUser[0]?.id ?? null;
+
+    if (!resolvedAuthUserId) {
+      await db
+        .insert(users)
+        .values({
+          id: user.id,
           email: user.email,
           name: user.name,
           role: (user.role as any) || 'member',
           department: user.department || null,
           status: user.status || 'active',
-          updatedAt: new Date(),
-        },
-      });
+        })
+        .onConflictDoNothing();
+
+      const afterInsert = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+
+      if (afterInsert[0]?.id) {
+        resolvedAuthUserId = afterInsert[0].id;
+      } else if (user.email) {
+        const byEmail = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, user.email))
+          .limit(1);
+        resolvedAuthUserId = byEmail[0]?.id ?? null;
+      }
+    }
 
     const isAdmin = user.role === 'admin' || user.role === 'manager';
 
@@ -72,72 +90,83 @@ export async function POST(req: NextRequest) {
         const existing = existingRows[0];
 
         if (existing && !isAdmin) {
-          const isCreator = existing.creatorId === user.id;
-          const isAssignee = existing.assigneeId === user.id;
+          const isCreator = existing.creatorId === user.id || (resolvedAuthUserId && existing.creatorId === resolvedAuthUserId);
+          const isAssignee = existing.assigneeId === user.id || (resolvedAuthUserId && existing.assigneeId === resolvedAuthUserId);
           if (!isCreator && !isAssignee) {
             // Skip unauthorized task modification
             continue;
           }
         }
 
-        let validCreatorId = existing ? existing.creatorId : (isAdmin && t.creatorId ? t.creatorId : user.id);
+        let validCreatorId: string | null = existing
+          ? existing.creatorId
+          : (isAdmin && t.creatorId ? t.creatorId : (resolvedAuthUserId || user.id));
         if (validCreatorId) {
-          const creatorExists = await db.select().from(users).where(eq(users.id, validCreatorId)).limit(1);
+          const creatorExists = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, validCreatorId))
+            .limit(1);
           if (creatorExists.length === 0) {
-            validCreatorId = user.id;
+            validCreatorId = resolvedAuthUserId;
           }
         }
 
-        let validAssigneeId = t.assigneeId || null;
+        let validAssigneeId: string | null = t.assigneeId || null;
         if (validAssigneeId) {
-          const assigneeExists = await db.select().from(users).where(eq(users.id, validAssigneeId)).limit(1);
+          const assigneeExists = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, validAssigneeId))
+            .limit(1);
           if (assigneeExists.length === 0) {
             validAssigneeId = null;
           }
         }
 
+        let validWorkspaceId: string | null = t.workspaceId || null;
+        if (validWorkspaceId) {
+          const wsExists = await db
+            .select({ id: workspaces.id })
+            .from(workspaces)
+            .where(eq(workspaces.id, validWorkspaceId))
+            .limit(1);
+          if (wsExists.length === 0) {
+            validWorkspaceId = null;
+          }
+        }
+
+        const pgTask = sanitizeTaskForPostgres(t, {
+          workspaceId: validWorkspaceId,
+          creatorId: validCreatorId,
+          assigneeId: validAssigneeId,
+        });
+
         await db
           .insert(tasks)
-          .values({
-            id: t.id,
-            title: t.title,
-            description: t.description || null,
-            dueDate: t.dueDate,
-            dueTime: t.dueTime || null,
-            priority: t.priority,
-            status: t.status || (t.completed ? 'completed' : 'todo'),
-            category: t.category,
-            completed: t.completed,
-            completedAt: t.completedAt ? new Date(t.completedAt) : null,
-            workspaceId: t.workspaceId || null,
-            creatorId: validCreatorId,
-            assigneeId: validAssigneeId,
-            reminderMinutesBefore: t.reminderMinutesBefore ?? 15,
-            reminderTriggered: t.reminderTriggered || false,
-            reminderDismissed: t.reminderDismissed || false,
-            recurrence: t.recurrence || 'none',
-            tags: t.tags || [],
-            subtasks: t.subtasks || [],
-            color: t.color || null,
-            createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
-            updatedAt: new Date(),
-          })
+          .values(pgTask)
           .onConflictDoUpdate({
             target: tasks.id,
             set: {
-              title: t.title,
-              description: t.description || null,
-              dueDate: t.dueDate,
-              dueTime: t.dueTime || null,
-              priority: t.priority,
-              status: t.status || (t.completed ? 'completed' : 'todo'),
-              category: t.category,
-              completed: t.completed,
-              completedAt: t.completedAt ? new Date(t.completedAt) : null,
-              assigneeId: validAssigneeId,
-              subtasks: t.subtasks || [],
-              tags: t.tags || [],
-              updatedAt: new Date(),
+              title: pgTask.title,
+              description: pgTask.description,
+              dueDate: pgTask.dueDate,
+              dueTime: pgTask.dueTime,
+              priority: pgTask.priority,
+              status: pgTask.status,
+              category: pgTask.category,
+              completed: pgTask.completed,
+              completedAt: pgTask.completedAt,
+              assigneeId: pgTask.assigneeId,
+              reminderMinutesBefore: pgTask.reminderMinutesBefore,
+              reminderTriggered: pgTask.reminderTriggered,
+              reminderDismissed: pgTask.reminderDismissed,
+              reminderTriggeredAt: pgTask.reminderTriggeredAt,
+              recurrence: pgTask.recurrence,
+              subtasks: pgTask.subtasks,
+              tags: pgTask.tags,
+              color: pgTask.color,
+              updatedAt: pgTask.updatedAt,
             },
           });
       }
