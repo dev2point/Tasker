@@ -44,6 +44,7 @@ interface HeaderProps {
   onOpenNotifications: () => void;
   onOpenPostgresModal?: () => void;
   onOpenAuthModal?: () => void;
+  onSignOut?: () => void;
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
   onOpenReportModal?: () => void;
@@ -64,6 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenPostgresModal,
   onOpenAuthModal,
+  onSignOut,
   onOpenCategoryTagManager,
   onOpenM365Modal,
   onOpenReportModal,
@@ -163,8 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
       shortLabel: 'Stats',
       icon: <BarChart3 className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0" />,
     },
-    // Include Admin in tabs if user is admin or already in admin view
-    ...(currentUser?.role === 'admin' || currentView === 'admin'
+    ...(currentUser?.role === 'admin'
       ? [
           {
             id: 'admin' as ViewMode,
@@ -596,10 +597,16 @@ export const Header: React.FC<HeaderProps> = ({
                         </button>
 
                         <button
+                          id="header-signout-btn"
                           type="button"
                           onClick={() => {
+                            soundManager.playClickSound();
                             setIsUserMenuOpen(false);
-                            onOpenAuthModal();
+                            if (onSignOut) {
+                              onSignOut();
+                            } else {
+                              onOpenAuthModal();
+                            }
                           }}
                           className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-950/40 text-rose-300 font-semibold transition-colors border-t border-emerald-500/15 mt-1 cursor-pointer"
                         >

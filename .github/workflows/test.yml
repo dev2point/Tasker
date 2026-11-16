@@ -5,74 +5,155 @@ on:
     branches:
       - main
       - master
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'public/assets/**'
+      - 'public/*.png'
+      - 'public/*.svg'
+      - 'public/*.ico'
+      - '.github/workflows/drizzle-migrations.yml'
   pull_request:
     branches:
       - main
       - master
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'public/assets/**'
+      - 'public/*.png'
+      - 'public/*.svg'
+      - 'public/*.ico'
+      - '.github/workflows/drizzle-migrations.yml'
   workflow_dispatch:
+    inputs:
+      run_build:
+        description: 'Exécuter également le build de production Next.js'
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: 🧪 Unit & Integration Tests
+  quality-gate:
+    name: 🧪 Lint & Suite de Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: 🟢 Setup Node.js (with npm cache)
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: ⚡ Cache npm cache directory
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          cache: 'npm'
 
       - name: 📦 Install dependencies
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --no-audit --no-fund
           else
             npm install --no-audit --no-fund
           fi
 
       - name: 🔍 Lint codebase
+        id: lint
         run: npm run lint
 
       - name: 🧪 Execute Vitest test suite
+        id: vitest
         run: npm test
 
+      - name: 📊 Generate CI Summary Report
+        if: always()
+        run: |
+          lint_status="${{ steps.lint.outcome }}"
+          test_status="${{ steps.vitest.outcome }}"
+
+          format_badge() {
+            case "$1" in
+              success) echo "✅ Passé" ;;
+              failure) echo "❌ Échec" ;;
+              cancelled) echo "🚫 Annulé" ;;
+              skipped) echo "⏭️ Ignoré" ;;
+              *) echo "ℹ️ $1" ;;
+            esac
+          }
+
+          {
+            echo "## 🧪 Rapport d'Exécution CI (Quality Gate)"
+            echo ""
+            echo "| Étape | Statut | Détails |"
+            echo "| :--- | :---: | :--- |"
+            echo "| **Linter (ESLint)** | $(format_badge "$lint_status") | Analyse statique du code |"
+            echo "| **Suite de Tests (Vitest)** | $(format_badge "$test_status") | Tests unitaires & d'intégration |"
+            echo ""
+            if [ "${{ github.event_name }}" = "push" ]; then
+              echo "> ℹ️ **Optimisation quota :** le build de production Next.js est réservé aux Pull Requests et aux lancements manuels."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  production-build:
+    name: 🏗️ Build Next.js Production
+    needs: quality-gate
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_build != false && inputs.run_build != 'false')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js (with npm cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: ⚡ Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'src/**', 'next.config.*') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-
+
       - name: 🏗️ Verify Next.js production build
+        id: build
         run: npm run build
         env:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
 
-      - name: 📊 Generate CI Summary Report
+      - name: 📊 Build Summary Report
         if: always()
         run: |
-          echo "## 🧪 Rapport d'Exécution des Tests CI" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Étape | Statut | Détails |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :---: | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Linter (ESLint)** | ✅ Passé | Analyse statique conforme |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Suite de Tests (Vitest)** | ✅ Passé | 54 tests validés (Couverture complète) |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Compilation Next.js** | ✅ Passé | Build de production optimisé |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Domaines couverts par les tests :" >> $GITHUB_STEP_SUMMARY
-          echo "- **Revue Métier & Circuit Maker-Checker** : Cycle de vie, rôles (Maker / Checker), verrous préventifs, journal d'audit immuable." >> $GITHUB_STEP_SUMMARY
-          echo "- **Diff Viewer** : Comparateur textuel ligne par ligne (lignes ajoutées, supprimées, conservées)." >> $GITHUB_STEP_SUMMARY
-          echo "- **Passerelles Interdépartements** : Requêtes inter-pôles (Fiscalité, Comptabilité, Juridique) et blocages." >> $GITHUB_STEP_SUMMARY
-          echo "- **Moteur de Rappels & Récurrences** : Calcul des échéances, formatage français, récurrences quotidienne/hebdo/mensuelle/annuelle." >> $GITHUB_STEP_SUMMARY
-          echo "- **Export Calendrier iCalendar RFC 5545** : Génération des fichiers .ics, alarmes VALARM, statuts et priorités." >> $GITHUB_STEP_SUMMARY
-          echo "- **Présence Collaborative** : Heartbeat Phoenix, membres connectés et statut de relecture." >> $GITHUB_STEP_SUMMARY
-          echo "- **Gestion des Tâches** : Recherche plein texte, filtrage par catégorie/statut/tags, tri par priorité, progression des sous-tâches." >> $GITHUB_STEP_SUMMARY
+          build_status="${{ steps.build.outcome }}"
+          if [ "$build_status" = "success" ]; then
+            badge="✅ Passé"
+          else
+            badge="❌ Échec ($build_status)"
+          fi
+          {
+            echo "## 🏗️ Rapport Build Next.js"
+            echo ""
+            echo "| Étape | Statut |"
+            echo "| :--- | :---: |"
+            echo "| **Compilation Next.js Production** | $badge |"
+          } >> "$GITHUB_STEP_SUMMARY"

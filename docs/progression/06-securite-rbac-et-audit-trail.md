@@ -76,6 +76,7 @@ Le module a fait l'objet d'un audit de sécurité approfondi ayant conduit à la
 - **SEC-05 (BOLA sur `/api/review/dossiers`) :** Résolu par vérification stricte du rôle du demandeur avant modification de dossier.
 - **SEC-08 (Rate Limiting) :** Implémentation du module de limitation de débit sur les routes sensibles.
 - **SEC-09 (Mots de passe) :** Rehaussement du standard à 12 caractères minimum avec validation de complexité.
+- **SEC-10 (Cycle de Vie SSR & Zéro Flash) :** Résolution initiale de session côté serveur (`app/page.tsx`), machine d'états déterministe (`lib/auth-lifecycle.ts`), voile de transition opaque à la déconnexion (`AuthTransitionCurtain`), et réinitialisation immédiate de la vue active (`list`) sans rechargement brutal.
 
 ---
 

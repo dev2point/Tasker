@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Download,
@@ -16,6 +16,44 @@ import {
 import { usePWAInstall } from './usePWAInstall';
 import { soundManager } from '@/lib/sound';
 
+const cardStorageListeners = new Set<() => void>();
+
+function notifyCardStorage() {
+  cardStorageListeners.forEach((cb) => cb());
+}
+
+function subscribeCardStorage(cb: () => void) {
+  cardStorageListeners.add(cb);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', cb);
+  }
+  return () => {
+    cardStorageListeners.delete(cb);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', cb);
+    }
+  };
+}
+
+function getDismissedSnapshot(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('planit_pwa_dismissed') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function getMinimizedSnapshot(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const val = sessionStorage.getItem('planit_pwa_card_minimized');
+    return val !== 'false'; // Default to true (minimized) so it never blocks the workspace
+  } catch {
+    return true;
+  }
+}
+
 export const PWAFloatingInstallCard: React.FC = () => {
   const {
     isCompatible,
@@ -27,55 +65,48 @@ export const PWAFloatingInstallCard: React.FC = () => {
     install,
   } = usePWAInstall();
 
-  const [isDismissed, setIsDismissed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return localStorage.getItem('planit_pwa_dismissed') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const isDismissed = useSyncExternalStore(
+    subscribeCardStorage,
+    getDismissedSnapshot,
+    () => false
+  );
 
-  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      const val = sessionStorage.getItem('planit_pwa_card_minimized');
-      return val !== 'false'; // Default to true (minimized) so it never blocks the workspace
-    } catch {
-      return true;
-    }
-  });
+  const isMinimized = useSyncExternalStore(
+    subscribeCardStorage,
+    getMinimizedSnapshot,
+    () => true
+  );
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(false);
   const [showManualHelp, setShowManualHelp] = useState<boolean>(false);
 
   const handleMinimize = () => {
     soundManager.playClickSound();
-    setIsMinimized(true);
     try {
       sessionStorage.setItem('planit_pwa_card_minimized', 'true');
     } catch {
       // ignore
     }
+    notifyCardStorage();
   };
 
   const handleDismissPermanently = () => {
     soundManager.playClickSound();
-    setIsDismissed(true);
     try {
       localStorage.setItem('planit_pwa_dismissed', 'true');
     } catch {
       // ignore
     }
+    notifyCardStorage();
   };
 
   const handleExpand = () => {
     soundManager.playClickSound();
-    setIsMinimized(false);
     try {
       sessionStorage.setItem('planit_pwa_card_minimized', 'false');
     } catch {
       // ignore
     }
+    notifyCardStorage();
   };
 
   const handleInstallClick = async () => {

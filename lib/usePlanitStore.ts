@@ -393,9 +393,11 @@ export function usePlanitStore() {
     try {
       localStorage.setItem(STORAGE_KEYS.TASKS, '[]');
       localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, '[]');
+      localStorage.setItem(STORAGE_KEYS.VIEW_MODE, 'list');
       notify();
       dbPutAllTasks([]).catch(console.error);
       dbPutAllNotifications([]).catch(console.error);
+      dbSetPreference('view_mode', 'list').catch(console.error);
     } catch {}
   }, []);
 

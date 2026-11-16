@@ -81,10 +81,9 @@ export const ListView: React.FC<ListViewProps> = ({
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
 
   // Quick inline add state
-  const defaultDue = useMemo(() => getDefaultDueDateTime(), []);
   const [quickTitle, setQuickTitle] = useState('');
-  const [quickDate, setQuickDate] = useState(defaultDue.dueDate);
-  const [quickTime, setQuickTime] = useState(defaultDue.dueTime);
+  const [quickDate, setQuickDate] = useState('');
+  const [quickTime, setQuickTime] = useState('');
   const [quickCategory, setQuickCategory] = useState(categories[0]?.id || 'fiscalite');
   const [showAdvancedQuickAdd, setShowAdvancedQuickAdd] = useState(false);
   const [quickAddError, setQuickAddError] = useState<string | null>(null);
@@ -155,9 +154,8 @@ export const ListView: React.FC<ListViewProps> = ({
       quickCategory
     );
     setQuickTitle('');
-    const nextDefault = getDefaultDueDateTime();
-    setQuickDate(nextDefault.dueDate);
-    setQuickTime(nextDefault.dueTime);
+    setQuickDate('');
+    setQuickTime('');
     setShowAdvancedQuickAdd(false);
   };
 
@@ -423,7 +421,14 @@ export const ListView: React.FC<ListViewProps> = ({
             id="quick-add-task-input"
             value={quickTitle}
             onChange={(e) => setQuickTitle(e.target.value)}
-            onFocus={() => setShowAdvancedQuickAdd(true)}
+            onFocus={() => {
+              if (!quickDate) {
+                const nextDefault = getDefaultDueDateTime();
+                setQuickDate(nextDefault.dueDate);
+                setQuickTime(nextDefault.dueTime);
+              }
+              setShowAdvancedQuickAdd(true);
+            }}
             placeholder="Créer une tâche rapidement... (Appuyez sur Entrée)"
             className="w-full text-xs sm:text-sm font-medium text-white placeholder:text-slate-400 focus:outline-hidden bg-transparent"
           />

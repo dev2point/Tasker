@@ -139,17 +139,27 @@ function getClientInfo(): ClientInfo {
   return cachedClientInfo;
 }
 
+const subscribeNoop = () => () => {};
+const getServerClientInfo = () => defaultClientInfo;
+
+function getIsInstalledSnapshot(): boolean {
+  if (typeof window === 'undefined') return false;
+  const standaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
+  const navigatorStandalone =
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+  let localFlag = false;
+  try {
+    localFlag = localStorage.getItem('planit_pwa_installed') === 'true';
+  } catch {
+    localFlag = false;
+  }
+  return standaloneMedia || navigatorStandalone || localFlag;
+}
+
 export function usePWAInstall() {
   const isInstalled = useSyncExternalStore(
     subscribeMatchMedia,
-    () => {
-      if (typeof window === 'undefined') return false;
-      const standaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
-      const navigatorStandalone =
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-      const localFlag = localStorage.getItem('planit_pwa_installed') === 'true';
-      return standaloneMedia || navigatorStandalone || localFlag;
-    },
+    getIsInstalledSnapshot,
     () => false
   );
 
@@ -159,7 +169,11 @@ export function usePWAInstall() {
     () => null
   );
 
-  const clientInfo = getClientInfo();
+  const clientInfo = useSyncExternalStore(
+    subscribeNoop,
+    getClientInfo,
+    getServerClientInfo
+  );
 
   const install = useCallback(async () => {
     if (!globalDeferredPrompt) return false;

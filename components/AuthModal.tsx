@@ -14,28 +14,34 @@ import {
   AlertCircle,
   KeyRound,
   Shield,
-  Database,
   Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { authClient, signIn, signUp, signOut, useSession } from '@/lib/auth-client';
-import { User, UserRole } from '@/types/user';
+import { authClient, signIn, signUp, useSession } from '@/lib/auth-client';
+import { User } from '@/types/user';
 import { ViewMode } from '@/types/task';
 import { BorderBeam } from '@/components/magicui/border-beam';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthSuccess?: () => void;
+  onAuthSuccess?: (user?: any) => void;
   currentUser?: User | null;
-  onSignOut?: () => void;
+  onSignOut?: () => void | Promise<void>;
   onViewChange?: (view: ViewMode) => void;
   isSidebarCollapsed?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
+  ...props
+}) => {
+  if (!isOpen) return null;
+  return <AuthModalInner key={props.currentUser?.id || 'anonymous'} {...props} />;
+};
+
+const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
   onClose,
   onAuthSuccess,
   currentUser: propCurrentUser,
@@ -43,7 +49,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onViewChange,
   isSidebarCollapsed = false,
 }) => {
-  const { data: session, isPending: isSessionLoading } = useSession();
+  const { data: session } = useSession();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
   // Sign In state
@@ -64,8 +70,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSignedOut, setIsSignedOut] = useState(false);
 
-  if (!isOpen) return null;
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -78,31 +82,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('AuthModal sign in attempt:', signInEmail.trim());
       const res = await signIn.email({
         email: signInEmail.trim(),
         password: signInPassword,
       });
 
-      console.log('AuthModal sign in response:', res);
-
       if (res?.error) {
         const errDetail = res.error.message || JSON.stringify(res.error);
         setErrorMessage(`Erreur connexion (${res.error.status || 'API'}): ${errDetail}`);
+        setIsLoading(false);
       } else {
         setSuccessMessage('Connexion réussie !');
         setIsSignedOut(false);
-        setTimeout(() => {
-          onAuthSuccess?.();
-          onClose();
-          window.location.reload();
-        }, 500);
+        if (typeof window !== 'undefined' && res?.data?.token) {
+          try {
+            localStorage.setItem('planit_auth_token', res.data.token);
+          } catch {}
+        }
+        onAuthSuccess?.(res?.data?.user);
+        onClose();
       }
     } catch (err: any) {
-      console.error('AuthModal sign in exception:', err);
       const msg = err?.message || err?.toString() || 'Erreur réseau';
       setErrorMessage(`Échec connexion: ${msg} (URL: ${window.location.origin})`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -124,7 +126,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('AuthModal sign up attempt:', signUpEmail.trim());
       const res = await signUp.email({
         name: signUpName.trim(),
         email: signUpEmail.trim(),
@@ -133,25 +134,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         department: signUpDepartment.trim() || undefined,
       } as any);
 
-      console.log('AuthModal sign up response:', res);
-
       if (res?.error) {
         const errDetail = res.error.message || JSON.stringify(res.error);
         setErrorMessage(`Erreur inscription (${res.error.status || 'API'}): ${errDetail}`);
+        setIsLoading(false);
       } else {
         setSuccessMessage('Compte créé avec succès et connecté !');
         setIsSignedOut(false);
-        setTimeout(() => {
-          onAuthSuccess?.();
-          onClose();
-          window.location.reload();
-        }, 600);
+        if (typeof window !== 'undefined' && res?.data?.token) {
+          try {
+            localStorage.setItem('planit_auth_token', res.data.token);
+          } catch {}
+        }
+        onAuthSuccess?.(res?.data?.user);
+        onClose();
       }
     } catch (err: any) {
-      console.error('AuthModal sign up exception:', err);
       const msg = err?.message || err?.toString() || 'Erreur réseau';
       setErrorMessage(`Échec inscription: ${msg} (URL: ${window.location.origin})`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -160,32 +160,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    if (onSignOut) {
+      await onSignOut();
+      return;
+    }
     try {
+      await authClient.signOut().catch(() => {});
+      await fetch('/api/auth/sign-out', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {});
       try {
-        await authClient.signOut();
-      } catch (err) {
-        console.warn('authClient.signOut error:', err);
-      }
-
-      try {
-        await fetch('/api/auth/sign-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } catch {}
-
-      try {
+        localStorage.removeItem('planit_auth_token');
         localStorage.removeItem('better-auth.session_token');
       } catch {}
-
       setIsSignedOut(true);
-      setSuccessMessage('Déconnexion réussie. Redirection...');
-      onSignOut?.();
-
-      setTimeout(() => {
-        onClose();
-        window.location.reload();
-      }, 400);
+      onClose();
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Erreur lors de la déconnexion.'
@@ -339,16 +329,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         </h4>
                         <Badge
                           variant="apricot"
-                          onClick={() => {
-                            console.log('[mfisca-tasks AuthModal] Role pastille clicked: Navigating to admin');
-                            if (onViewChange) onViewChange('admin');
-                            onClose();
-                          }}
-                          title="Cliquer pour accéder à la Console d'Administration"
-                          className="text-[10px] uppercase font-bold py-0.5 px-2 bg-purple-500/20 text-purple-200 border border-purple-500/40 hover:bg-purple-500/30 cursor-pointer transition-all shadow-2xs gap-1 inline-flex items-center"
+                          onClick={
+                            currentUser.role === 'admin'
+                              ? () => {
+                                  if (onViewChange) onViewChange('admin');
+                                  onClose();
+                                }
+                              : undefined
+                          }
+                          title={
+                            currentUser.role === 'admin'
+                              ? "Cliquer pour accéder à la Console d'Administration"
+                              : `Rôle : ${currentUser.role || 'member'}`
+                          }
+                          className={`text-[10px] uppercase font-bold py-0.5 px-2 bg-purple-500/20 text-purple-200 border border-purple-500/40 shadow-2xs gap-1 inline-flex items-center ${
+                            currentUser.role === 'admin'
+                              ? 'hover:bg-purple-500/30 cursor-pointer transition-all'
+                              : ''
+                          }`}
                         >
                           <Shield className="w-3 h-3 text-purple-300 shrink-0" />
-                          {currentUser.role || 'Admin'}
+                          {currentUser.role || 'member'}
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-300 truncate">{currentUser.email}</p>

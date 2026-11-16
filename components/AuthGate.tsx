@@ -62,17 +62,15 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
     setIsLoading(true);
     try {
-      console.log('Attempting sign in for:', email, 'baseURL:', window.location.origin);
       const res = await signIn.email({
         email,
         password,
       });
 
-      console.log('Sign in response:', res);
-
       if (res?.error) {
         const errDetail = res.error.message || JSON.stringify(res.error);
         setErrorMessage(`Erreur de connexion (${res.error.status || 'API'}): ${errDetail}`);
+        setIsLoading(false);
       } else {
         setSuccessMessage('Connexion réussie ! Chargement de votre espace...');
         const user = res?.data?.user;
@@ -81,15 +79,11 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             localStorage.setItem('planit_auth_token', res.data.token);
           } catch {}
         }
-        setTimeout(() => {
-          onAuthSuccess?.(user);
-        }, 150);
+        onAuthSuccess?.(user);
       }
     } catch (err: any) {
-      console.error('Sign in exception:', err);
       const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
       setErrorMessage(`Échec de la requête de connexion: ${msg} (URL: ${window.location.origin})`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -115,7 +109,6 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
     setIsLoading(true);
     try {
-      console.log('Attempting sign up for:', email, 'baseURL:', window.location.origin);
       const res = await signUp.email({
         name,
         email,
@@ -123,11 +116,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
         department: signUpDepartment.trim() || undefined,
       } as any);
 
-      console.log('Sign up response:', res);
-
       if (res?.error) {
         const errDetail = res.error.message || JSON.stringify(res.error);
         setErrorMessage(`Erreur de création de compte (${res.error.status || 'API'}): ${errDetail}`);
+        setIsLoading(false);
         return;
       }
 
@@ -138,14 +130,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
           localStorage.setItem('planit_auth_token', res.data.token);
         } catch {}
       }
-      setTimeout(() => {
-        onAuthSuccess?.(user);
-      }, 200);
+      onAuthSuccess?.(user);
     } catch (err: any) {
-      console.error('Sign up exception:', err);
       const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
       setErrorMessage(`Échec de la requête d'inscription: ${msg} (URL: ${window.location.origin})`);
-    } finally {
       setIsLoading(false);
     }
   };

@@ -224,25 +224,27 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
               </motion.button>
 
               {/* Item 6: Administration */}
-              <motion.button
-                type="button"
-                onClick={() => handleSelectView('admin')}
-                whileTap={{ scale: 0.96 }}
-                className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
-                  currentView === 'admin'
-                    ? 'bg-purple-600 text-white border-purple-400 font-bold shadow-purple-500/30'
-                    : 'bg-[#061A13]/90 text-purple-200 border-purple-500/30 hover:bg-[#0A291E]'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
-                  currentView === 'admin'
-                    ? 'bg-slate-950 text-purple-400'
-                    : 'bg-purple-500/20 text-purple-300 shadow-xs'
-                }`}>
-                  <Shield className="w-4 h-4 stroke-[2.3]" />
-                </div>
-                <span className="whitespace-nowrap font-bold">Admin</span>
-              </motion.button>
+              {currentUser?.role === 'admin' && (
+                <motion.button
+                  type="button"
+                  onClick={() => handleSelectView('admin')}
+                  whileTap={{ scale: 0.96 }}
+                  className={`flex items-center gap-3 pl-2 pr-5 py-2 rounded-full backdrop-blur-2xl border shadow-xl text-sm font-semibold transition-all active:scale-95 ${
+                    currentView === 'admin'
+                      ? 'bg-purple-600 text-white border-purple-400 font-bold shadow-purple-500/30'
+                      : 'bg-[#061A13]/90 text-purple-200 border-purple-500/30 hover:bg-[#0A291E]'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                    currentView === 'admin'
+                      ? 'bg-slate-950 text-purple-400'
+                      : 'bg-purple-500/20 text-purple-300 shadow-xs'
+                  }`}>
+                    <Shield className="w-4 h-4 stroke-[2.3]" />
+                  </div>
+                  <span className="whitespace-nowrap font-bold">Admin</span>
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

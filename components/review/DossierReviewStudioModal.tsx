@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   ReviewDossier,
   ReviewStatus,
@@ -77,6 +77,18 @@ const WORKFLOW_STEPS: Array<{ id: ReviewStatus; label: string; stage: string }> 
 
 export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> = ({
   isOpen,
+  dossier,
+  ...props
+}) => {
+  if (!isOpen || !dossier) return null;
+  return <DossierReviewStudioModalInner key={dossier.id} dossier={dossier} {...props} />;
+};
+
+interface DossierReviewStudioModalInnerProps extends Omit<DossierReviewStudioModalProps, 'isOpen' | 'dossier'> {
+  dossier: ReviewDossier;
+}
+
+const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps> = ({
   onClose,
   dossier,
   currentUser,
@@ -86,8 +98,7 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
 }) => {
   const [activeTab, setActiveTab] = useState<'diff' | 'data' | 'files' | 'gateway' | 'audit'>('diff');
   const [isEditingContent, setIsEditingContent] = useState(false);
-  const [prevDossierId, setPrevDossierId] = useState<string | undefined>(dossier?.id);
-  const [draftContent, setDraftContent] = useState<string>(() => dossier?.textDocument.currentContent || '');
+  const [draftContent, setDraftContent] = useState<string>(() => dossier.textDocument.currentContent || '');
   const [amendmentNote, setAmendmentNote] = useState('');
   const [isCorrectionsModalOpen, setIsCorrectionsModalOpen] = useState(false);
   const [correctionsInput, setCorrectionsInput] = useState('');
@@ -102,17 +113,6 @@ export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> =
     pendingUpdate: ReviewDossier;
   } | null>(null);
   const [showConflictDiff, setShowConflictDiff] = useState(false);
-
-  if (dossier && dossier.id !== prevDossierId) {
-    setPrevDossierId(dossier.id);
-    setDraftContent(dossier.textDocument.currentContent);
-    setIsEditingContent(false);
-    setAmendmentNote('');
-    setCorrectionsInput('');
-    setConflictState(null);
-  }
-
-  if (!isOpen || !dossier) return null;
 
   const isLockedByOther =
     dossier.lock.isLocked &&

@@ -45,6 +45,7 @@ export interface SidebarProps {
   onOpenNotifications: () => void;
   onOpenPostgresModal?: () => void;
   onOpenAuthModal?: () => void;
+  onSignOut?: () => void;
   onOpenCategoryTagManager?: () => void;
   onOpenM365Modal?: () => void;
   onOpenReportModal?: () => void;
@@ -68,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenNotifications,
   onOpenPostgresModal,
   onOpenAuthModal,
+  onSignOut,
   onOpenCategoryTagManager,
   onOpenM365Modal,
   onOpenReportModal,
@@ -171,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Statistiques',
       icon: <BarChart3 className="w-4 h-4 shrink-0" />,
     },
-    ...(currentUser?.role === 'admin' || currentView === 'admin'
+    ...(currentUser?.role === 'admin'
       ? [
           {
             id: 'admin' as ViewMode,
@@ -764,10 +766,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </button>
 
                   <button
+                    id="sidebar-signout-btn"
                     type="button"
                     onClick={() => {
+                      soundManager.playClickSound();
                       setIsUserMenuOpen(false);
-                      onOpenAuthModal();
+                      if (onSignOut) {
+                        onSignOut();
+                      } else {
+                        onOpenAuthModal();
+                      }
                     }}
                     className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-950/40 text-rose-300 font-semibold transition-colors border-t border-emerald-500/15 mt-1 cursor-pointer"
                   >
