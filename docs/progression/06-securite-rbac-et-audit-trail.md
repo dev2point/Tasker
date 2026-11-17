@@ -1,6 +1,6 @@
 ---
-Jour: Lundi 2 Novembre 2026 (2026-11-02)
-Heure de la dernière modif: 00:52:00 PST (08:52:00 UTC)
+Jour: Mardi 17 Novembre 2026 (2026-11-17)
+Heure de la dernière modif: 13:15:00 CET (12:15:00 UTC)
 Auteur: niceboy
 Module: Sécurité Applicative, Contrôle d'Accès (RBAC) & Audit Trail
 ---
@@ -63,7 +63,7 @@ Le module de sécurité et de contrôle d'accès garantit :
 - `/lib/auth-server.ts` & `/lib/auth.ts` : Configuration sécurisée de Better Auth (mots de passe >= 12 caractères, cookies sécurisés `Partitioned; Secure; HttpOnly`).
 - `/lib/rate-limit.ts` : Limitation de débit avec algorithme de fenêtre glissante en mémoire protégeant les quotas IA et l'intégrité de la base.
 - `/components/review/AuditTrailViewer.tsx` : Interface d'inspection des journaux d'audit avec filtres par acteur, action et plage de dates.
-- `/tests/rbac-permissions.test.ts` : Batterie de tests automatisés vérifiant l'inviolabilité des barrières d'accès.
+- `/tests/rbac-permissions.test.ts`, `/tests/realtime-sse.test.ts` & `/tests/notifications-and-statuses.test.ts` : Batteries de tests automatisés vérifiant l'inviolabilité des barrières d'accès, le ciblage SSE et les transitions de notifications.
 
 ---
 
@@ -77,6 +77,10 @@ Le module a fait l'objet d'un audit de sécurité approfondi ayant conduit à la
 - **SEC-08 (Rate Limiting) :** Implémentation du module de limitation de débit sur les routes sensibles.
 - **SEC-09 (Mots de passe) :** Rehaussement du standard à 12 caractères minimum avec validation de complexité.
 - **SEC-10 (Cycle de Vie SSR & Zéro Flash) :** Résolution initiale de session côté serveur (`app/page.tsx`), machine d'états déterministe (`lib/auth-lifecycle.ts`), voile de transition opaque à la déconnexion (`AuthTransitionCurtain`), et réinitialisation immédiate de la vue active (`list`) sans rechargement brutal.
+- **SEC-11 (Isolation SSE, Scoping Notifications & RBAC Statuts — 17/11/2026) :**
+  - Filtrage côté serveur dans `GET /api/events` via `canReceiveRealtimeEvent(event, viewer)` : les événements `TASK_ASSIGNED` et `TASK_COMPLETED` dotés d'un `targetUserId` ne sont délivrés qu'au destinataire exact, et `TASK_UPDATED` / `TASK_DELETED` aux seuls utilisateurs visibles (`visibleToUserIds` ou `admin`).
+  - Scoping strict de `/api/notifications` (`GET`, `PATCH`, `DELETE`) sur `recipientId = authUser.id` (rejet `HTTP 401` sans session).
+  - Application des gardes `canUserEditTask` et `canUserCompleteTask` sur les changements des 4 statuts dans `ListView`, `KanbanView`, `TaskModal` et `POST /api/tasks`.
 
 ---
 

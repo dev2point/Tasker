@@ -1,6 +1,6 @@
 ---
-Jour: Mercredi 4 Novembre 2026 (2026-11-04)
-Heure de la dernière modif: 07:12:00 PST (15:12:00 UTC)
+Jour: Mardi 17 Novembre 2026 (2026-11-17)
+Heure de la dernière modif: 13:15:00 CET (12:15:00 UTC)
 Auteur: niceboy
 Module: Gestion Opérationnelle des Tâches & Vues Métier
 ---
@@ -54,11 +54,13 @@ Le module de gestion des tâches constitue le cœur opérationnel de **mfisca-ta
 ```
 
 ### Fichiers Clés du Module :
-- `/components/KanbanView.tsx` : Vue Kanban réactive avec gestion des transitions d'états (À faire, En cours, En revue, Terminé).
-- `/components/ListView.tsx` : Vue dense avec tri, pagination locale, filtrage par assigné, priorité, date et département.
+- `/components/KanbanView.tsx` : Vue Kanban réactive à 4 colonnes (*Non démarrée*, *En cours*, *En attente*, *Terminée*) avec glisser-déposer, sélecteur direct par carte et contrôle RBAC.
+- `/components/ListView.tsx` : Vue dense avec tri, filtrage par statut/assigné/priorité/date/département, regroupement par statut et changement d'état en ligne.
 - `/components/CalendarView.tsx` : Vue calendrier interactif reprenant les dates d'échéances et autorisant le déplacement direct.
-- `/components/TaskModal.tsx` : Modale riche (détails de la tâche, temps estimé/passé, documents associés, niveau de risque fiscal).
+- `/components/TaskModal.tsx` : Modale riche (détails de la tâche, documents associés, changement direct des 4 statuts en mode Consultation et Édition).
+- `/components/NotificationDropdown.tsx` : Cloche de notifications interactive (rappels d'échéance, assignations, réassignations et fins de tâches).
 - `/components/OverdueReminderBanner.tsx` : Bannière persistante en cas de retard sur échéance réglementaire.
+- `/lib/notifications-helper.ts` & `/lib/constants.ts` : Détection des transitions d'assignation/clôture et référentiel normalisé des 4 statuts (`TASK_STATUS_ORDER`, `TASK_STATUS_CONFIG`, `normalizeTaskStatus`).
 - `/lib/usePlanitStore.ts` : Store global Zustand synchronisé gérant l'état local réactif des tâches et des filtres.
 
 ---
@@ -77,6 +79,16 @@ Le module de gestion des tâches constitue le cœur opérationnel de **mfisca-ta
 - **Phase 6 :** Ergonomie UX des modales & indicateur visuel ambre de l'onglet actif :
   - **Centrage des modales dans l'espace utile à droite de la barre latérale** : application d'un padding adaptatif réactif (`md:pl-64` en mode déployé, `md:pl-20` en mode replié) avec transition fluide sur les backdrops de toutes les modales (`ExecutiveReportModal`, `TaskModal`, `CategoryTagManagerModal`, `Microsoft365Modal`, `AIAssistantModal`, `ExportModal`, `PostgresTeamModal`, `AuthModal`, `ActiveReminderModal`, `DossierReviewStudioModal`, `NewDossierModal`). Élimine tout rognage ou masquage causé par la sidebar fixe.
   - **Mise en valeur ambre dorée de l'onglet ou outil actif** : prop `activeModal` sur `Sidebar.tsx` stylisant l'élément ouvert avec fond ambre doré semi-transparent (`bg-amber-500/15`), bordure lumineuse (`border-amber-500/50`), halo ring (`ring-1 ring-amber-500/30`), texte et icône ambre (`text-amber-200`, `text-amber-400`) et badges ambre contrastés.
+- **Phase 7 (17/11/2026) — Cycle de vie à 4 statuts & Notifications collaboratives (Assignation / Clôture) :**
+  - **Référentiel des 4 statuts** (`types/task.ts`, `lib/constants.ts`) : `todo` (**Non démarrée**), `in_progress` (**En cours**), `waiting` (**En attente**) et `completed` (**Terminée**), normalisés via `normalizeTaskStatus` et synchronisés avec `completed` / `completedAt` dans `lib/db/task-sanitize.ts`.
+  - **Édition multi-vues avec garde RBAC** :
+    - `ListView.tsx` : filtres par statut, regroupement `Grouper: Statut` et sélecteur de statut en ligne sur chaque tâche.
+    - `KanbanView.tsx` : tableau 4 colonnes réactif avec glisser-déposer HTML5, boutons d'avancement/recul et sélecteur direct par carte.
+    - `TaskModal.tsx` : affichage du statut exact et sélecteur interactif disponible directement en mode Consultation comme en mode Édition.
+  - **Notifications assigné & créateur (Cloche PostgreSQL + SSE + Navigateur)** :
+    - Détection serveur autoritaire dans `lib/notifications-helper.ts` (`detectTaskNotificationTransitions`) et `POST /api/tasks` : notification `assigned` vers le nouvel assigné (assignation ou réassignation), notification `task_completed` vers le créateur lorsqu'un collaborateur passe la tâche à *Terminée* (sans auto-notification).
+    - Livraison triple canal : persistance en base PostgreSQL (`notifications` / `/api/notifications`), push temps réel SSE ciblé (`TASK_ASSIGNED`, `TASK_COMPLETED`), alerte sonore et notification navigateur native (`sendBrowserNotification`).
+  - **Couverture & Documentation** : 5 tests unitaires dédiés dans `tests/notifications-and-statuses.test.ts` et guides complets publiés dans `/docs/guides/flux-creation-assignation-tache.md` et `/docs/guides/user-flow-creation-assignation-tache.md`.
 
 ---
 
@@ -101,10 +113,10 @@ Le module de gestion des tâches constitue le cœur opérationnel de **mfisca-ta
   2. Introduire une pagination côté serveur sur l'API `/api/tasks` pour les portefeuilles volumineux.
 
 ### DT-TSK-02 : Drag & Drop dépendant d'un état local asynchrone non-optimiste
-- **Description :** Dans `KanbanView.tsx`, lors d'un glisser-déposer de tâche entre deux colonnes de statut, la mise à jour visuelle est synchronisée immédiatement dans Zustand, mais en cas d'échec réseau sur `/api/tasks`, le rollback visuel nécessite un rafraîchissement manuel.
+- **Description :** Dans `KanbanView.tsx` (désormais étendu à 4 colonnes avec vérification RBAC), lors d'un glisser-déposer ou changement de statut entre colonnes, la mise à jour visuelle est appliquée immédiatement dans l'état local avant confirmation de `/api/tasks` ; en cas d'échec réseau, un rafraîchissement peut être nécessaire.
 - **Cause racine :** Absence d'un wrapper de mutation optimiste complet avec capture de snapshot antérieur et toast d'erreur automatique avec bouton "Réessayer".
 - **Impact :** Légère désynchronisation visuelle possible si la connexion est instable ou coupée en cours de modification.
-- **Plan de remédiation :** Encapsuler les transitions d'état dans une fonction transactionnelle avec snapshot de restauration (`previousTasks`) en cas d'erreur HTTP 5xx.
+- **Plan de remédiation :** Encapsuler `handleUpdateTaskStatus` dans une fonction transactionnelle avec snapshot de restauration (`previousTasks`) en cas d'erreur HTTP 5xx.
 
 ### DT-TSK-03 : Manque de typage strict sur les champs de métadonnées additionnelles
 - **Description :** Certains attributs de tâches (ex: `metadata`, `customFields`) utilisent des types flexibles `Record<string, unknown>` ou `any`.

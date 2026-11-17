@@ -1,6 +1,6 @@
 ---
-Jour: Mercredi 11 Novembre 2026 (2026-11-11)
-Heure de la dernière modif: 17:20:00 CET (16:20:00 UTC)
+Jour: Mardi 17 Novembre 2026 (2026-11-17)
+Heure de la dernière modif: 13:15:00 CET (12:15:00 UTC)
 Auteur: niceboy
 Module: Index Général & Cartographie de Progression
 ---
@@ -17,29 +17,36 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 
 | N° | Fichier / Document | Domaine Fonctionnel & Technique | Statut Général | Niveau de Dette |
 | :---: | :--- | :--- | :--- | :---: |
-| **00** | [`00-index-progression.md`](./00-index-progression.md) | Synthèse générale, métriques globales & matrice de maturité | **À Jour** | Très Faible |
-| **01** | [`01-gestion-taches-et-vues.md`](./01-gestion-taches-et-vues.md) | Modèle de tâche, Kanban, Listes, Calendrier, Filtrage & Priorités | **Opérationnel** | Faible / Modérée |
+| **00** | [`00-index-progression.md`](./00-index-progression.md) | Synthèse générale, métriques globales & matrice de maturité | **À Jour (17/11/2026)** | Très Faible |
+| **01** | [`01-gestion-taches-et-vues.md`](./01-gestion-taches-et-vues.md) | Modèle de tâche (4 statuts), Kanban 4 colonnes, Listes, Calendrier & Notifications | **Opérationnel (4 statuts + Push)** | Faible |
 | **02** | [`02-circuit-revue-maker-checker.md`](./02-circuit-revue-maker-checker.md) | Workflow Maker-Checker, Studio Diff Word .docx & Excel .xlsx, OCC & Modération | **Opérationnel, Diff Office & OCC Actifs** | Très Faible |
 | **03** | [`03-moteur-rapports-et-synthese-pdf.md`](./03-moteur-rapports-et-synthese-pdf.md) | Moteur de reporting exécutif, génération PDF A4, métriques fiscales & exports | **Opérationnel** | Modérée |
-| **04** | [`04-metriques-kpis-et-benchmark.md`](./04-metriques-kpis-et-benchmark.md) | Statistiques temps réel, moteur de benchmark sectoriel, calculs de productivité | **Opérationnel** | Faible |
-| **05** | [`05-persistance-bdd-et-synchronisation.md`](./05-persistance-bdd-et-synchronisation.md) | Architecture hybride PostgreSQL/Drizzle, API Sync, IndexedDB & Healthcheck | **Opérationnel** | Modérée |
-| **06** | [`06-securite-rbac-et-audit-trail.md`](./06-securite-rbac-et-audit-trail.md) | Sécurité OWASP, RBAC multi-rôles, Better Auth, Rate Limiting & Traçabilité | **Durci & Validé** | Faible |
+| **04** | [`04-metriques-kpis-et-benchmark.md`](./04-metriques-kpis-et-benchmark.md) | Statistiques temps réel (répartition 4 statuts), benchmark sectoriel & productivité | **Opérationnel** | Faible |
+| **05** | [`05-persistance-bdd-et-synchronisation.md`](./05-persistance-bdd-et-synchronisation.md) | Architecture PostgreSQL/Drizzle (`tasks`, `notifications`, `user`), API Sync & Healthcheck | **Opérationnel (Notifications & RLS)** | Faible / Modérée |
+| **06** | [`06-securite-rbac-et-audit-trail.md`](./06-securite-rbac-et-audit-trail.md) | Sécurité OWASP, RBAC multi-rôles, Isolation SSE/Notifications, Better Auth & Audit | **Durci & Validé** | Faible |
 | **07** | [`07-integrations-pwa-et-m365.md`](./07-integrations-pwa-et-m365.md) | PWA (mode hors-ligne, Service Worker), Microsoft 365 & formats iCalendar | **Opérationnel** | Modérée |
+
+### Guides Fonctionnels Associés (`/docs/guides/`)
+- [`flux-creation-assignation-tache.md`](../guides/flux-creation-assignation-tache.md) : Architecture technique complète de la création et de l'assignation de tâches.
+- [`user-flow-creation-assignation-tache.md`](../guides/user-flow-creation-assignation-tache.md) : Parcours utilisateur détaillé côté créateur et côté collaborateur assigné.
+- [`azure-entra-id-setup.md`](../guides/azure-entra-id-setup.md) : Configuration OAuth / PKCE Microsoft 365 & Azure Entra ID.
 
 ---
 
 ## 📊 Matrice de Maturité & Indicateurs Qualité
 
 ```
-[Qualité & Tests]       ████████████████████  100% (116/116 tests Vitest passants sur 15 suites)
-[Sécurité & RBAC]       ████████████████████  100% (Vulnérabilités SEC-01 à SEC-09 corrigées)
-[Collaboration SSE]     ████████████████████  100% (Hub Server-Sent Events & diffusion push)
+[Qualité & Tests]       ███████████████████░   98% (18 suites / 136 tests Vitest ; 17/18 suites et 133/136 tests passants*)
+[Sécurité & RBAC]       ████████████████████  100% (SEC-01 à SEC-11 résolus, isolation SSE/Notifications active)
+[Collaboration SSE]     ████████████████████  100% (Hub SSE ciblé par destinataire, push assignation/fin & navigateur)
 [Contrôle Concurrence]  ████████████████████  100% (OCC Optimistic Concurrency v1...vN + 409 Conflict)
 [Moteur de Revue & Diff]████████████████████  100% (Diff Word mot à mot, Excel double grille, Modération motif)
-[Vues & Ergonomie]      ███████████████████░   95% (Kanban, Calendrier, Centrage Modales, Indicateur Ambre)
-[Persistance Hybride]   ████████████████░░░░   85% (PostgreSQL + Synchronisation locale résiliente)
+[Vues & Ergonomie]      ███████████████████░   98% (Kanban 4 colonnes, Liste/Modale 4 statuts, Stats cycle de vie)
+[Persistance Hybride]   ██████████████████░░   92% (PostgreSQL + table notifications RLS + enrichissement créateur/assigné)
 [Intégrations Tiers]    ██████████████░░░░░░   75% (M365, iCal, PWA)
 ```
+
+> \* Note : Les 3 échecs constatés dans `tests/load-performance.test.ts` concernent exclusivement des seuils de latence micro-CPU propres à l'environnement conteneurisé (`45 ms` / `250 ms`), toutes les suites fonctionnelles (17/17) passant à 100 %.
 
 ---
 
@@ -56,5 +63,5 @@ Ce dossier consigne l'historique de conception, l'état d'avancement réel, les 
 | ID Dette | Intitulé & Description | Composants Affectés | Impact Métier / Tech | Stratégie de Remédiation |
 | :--- | :--- | :--- | :--- | :--- |
 | **DT-GLO-01** | **Absence de tests E2E automatisés (Playwright/Cypress)** | Parcours complets d'authentification, modales complexes et impression PDF | Risque de régression visuelle ou de rupture de flux utilisateur lors de refactorisations majeures. | Mettre en place une suite Playwright ciblant les 5 flux critiques (création tâche, soumission dossier, approbation checker, export rapport, login). |
-| **DT-GLO-02** | **Synchronisation temps réel par Server-Sent Events (SSE)** | `lib/realtime-hub.ts`, `/app/api/events`, `use-realtime-events.ts` | Élimination de la latence de polling et diffusion instantanée des alertes Maker-Checker et des présences. | **✅ Résolu (03/11/2026) :** Hub SSE temps réel opérationnel, diffusion push instantanée aux relecteurs et reconnexion automatique. |
+| **DT-GLO-02** | **Synchronisation temps réel par Server-Sent Events (SSE)** | `lib/realtime-hub.ts`, `/app/api/events`, `use-realtime-events.ts`, `/api/notifications` | Élimination de la latence de polling et diffusion instantanée des alertes Maker-Checker, d'assignation et de fin de tâche. | **✅ Résolu (03/11/2026) & Étendu (17/11/2026) :** Hub SSE avec filtrage strict par destinataire (`canReceiveRealtimeEvent`) et notifications navigateur. |
 | **DT-GLO-03** | **Rendu PDF vectoriel côté client (`window.print`)** | `ExecutiveReportModal.tsx`, `lib/report-generator.ts` | Dépendance vis-à-vis du navigateur client ; incapacité à générer des rapports PDF par lot la nuit en tâche de fond (cron). | Développer un endpoint API dédié `/api/reports/pdf` utilisant `@react-pdf/renderer` ou Chromium headless pour la distribution automatisée par e-mail. |

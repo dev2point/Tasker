@@ -1,40 +1,39 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   X,
   Calendar,
-  Clock,
   Bell,
   Wand2,
   Plus,
   Trash2,
   CheckCircle2,
-  Circle,
-  Tag,
   Repeat,
   Folder,
   AlertCircle,
   Loader2,
   User as UserIcon,
   FolderPlus,
-  Hash,
   Check,
   Edit3,
   ArrowLeft,
   FileText,
   RotateCcw,
-  CheckCheck,
 } from 'lucide-react';
-import { Task, Priority, Recurrence, Category, Subtask } from '@/types/task';
+import { Task, Priority, Recurrence, Category, Subtask, TaskStatus } from '@/types/task';
 import { TrackedFile } from '@/types/file-version';
 import { FileVersionManager } from '@/components/FileVersionManager';
 import { User } from '@/types/user';
-import { REMINDER_OPTIONS, PRIORITY_CONFIG } from '@/lib/constants';
+import {
+  REMINDER_OPTIONS,
+  PRIORITY_CONFIG,
+  TASK_STATUS_ORDER,
+  TASK_STATUS_CONFIG,
+  normalizeTaskStatus,
+} from '@/lib/constants';
 import {
   CategoryIcon,
-  getTagColor,
-  AVAILABLE_CATEGORY_ICONS,
   PRESET_CATEGORY_COLORS,
 } from '@/components/CategoryIcon';
 import { soundManager } from '@/lib/sound';
@@ -57,6 +56,7 @@ export interface TaskModalProps {
   initialTask?: Task | null;
   initialMode?: 'view' | 'edit';
   onToggleComplete?: (taskId: string) => void;
+  onUpdateTaskStatus?: (taskId: string, status: TaskStatus) => void;
   onPostponeTask?: (taskId: string, days?: number) => void;
   categories: Category[];
   teamUsers?: User[];
@@ -75,6 +75,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   initialTask,
   initialMode,
   onToggleComplete,
+  onUpdateTaskStatus,
   onPostponeTask,
   categories,
   teamUsers = [],
@@ -107,8 +108,8 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
       : 15
   );
   const [recurrence, setRecurrence] = useState<Recurrence>(initialTask?.recurrence || 'none');
-  const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(
-    initialTask?.status || (initialTask?.completed ? 'completed' : 'todo')
+  const [status, setStatus] = useState<TaskStatus>(() =>
+    normalizeTaskStatus(initialTask?.status, initialTask?.completed)
   );
   const [subtasks, setSubtasks] = useState<Subtask[]>(
     initialTask?.subtasks ? [...initialTask.subtasks] : []
@@ -337,17 +338,40 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   const handleToggleCompleteInView = () => {
     if (!initialTask) return;
     soundManager.playCompleteSound();
-    if (onToggleComplete) {
+    const targetStatus: TaskStatus = initialTask.completed ? 'todo' : 'completed';
+    if (onUpdateTaskStatus) {
+      onUpdateTaskStatus(initialTask.id, targetStatus);
+      onClose();
+    } else if (onToggleComplete) {
       onToggleComplete(initialTask.id);
       onClose();
     } else {
-      const newCompleted = !initialTask.completed;
       onSaveTask({
         id: initialTask.id,
-        completed: newCompleted,
-        status: newCompleted ? 'completed' : 'todo',
+        completed: targetStatus === 'completed',
+        status: targetStatus,
       });
       onClose();
+    }
+  };
+
+  const handleStatusChangeInView = (nextStatus: TaskStatus) => {
+    if (!initialTask) return;
+    if (nextStatus === 'completed' && !canComplete) return;
+    setStatus(nextStatus);
+    if (nextStatus === 'completed') {
+      soundManager.playCompleteSound();
+    } else {
+      soundManager.playClickSound();
+    }
+    if (onUpdateTaskStatus) {
+      onUpdateTaskStatus(initialTask.id, nextStatus);
+    } else {
+      onSaveTask({
+        id: initialTask.id,
+        status: nextStatus,
+        completed: nextStatus === 'completed',
+      });
     }
   };
 
@@ -414,17 +438,15 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                     >
                       {priorityConfig.label}
                     </span>
-                    {initialTask?.completed ? (
-                      <Badge className="bg-emerald-500 text-slate-950 font-bold text-[10px]">
-                        Terminée
-                      </Badge>
-                    ) : isOverdue ? (
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] font-bold ${TASK_STATUS_CONFIG[status].badgeClass}`}
+                    >
+                      {TASK_STATUS_CONFIG[status].label}
+                    </Badge>
+                    {isOverdue && status !== 'completed' && (
                       <Badge variant="destructive" className="bg-rose-600 text-white font-bold text-[10px]">
                         En retard
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-emerald-300 border-emerald-500/40 text-[10px]">
-                        {status === 'in_progress' ? 'En cours' : 'À faire'}
                       </Badge>
                     )}
                   </div>
@@ -661,25 +683,45 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
             </div>
 
             {/* Footer Consultation Actions */}
-            <div className="p-4 bg-emerald-950/80 border-t border-emerald-500/20 flex items-center justify-between gap-2.5 sticky bottom-0 backdrop-blur-md">
-              <div className="flex items-center gap-2">
+            <div className="p-4 bg-emerald-950/80 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2.5 sticky bottom-0 backdrop-blur-md">
+              <div className="flex flex-wrap items-center gap-2">
+                {initialTask && (canEdit || canComplete) && (
+                  <select
+                    aria-label="Statut de la tâche"
+                    value={status}
+                    onChange={(e) => handleStatusChangeInView(e.target.value as TaskStatus)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-hidden cursor-pointer ${TASK_STATUS_CONFIG[status].selectClass}`}
+                  >
+                    {TASK_STATUS_ORDER.map((statusOption) => (
+                      <option
+                        key={statusOption}
+                        value={statusOption}
+                        disabled={statusOption === 'completed' && !canComplete}
+                        className="bg-slate-900 text-white"
+                      >
+                        {TASK_STATUS_CONFIG[statusOption].label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
                 {canComplete && initialTask && (
                   <Button
                     type="button"
                     size="sm"
                     onClick={handleToggleCompleteInView}
                     className={`font-bold text-xs gap-1.5 cursor-pointer rounded-xl ${
-                      initialTask.completed
+                      status === 'completed'
                         ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                         : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400 shadow-md'
                     }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{initialTask.completed ? 'Rouvrir la tâche' : 'Marquer comme terminée'}</span>
+                    <span>{status === 'completed' ? 'Rouvrir la tâche' : 'Marquer comme terminée'}</span>
                   </Button>
                 )}
 
-                {onPostponeTask && initialTask && !initialTask.completed && (
+                {onPostponeTask && initialTask && status !== 'completed' && (
                   <Button
                     type="button"
                     variant="outline"
@@ -1132,12 +1174,19 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
                       </label>
                       <select
                         value={status}
-                        onChange={(e) => setStatus(e.target.value as any)}
+                        onChange={(e) => setStatus(e.target.value as TaskStatus)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-xs text-white focus:ring-2 focus:ring-emerald-400/50 outline-hidden font-medium"
                       >
-                        <option value="todo" className="bg-slate-900 text-white">À faire</option>
-                        <option value="in_progress" className="bg-slate-900 text-white">En cours</option>
-                        <option value="completed" className="bg-slate-900 text-white">Terminée</option>
+                        {TASK_STATUS_ORDER.map((statusOption) => (
+                          <option
+                            key={statusOption}
+                            value={statusOption}
+                            disabled={statusOption === 'completed' && !canComplete}
+                            className="bg-slate-900 text-white"
+                          >
+                            {TASK_STATUS_CONFIG[statusOption].label}
+                          </option>
+                        ))}
                       </select>
                     </div>
 

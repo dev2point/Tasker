@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { realtimeHub, RealtimeEventType, RealtimeActor } from '@/lib/realtime-hub';
+import {
+  realtimeHub,
+  RealtimeEventType,
+  RealtimeActor,
+  canReceiveRealtimeEvent,
+} from '@/lib/realtime-hub';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -9,6 +14,15 @@ export const runtime = 'nodejs';
  * Server-Sent Events (SSE) stream endpoint for real-time collaborative updates.
  */
 export async function GET(req: NextRequest) {
+  let authUser: { id: string; role: string } | null = null;
+  try {
+    const { getAuthenticatedUser } = await import('@/lib/auth-server');
+    authUser = await getAuthenticatedUser(req);
+  } catch {
+    authUser = null;
+  }
+  const viewer = authUser ? { id: authUser.id, role: authUser.role } : null;
+
   const encoder = new TextEncoder();
   const subscriberId = `sub-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
@@ -20,6 +34,11 @@ export async function GET(req: NextRequest) {
       // 1. Send initial CONNECTED handshake event
       const nowIso = new Date().toISOString();
       const initId = `init-${Date.now()}`;
+      const filteredRecent = realtimeHub
+        .getRecentEvents()
+        .filter((evt) => canReceiveRealtimeEvent(evt, viewer))
+        .slice(-10);
+
       const initialPayload = {
         id: initId,
         type: 'CONNECTED' as const,
@@ -30,16 +49,19 @@ export async function GET(req: NextRequest) {
         subscriberId,
         connectedAt: nowIso,
         activePresence: realtimeHub.getActivePresence(),
-        recentEvents: realtimeHub.getRecentEvents().slice(-10),
+        recentEvents: filteredRecent,
       };
 
       controller.enqueue(
         encoder.encode(`id: ${initId}\nevent: CONNECTED\ndata: ${JSON.stringify(initialPayload)}\n\n`)
       );
 
-      // 2. Subscribe to the real-time event bus
+      // 2. Subscribe to the real-time event bus with strict recipient isolation
       unsubscribe = realtimeHub.subscribe(subscriberId, (event) => {
         try {
+          if (!canReceiveRealtimeEvent(event, viewer)) {
+            return;
+          }
           const sseMessage = `id: ${event.id}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(encoder.encode(sseMessage));
         } catch {

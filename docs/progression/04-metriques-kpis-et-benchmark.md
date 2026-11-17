@@ -1,6 +1,6 @@
 ---
-Jour: Mercredi 4 Novembre 2026 (2026-11-04)
-Heure de la dernière modif: 06:40:00 PST (14:40:00 UTC)
+Jour: Mardi 17 Novembre 2026 (2026-11-17)
+Heure de la dernière modif: 13:15:00 CET (12:15:00 UTC)
 Auteur: niceboy
 Module: Métriques Métier, KPIs & Benchmark de Performance
 ---
@@ -39,10 +39,10 @@ Dans un contexte fiscal soumis à une forte saisonnalité (période fiscale de c
            │                                                   │
            ▼                                                   ▼
 +------------------------------------+ +------------------------------------+
-|       components/StatsView.tsx     | |    components/BenchmarkModal.tsx   |
+|       components/StatsView.tsx     | |    tests/load-performance.test.ts  |
 |  - Graphiques de répartition       | |  - Écarts relatifs aux standards   |
-|  - Taux d'achèvement temps réel    | |  - Recommandations d'optimisation  |
-|  - Suivi des charges par pôle      | |  - Simulation de gains de vélocité |
+|  - Répartition sur les 4 statuts   | |  - Banc de charge 10 000 tâches    |
+|  - Suivi des charges par pôle      | |  - Audit latence p95 & mémoire     |
 +------------------------------------+ +------------------------------------+
 ```
 
@@ -63,6 +63,7 @@ Dans un contexte fiscal soumis à une forte saisonnalité (période fiscale de c
   - Suppression de l'onglet et du bouton « Tests de charge » de la Sidebar et du Header.
   - Suppression du composant d'interface `BenchmarkModal.tsx`.
   - Confinement de la validation volumétrique au backend et à la suite automatisée Vitest (`tests/load-performance.test.ts`).
+- **Phase 6 (17/11/2026) :** Ajout dans `StatsView.tsx` du panneau *Cycle de vie des tâches* exposant la répartition en temps réel des tâches sur les 4 statuts (`Non démarrée`, `En cours`, `En attente`, `Terminée`) via `normalizeTaskStatus`, avec compteurs `tabular-nums` et jauges proportionnelles.
 
 ---
 

@@ -1,4 +1,5 @@
 import { Task } from '@/types/task';
+import { normalizeTaskStatus } from '@/lib/constants';
 
 export function toValidDateOrNull(value: unknown): Date | null {
   if (!value) return null;
@@ -19,7 +20,8 @@ export function sanitizeTaskForPostgres(
 ) {
   const now = new Date();
   const todayFallback = now.toISOString().split('T')[0];
-  const completed = Boolean(taskData.completed);
+  const safeStatus = normalizeTaskStatus(taskData.status, Boolean(taskData.completed));
+  const completed = safeStatus === 'completed';
   const completedAt = completed ? toValidDateOrNull(taskData.completedAt) ?? now : null;
   const reminderTriggered = Boolean(taskData.reminderTriggered);
   const reminderTriggeredAt = toValidDateOrNull(taskData.reminderTriggeredAt);
@@ -30,7 +32,6 @@ export function sanitizeTaskForPostgres(
   const safeDueDate = String(taskData.dueDate || todayFallback).slice(0, 32);
   const safeDueTime = taskData.dueTime ? String(taskData.dueTime).slice(0, 16) : null;
   const safePriority = String(taskData.priority || 'medium').slice(0, 32);
-  const safeStatus = String(taskData.status || (completed ? 'completed' : 'todo')).slice(0, 32);
   const safeCategory = String(taskData.category || 'work').slice(0, 64);
   const safeRecurrence = String(taskData.recurrence || 'none').slice(0, 32);
   const safeColor = taskData.color ? String(taskData.color).slice(0, 32) : null;

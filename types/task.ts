@@ -1,5 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
+export type TaskStatus = 'todo' | 'in_progress' | 'waiting' | 'completed';
+
 export type Recurrence = 'none' | 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'yearly';
 
 export interface Subtask {
@@ -37,7 +39,7 @@ export interface Task {
   tags: string[];
   subtasks: Subtask[];
   color?: string;
-  status?: 'todo' | 'in_progress' | 'completed';
+  status?: TaskStatus;
   trackedFiles?: import('./file-version').TrackedFile[];
 }
 
@@ -66,7 +68,15 @@ export interface TaskNotification {
   dueTime?: string;
   triggerTime: string;
   read: boolean;
-  type: 'due' | 'reminder' | 'overdue' | 'admin_update' | 'admin_completed' | 'admin_delete' | 'assigned';
+  type:
+    | 'due'
+    | 'reminder'
+    | 'overdue'
+    | 'admin_update'
+    | 'admin_completed'
+    | 'admin_delete'
+    | 'assigned'
+    | 'task_completed';
   targetUserId?: string;
   actionBy?: string;
   actionByName?: string;
@@ -76,6 +86,16 @@ export interface TaskNotification {
 
 export type ViewMode = 'list' | 'calendar' | 'kanban' | 'stats' | 'admin' | 'review';
 export type CalendarViewType = 'month' | 'week' | 'day';
-export type FilterType = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed' | 'urgent';
+export type FilterType =
+  | 'all'
+  | 'today'
+  | 'upcoming'
+  | 'overdue'
+  | 'completed'
+  | 'urgent'
+  | 'todo'
+  | 'in_progress'
+  | 'waiting';
 export type GroupByType = 'none' | 'dueDate' | 'priority' | 'category' | 'status' | 'tag';
+
 

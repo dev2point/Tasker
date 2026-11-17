@@ -22,21 +22,24 @@ import {
   X,
   SlidersHorizontal,
   FolderPlus,
-  Hash,
   FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Task, Category, Priority, FilterType, GroupByType } from '@/types/task';
-import { PRIORITY_CONFIG } from '@/lib/constants';
+import { Task, Category, Priority, FilterType, GroupByType, TaskStatus } from '@/types/task';
+import {
+  PRIORITY_CONFIG,
+  TASK_STATUS_ORDER,
+  TASK_STATUS_CONFIG,
+  normalizeTaskStatus,
+} from '@/lib/constants';
 import { isTaskOverdue, formatDueDateFrench } from '@/lib/reminders';
 import { soundManager } from '@/lib/sound';
-import { CategoryIcon, getTagColor } from '@/components/CategoryIcon';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { TaskScrollList } from '@/components/TaskScrollList';
 import { User } from '@/types/user';
-import { canUserCompleteTask, canUserDeleteTask } from '@/lib/rbac';
+import { canUserCompleteTask, canUserDeleteTask, canUserEditTask } from '@/lib/rbac';
 import {
   getDefaultDueDateTime,
   getMinDateStr,
@@ -49,6 +52,7 @@ interface ListViewProps {
   categories: Category[];
   onOpenTaskModal: (task?: Task, mode?: 'view' | 'edit') => void;
   onToggleComplete: (taskId: string) => void;
+  onUpdateTaskStatus?: (taskId: string, newStatus: TaskStatus) => void;
   onDeleteTask: (taskId: string) => void;
   onDuplicateTask: (task: Task) => void;
   onQuickAdd: (title: string, dueDate: string, dueTime?: string, category?: string) => void;
@@ -63,6 +67,7 @@ export const ListView: React.FC<ListViewProps> = ({
   categories,
   onOpenTaskModal,
   onToggleComplete,
+  onUpdateTaskStatus,
   onDeleteTask,
   onDuplicateTask,
   onQuickAdd,
@@ -165,6 +170,7 @@ export const ListView: React.FC<ListViewProps> = ({
 
     return tasks.filter((task) => {
       // 1. Completion / status filter
+      const normalizedStatus = normalizeTaskStatus(task.status, task.completed);
       if (activeFilter === 'today' && (task.dueDate !== todayStr || task.completed)) {
         return false;
       }
@@ -174,7 +180,16 @@ export const ListView: React.FC<ListViewProps> = ({
       if (activeFilter === 'overdue' && !isTaskOverdue(task)) {
         return false;
       }
-      if (activeFilter === 'completed' && !task.completed) {
+      if (activeFilter === 'completed' && normalizedStatus !== 'completed') {
+        return false;
+      }
+      if (activeFilter === 'todo' && normalizedStatus !== 'todo') {
+        return false;
+      }
+      if (activeFilter === 'in_progress' && normalizedStatus !== 'in_progress') {
+        return false;
+      }
+      if (activeFilter === 'waiting' && normalizedStatus !== 'waiting') {
         return false;
       }
       if (activeFilter === 'urgent' && (task.priority !== 'urgent' || task.completed)) {
@@ -363,6 +378,20 @@ export const ListView: React.FC<ListViewProps> = ({
       return result;
     }
 
+    if (groupBy === 'status') {
+      return TASK_STATUS_ORDER.map((statusId) => {
+        const cfg = TASK_STATUS_CONFIG[statusId];
+        return {
+          id: `status-${statusId}`,
+          title: cfg.label,
+          tasks: sortedTasks.filter(
+            (t) => normalizeTaskStatus(t.status, t.completed) === statusId
+          ),
+          badge: cfg.badgeClass,
+        };
+      }).filter((g) => g.tasks.length > 0);
+    }
+
     return [{ id: 'all', title: 'Tâches', tasks: sortedTasks }];
   }, [sortedTasks, groupBy, categories]);
 
@@ -386,6 +415,40 @@ export const ListView: React.FC<ListViewProps> = ({
     onToggleComplete(taskId);
   };
 
+  const handleStatusSelectChange = (task: Task, newStatus: TaskStatus) => {
+    const currentStatus = normalizeTaskStatus(task.status, task.completed);
+    if (currentStatus === newStatus) return;
+
+    if (currentUser) {
+      if (newStatus === 'completed' && !canUserCompleteTask(task, currentUser)) {
+        soundManager.playClickSound();
+        return;
+      }
+      if (!canUserEditTask(task, currentUser) && !canUserCompleteTask(task, currentUser)) {
+        soundManager.playClickSound();
+        return;
+      }
+    }
+
+    if (newStatus === 'completed') {
+      soundManager.playCompleteSound();
+      confetti({
+        particleCount: 45,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#10B981', '#34D399', '#6EE7B7'],
+      });
+    } else {
+      soundManager.playClickSound();
+    }
+
+    if (onUpdateTaskStatus) {
+      onUpdateTaskStatus(task.id, newStatus);
+    } else if (newStatus === 'completed' || currentStatus === 'completed') {
+      onToggleComplete(task.id);
+    }
+  };
+
   const filterCounts = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
     return {
@@ -393,7 +456,10 @@ export const ListView: React.FC<ListViewProps> = ({
       today: tasks.filter((t) => t.dueDate === todayStr && !t.completed).length,
       upcoming: tasks.filter((t) => t.dueDate > todayStr && !t.completed).length,
       overdue: tasks.filter((t) => isTaskOverdue(t)).length,
-      completed: tasks.filter((t) => t.completed).length,
+      todo: tasks.filter((t) => normalizeTaskStatus(t.status, t.completed) === 'todo').length,
+      in_progress: tasks.filter((t) => normalizeTaskStatus(t.status, t.completed) === 'in_progress').length,
+      waiting: tasks.filter((t) => normalizeTaskStatus(t.status, t.completed) === 'waiting').length,
+      completed: tasks.filter((t) => normalizeTaskStatus(t.status, t.completed) === 'completed').length,
       urgent: tasks.filter((t) => t.priority === 'urgent' && !t.completed).length,
     };
   }, [tasks]);
@@ -517,6 +583,9 @@ export const ListView: React.FC<ListViewProps> = ({
               { id: 'upcoming', label: 'À venir', count: filterCounts.upcoming },
               { id: 'overdue', label: 'En retard', count: filterCounts.overdue, alert: filterCounts.overdue > 0 },
               { id: 'urgent', label: 'Urgentes', count: filterCounts.urgent },
+              { id: 'todo', label: 'Non démarrée', count: filterCounts.todo },
+              { id: 'in_progress', label: 'En cours', count: filterCounts.in_progress },
+              { id: 'waiting', label: 'En attente', count: filterCounts.waiting },
               { id: 'completed', label: 'Terminées', count: filterCounts.completed },
             ].map((f) => {
               const active = activeFilter === f.id;
@@ -649,6 +718,7 @@ export const ListView: React.FC<ListViewProps> = ({
               className="bg-transparent text-xs font-semibold text-slate-300 outline-hidden pr-1 cursor-pointer max-w-[130px] truncate"
             >
               <option value="dueDate" className="bg-slate-900 text-white">Grouper: Date</option>
+              <option value="status" className="bg-slate-900 text-white">Grouper: Statut</option>
               <option value="category" className="bg-slate-900 text-white">Grouper: Pôle</option>
               <option value="tag" className="bg-slate-900 text-white">Grouper: Tag</option>
               <option value="priority" className="bg-slate-900 text-white">Grouper: Priorité</option>
@@ -726,7 +796,12 @@ export const ListView: React.FC<ListViewProps> = ({
                     const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
                     const isOverdue = isTaskOverdue(task);
                     const isExpanded = Boolean(expandedTasks[task.id]);
+                    const taskStatus = normalizeTaskStatus(task.status, task.completed);
+                    const statusCfg = TASK_STATUS_CONFIG[taskStatus];
                     const canComplete = canUserCompleteTask(task, currentUser || null);
+                    const canEditStatus = currentUser
+                      ? canUserEditTask(task, currentUser) || canComplete
+                      : true;
                     const canDelete = canUserDeleteTask(task, currentUser || null);
                     const completedSubtasks = task.subtasks?.filter((s) => s.completed).length || 0;
                     const totalSubtasks = task.subtasks?.length || 0;
@@ -909,14 +984,35 @@ export const ListView: React.FC<ListViewProps> = ({
                             </div>
                           </div>
 
-                          {/* Quick Actions (Linear-Style Hover Buttons) */}
-                          <div className="flex items-center gap-1 shrink-0 self-start sm:self-center opacity-85 group-hover:opacity-100 transition-opacity">
+                          {/* Quick Actions (Status Selector + Linear-Style Hover Buttons) */}
+                          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-center opacity-90 group-hover:opacity-100 transition-opacity">
+                            <select
+                              aria-label={`Statut de ${task.title}`}
+                              value={taskStatus}
+                              disabled={!canEditStatus || !onUpdateTaskStatus}
+                              onChange={(e) =>
+                                handleStatusSelectChange(task, e.target.value as TaskStatus)
+                              }
+                              className={`px-2 py-1 rounded-lg border text-[11px] font-semibold outline-hidden cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${statusCfg.selectClass}`}
+                            >
+                              {TASK_STATUS_ORDER.map((statusOption) => (
+                                <option
+                                  key={statusOption}
+                                  value={statusOption}
+                                  disabled={statusOption === 'completed' && !canComplete}
+                                  className="bg-slate-900 text-white"
+                                >
+                                  {TASK_STATUS_CONFIG[statusOption].label}
+                                </option>
+                              ))}
+                            </select>
+
                             {!task.completed && (
                               <button
                                 type="button"
                                 onClick={() => onPostponeTask(task.id, 1)}
                                 title="Reporter à demain (+1 jour)"
-                                className="px-2 py-0.5 rounded text-slate-300 hover:text-white hover:bg-emerald-500/20 transition-colors font-mono text-[11px] font-semibold border border-emerald-500/20 cursor-pointer"
+                                className="px-2 py-0.5 rounded text-slate-300 hover:text-white hover:bg-emerald-500/20 transition-colors font-mono text-[11px] font-semibold border border-emerald-500/20 cursor-pointer shrink-0"
                               >
                                 +1j
                               </button>

@@ -1,4 +1,4 @@
-import { Category, Priority, Task } from '@/types/task';
+import { Category, Priority, Task, TaskStatus } from '@/types/task';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
@@ -95,7 +95,78 @@ export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; b
   },
 };
 
+export const TASK_STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'waiting', 'completed'];
+
+export const TASK_STATUS_CONFIG: Record<
+  TaskStatus,
+  {
+    value: TaskStatus;
+    label: string;
+    shortLabel: string;
+    dotColor: string;
+    accentBorder: string;
+    textColor: string;
+    selectClass: string;
+    badgeClass: string;
+  }
+> = {
+  todo: {
+    value: 'todo',
+    label: 'Non démarrée',
+    shortLabel: 'Non démarrée',
+    dotColor: 'bg-slate-400',
+    accentBorder: 'border-t-slate-400/80',
+    textColor: 'text-slate-300',
+    selectClass: 'border-slate-500/35 bg-slate-900/80 text-slate-200',
+    badgeClass: 'bg-slate-900/80 text-slate-200 border-slate-500/40',
+  },
+  in_progress: {
+    value: 'in_progress',
+    label: 'En cours',
+    shortLabel: 'En cours',
+    dotColor: 'bg-emerald-400',
+    accentBorder: 'border-t-emerald-500/80',
+    textColor: 'text-emerald-300',
+    selectClass: 'border-emerald-500/40 bg-emerald-950/80 text-emerald-200',
+    badgeClass: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40',
+  },
+  waiting: {
+    value: 'waiting',
+    label: 'En attente',
+    shortLabel: 'En attente',
+    dotColor: 'bg-amber-400',
+    accentBorder: 'border-t-amber-500/80',
+    textColor: 'text-amber-300',
+    selectClass: 'border-amber-500/40 bg-amber-950/70 text-amber-200',
+    badgeClass: 'bg-amber-950/80 text-amber-300 border-amber-500/40',
+  },
+  completed: {
+    value: 'completed',
+    label: 'Terminée',
+    shortLabel: 'Terminée',
+    dotColor: 'bg-teal-400',
+    accentBorder: 'border-t-teal-400/80',
+    textColor: 'text-teal-300',
+    selectClass: 'border-teal-500/40 bg-teal-950/80 text-teal-200',
+    badgeClass: 'bg-teal-500/20 text-teal-200 border-teal-400/40',
+  },
+};
+
+export function normalizeTaskStatus(status?: string | null, completed?: boolean): TaskStatus {
+  if (completed || status === 'completed') {
+    return 'completed';
+  }
+  if (status === 'in_progress') {
+    return 'in_progress';
+  }
+  if (status === 'waiting') {
+    return 'waiting';
+  }
+  return 'todo';
+}
+
 // Default tasks are empty; tasks are fetched strictly from the database
 export function getInitialSampleTasks(): Task[] {
   return [];
 }
+

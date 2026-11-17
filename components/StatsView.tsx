@@ -2,22 +2,22 @@
 
 import React, { useMemo } from 'react';
 import {
-  CheckCircle2,
   Clock,
   Bell,
   AlertTriangle,
   TrendingUp,
   Award,
-  Calendar,
   Layers,
-  Flame,
-  FileText,
   Printer,
 } from 'lucide-react';
 import { Task, Category, Priority } from '@/types/task';
-import { PRIORITY_CONFIG } from '@/lib/constants';
+import {
+  PRIORITY_CONFIG,
+  TASK_STATUS_ORDER,
+  TASK_STATUS_CONFIG,
+  normalizeTaskStatus,
+} from '@/lib/constants';
 import { isTaskOverdue, formatDueDateFrench, getReminderTriggerTime } from '@/lib/reminders';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -78,6 +78,23 @@ export const StatsView: React.FC<StatsViewProps> = ({
       };
     });
   }, [tasks]);
+
+  // Lifecycle Status distribution
+  const statusStats = useMemo(() => {
+    return TASK_STATUS_ORDER.map((statusId) => {
+      const cfg = TASK_STATUS_CONFIG[statusId];
+      const count = tasks.filter(
+        (t) => normalizeTaskStatus(t.status, t.completed) === statusId
+      ).length;
+      const pct = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
+      return {
+        statusId,
+        cfg,
+        count,
+        pct,
+      };
+    });
+  }, [tasks, totalTasks]);
 
   // Upcoming reminders timeline
   const upcomingRemindersList = useMemo(() => {
@@ -264,6 +281,43 @@ export const StatsView: React.FC<StatsViewProps> = ({
               }`}
             />
           </div>
+        </div>
+      </div>
+
+      {/* Lifecycle Status Summary Strip */}
+      <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-3">
+        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2.5">
+          <h3 className="font-bold text-sm text-white">Cycle de vie des tâches</h3>
+          <span className="text-xs text-slate-400 font-mono tabular-nums">
+            {totalTasks} tâche{totalTasks > 1 ? 's' : ''}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {statusStats.map(({ statusId, cfg, count, pct }) => (
+            <div
+              key={statusId}
+              className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 space-y-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor}`} />
+                  <span className="text-xs font-semibold text-slate-200 truncate">
+                    {cfg.label}
+                  </span>
+                </div>
+                <span className="text-sm font-extrabold font-mono tabular-nums text-white shrink-0">
+                  {count}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-emerald-950 rounded-full overflow-hidden border border-emerald-500/20">
+                <div
+                  className={`h-full rounded-full ${cfg.dotColor}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

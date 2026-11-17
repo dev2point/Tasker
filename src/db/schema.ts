@@ -156,7 +156,7 @@ export const tasks = pgTable('tasks', {
   dueDate: varchar('due_date', { length: 32 }).notNull(),
   dueTime: varchar('due_time', { length: 16 }),
   priority: varchar('priority', { length: 32 }).notNull().default('medium'), // 'low' | 'medium' | 'high' | 'urgent'
-  status: varchar('status', { length: 32 }).notNull().default('todo'), // 'todo' | 'in_progress' | 'completed'
+  status: varchar('status', { length: 32 }).notNull().default('todo'), // 'todo' | 'in_progress' | 'waiting' | 'completed'
   category: varchar('category', { length: 64 }).notNull().default('work'),
   completed: boolean('completed').default(false).notNull(),
   completedAt: timestamp('completed_at'),
@@ -246,11 +246,53 @@ export const activityLogs = pgTable('activity_logs', {
   }),
 ]).enableRLS();
 
+// 7. Persistent User Notifications Table (with RLS policies)
+export const notifications = pgTable('notifications', {
+  id: varchar('id', { length: 96 }).primaryKey(),
+  recipientId: text('recipient_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  actorId: text('actor_id').references(() => users.id, { onDelete: 'set null' }),
+  actorName: varchar('actor_name', { length: 255 }),
+  taskId: varchar('task_id', { length: 64 }).notNull(),
+  taskTitle: varchar('task_title', { length: 500 }).notNull(),
+  dueDate: varchar('due_date', { length: 32 }).notNull(),
+  dueTime: varchar('due_time', { length: 16 }),
+  type: varchar('type', { length: 32 }).notNull(),
+  message: text('message'),
+  read: boolean('read').default(false).notNull(),
+  triggerTime: timestamp('trigger_time').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, () => [
+  pgPolicy('notifications_select_policy', {
+    for: 'select',
+    to: 'public',
+    using: sql`true`,
+  }),
+  pgPolicy('notifications_insert_policy', {
+    for: 'insert',
+    to: 'public',
+    withCheck: sql`true`,
+  }),
+  pgPolicy('notifications_update_policy', {
+    for: 'update',
+    to: 'public',
+    using: sql`true`,
+    withCheck: sql`true`,
+  }),
+  pgPolicy('notifications_delete_policy', {
+    for: 'delete',
+    to: 'public',
+    using: sql`true`,
+  }),
+]).enableRLS();
+
 // Relational Definitions
 export const usersRelations = relations(users, ({ many }) => ({
   createdTasks: many(tasks, { relationName: 'creator' }),
   assignedTasks: many(tasks, { relationName: 'assignee' }),
   memberships: many(workspaceMembers),
+  receivedNotifications: many(notifications),
 }));
 
 export const tasksRelations = relations(tasks, ({ one, many }) => ({

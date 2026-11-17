@@ -12,7 +12,10 @@ export type RealtimeEventType =
   | 'DOSSIER_UNLOCKED'
   | 'DOSSIER_CONFLICT'
   | 'PRESENCE_CHANGED'
-  | 'TASK_UPDATED';
+  | 'TASK_UPDATED'
+  | 'TASK_ASSIGNED'
+  | 'TASK_COMPLETED'
+  | 'TASK_DELETED';
 
 export interface RealtimeActor {
   id: string;
@@ -29,6 +32,8 @@ export interface RealtimeEvent {
   actor: RealtimeActor;
   targetId?: string;
   targetRef?: string;
+  targetUserId?: string;
+  visibleToUserIds?: string[];
   message: string;
   payload?: any;
 }
@@ -71,9 +76,29 @@ export function normalizeRealtimeEvent(
     actor: candidate.actor || { id: 'system', name: 'Système' },
     targetId: candidate.targetId,
     targetRef: candidate.targetRef,
+    targetUserId: candidate.targetUserId,
+    visibleToUserIds: Array.isArray(candidate.visibleToUserIds)
+      ? candidate.visibleToUserIds
+      : undefined,
     message: typeof candidate.message === 'string' ? candidate.message : '',
     payload: candidate.payload,
   };
+}
+
+export function canReceiveRealtimeEvent(
+  event: Partial<RealtimeEvent> | null | undefined,
+  viewer: { id?: string | null; role?: string | null } | null | undefined
+): boolean {
+  if (!event) return false;
+  if (event.targetUserId) {
+    return Boolean(viewer?.id && viewer.id === event.targetUserId);
+  }
+  if (Array.isArray(event.visibleToUserIds) && event.visibleToUserIds.length > 0) {
+    if (!viewer?.id) return false;
+    if (viewer.role === 'admin') return true;
+    return event.visibleToUserIds.includes(viewer.id);
+  }
+  return true;
 }
 
 export function shouldSurfaceRealtimeAlert(event: Partial<RealtimeEvent> | null | undefined): boolean {
@@ -90,6 +115,10 @@ export function formatRealtimeAlertType(type: unknown): string {
   if (typeof type !== 'string' || !type.trim()) {
     return 'NOTIFICATION';
   }
+  if (type === 'TASK_ASSIGNED') return 'TÂCHE ASSIGNÉE';
+  if (type === 'TASK_COMPLETED') return 'TÂCHE TERMINÉE';
+  if (type === 'TASK_UPDATED') return 'TÂCHE MISE À JOUR';
+  if (type === 'TASK_DELETED') return 'TÂCHE SUPPRIMÉE';
   return type.replace(/^DOSSIER_/, '').replace(/_/g, ' ').trim() || 'NOTIFICATION';
 }
 
@@ -142,6 +171,8 @@ class RealtimeEventHub {
       actor: eventData.actor,
       targetId: eventData.targetId,
       targetRef: eventData.targetRef,
+      targetUserId: eventData.targetUserId,
+      visibleToUserIds: eventData.visibleToUserIds,
       message: eventData.message,
       payload: eventData.payload,
     };

@@ -40,6 +40,7 @@ import {
   mapSessionUserToDomainUser,
 } from '@/lib/auth-lifecycle';
 import {
+  canUserViewTask,
   canUserCompleteTask,
   canUserEditTask,
   canUserDeleteTask,
@@ -48,7 +49,7 @@ import {
   buildAdminActionNotification,
 } from '@/lib/rbac';
 
-import { Task, TaskNotification, ViewMode } from '@/types/task';
+import { Task, TaskNotification, TaskStatus, ViewMode } from '@/types/task';
 import { User } from '@/types/user';
 import {
   evaluateReminders,
@@ -61,6 +62,9 @@ import {
 import { soundManager } from '@/lib/sound';
 import { usePlanitStore } from '@/lib/usePlanitStore';
 import { getDefaultDueDateTime, isDueDateTimeInPast } from '@/lib/due-date-utils';
+import { normalizeTaskStatus } from '@/lib/constants';
+import { mergeNotificationsById } from '@/lib/notifications-helper';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 export interface HomeWorkspaceProps {
   initialSession: InitialAuthSession | null;
@@ -348,9 +352,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
 
     const loadRemoteData = async () => {
       try {
-        const [usersRes, tasksRes] = await Promise.all([
+        const [usersRes, tasksRes, notifsRes] = await Promise.all([
           fetch('/api/users').catch(() => null),
           fetch('/api/tasks').catch(() => null),
+          fetch('/api/notifications').catch(() => null),
         ]);
 
         if (isCancelled) return;
@@ -368,6 +373,15 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
             setTasks(tasksData.tasks);
           }
         }
+
+        if (notifsRes && notifsRes.ok) {
+          const notifsData = await notifsRes.json().catch(() => null);
+          if (notifsData?.notifications && Array.isArray(notifsData.notifications)) {
+            setNotifications((prev) =>
+              mergeNotificationsById(prev, notifsData.notifications as TaskNotification[])
+            );
+          }
+        }
       } catch (err) {
         console.warn('Notice: Remote database synchronization deferred:', err);
       }
@@ -378,7 +392,67 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     return () => {
       isCancelled = true;
     };
-  }, [isMounted, authenticatedUserId, setTasks]);
+  }, [isMounted, authenticatedUserId, setTasks, setNotifications]);
+
+  // Real-time SSE listener for task assignments, reassignments, completions & live updates
+  useRealtimeEvents({
+    enabled: Boolean(authenticatedUserId && effectiveAuthPhase === 'authenticated'),
+    currentUserId: currentUser?.id,
+    currentUserRole: currentUser?.role,
+    enableSounds: soundEnabled,
+    onEvent: (event) => {
+      if (!currentUser) return;
+
+      if (
+        event.type === 'TASK_ASSIGNED' ||
+        event.type === 'TASK_COMPLETED' ||
+        event.type === 'TASK_UPDATED'
+      ) {
+        const incomingTask = event.payload?.task as Task | undefined;
+        if (incomingTask?.id) {
+          setTasks((prev) => {
+            const exists = prev.some((t) => t.id === incomingTask.id);
+            const canView = canUserViewTask(incomingTask, currentUser);
+            if (!canView) {
+              return exists ? prev.filter((t) => t.id !== incomingTask.id) : prev;
+            }
+            if (exists) {
+              return prev.map((t) => (t.id === incomingTask.id ? incomingTask : t));
+            }
+            return [incomingTask, ...prev];
+          });
+        }
+      }
+
+      if (event.type === 'TASK_DELETED') {
+        const deletedTaskId = event.targetId || event.payload?.taskId;
+        if (deletedTaskId) {
+          setTasks((prev) => prev.filter((t) => t.id !== deletedTaskId));
+        }
+      }
+
+      if (
+        (event.type === 'TASK_ASSIGNED' || event.type === 'TASK_COMPLETED') &&
+        event.targetUserId === currentUser.id
+      ) {
+        const incomingNotif = event.payload?.notification as TaskNotification | undefined;
+        if (incomingNotif?.id) {
+          setNotifications((prev) => mergeNotificationsById(prev, [incomingNotif]));
+        }
+
+        if (event.actor?.id !== currentUser.id) {
+          const browserTitle =
+            event.type === 'TASK_ASSIGNED'
+              ? `📌 Tâche assignée : ${incomingNotif?.taskTitle || 'Nouvelle tâche'}`
+              : `✅ Tâche terminée : ${incomingNotif?.taskTitle || 'Tâche finalisée'}`;
+          sendBrowserNotification(browserTitle, {
+            body: event.message || incomingNotif?.message || '',
+            tag: incomingNotif?.id || event.id,
+          });
+        }
+      }
+    },
+  });
 
   // Update sound manager & permissions on change after mount
   useEffect(() => {
@@ -389,17 +463,28 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
   }, [soundEnabled, isMounted]);
 
   // Database persistence helpers
-  const persistTaskToDb = useCallback(async (task: Task) => {
-    try {
-      await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(task),
-      });
-    } catch (err) {
-      console.warn('Notice: Task offline persist deferred:', err);
-    }
-  }, []);
+  const persistTaskToDb = useCallback(
+    async (task: Task) => {
+      try {
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(task),
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data?.task?.id) {
+            setTasks((prev) =>
+              prev.map((t) => (t.id === data.task.id ? (data.task as Task) : t))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Notice: Task offline persist deferred:', err);
+      }
+    },
+    [setTasks]
+  );
 
   const deleteTaskFromDb = useCallback(async (taskId: string) => {
     try {
@@ -524,12 +609,26 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         }
       }
 
-      let updatedTaskObj: Task | null = null;
+          let updatedTaskObj: Task | null = null;
       const updated = tasks.map((t) => {
         if (t.id === taskPayload.id) {
+          const mergedStatus = normalizeTaskStatus(
+            taskPayload.status ?? t.status,
+            taskPayload.completed !== undefined
+              ? Boolean(taskPayload.completed)
+              : taskPayload.status === 'completed'
+              ? true
+              : taskPayload.status !== undefined
+              ? false
+              : t.completed
+          );
+          const mergedCompleted = mergedStatus === 'completed';
           updatedTaskObj = {
             ...t,
             ...taskPayload,
+            status: mergedStatus,
+            completed: mergedCompleted,
+            completedAt: mergedCompleted ? t.completedAt || nowIso : undefined,
             updatedAt: nowIso,
           } as Task;
           return updatedTaskObj;
@@ -553,6 +652,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         return;
       }
 
+      const initialStatus = normalizeTaskStatus(taskPayload.status, Boolean(taskPayload.completed));
       const newTask: Task = {
         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
         title: taskPayload.title || 'Nouvelle tâche',
@@ -561,7 +661,8 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         dueTime: finalDueTime,
         priority: taskPayload.priority || 'medium',
         category: taskPayload.category || 'fiscalite',
-        completed: Boolean(taskPayload.completed),
+        completed: initialStatus === 'completed',
+        completedAt: initialStatus === 'completed' ? nowIso : undefined,
         createdAt: nowIso,
         updatedAt: nowIso,
         creatorId: currentUser?.id,
@@ -577,27 +678,35 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         recurrence: taskPayload.recurrence || 'none',
         tags: taskPayload.tags || [],
         subtasks: taskPayload.subtasks || [],
-        status: taskPayload.status || 'todo',
+        status: initialStatus,
       };
       persistTaskToDb(newTask);
       saveTasks([newTask, ...tasks]);
     }
   };
 
-  // Toggle Task Completion
-  const handleToggleComplete = (taskId: string) => {
+  // Unified Task Status Transition Handler (List, Kanban, TaskModal, Checkbox)
+  const handleUpdateTaskStatus = (taskId: string, newStatus: TaskStatus) => {
     const targetTask = tasks.find((t) => t.id === taskId);
     if (!targetTask) return;
 
-    if (!canUserCompleteTask(targetTask, currentUser)) {
+    const normalizedNext = normalizeTaskStatus(newStatus, newStatus === 'completed');
+    const isCompletionTransition =
+      normalizedNext === 'completed' || targetTask.completed || targetTask.status === 'completed';
+
+    const hasPermission = isCompletionTransition
+      ? canUserCompleteTask(targetTask, currentUser)
+      : canUserEditTask(targetTask, currentUser);
+
+    if (!hasPermission) {
       soundManager.playClickSound();
       sendBrowserNotification('Action non autorisée', {
-        body: "Seul l'assigné, le créateur ou un administrateur peut marquer cette tâche comme terminée.",
+        body: "Vous n'avez pas les droits pour modifier le statut de cette tâche.",
       });
       return;
     }
 
-    if (currentUser?.role === 'admin') {
+    if (currentUser?.role === 'admin' && isCompletionTransition && normalizedNext !== targetTask.status) {
       const isSomeoneElses =
         (targetTask.creatorId && targetTask.creatorId !== currentUser.id) ||
         (targetTask.assigneeId && targetTask.assigneeId !== currentUser.id);
@@ -608,8 +717,8 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
             ? targetTask.assigneeId
             : targetTask.creatorId;
 
-        if (targetId) {
-          const nextCompletedState = !targetTask.completed;
+        if (targetId && targetId !== targetTask.creatorId) {
+          const nextCompletedState = normalizedNext === 'completed';
           const notif = buildAdminActionNotification(
             nextCompletedState ? 'admin_completed' : 'admin_update',
             targetTask,
@@ -622,20 +731,20 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       }
     }
 
+    const nowIso = new Date().toISOString();
+    const isCompleted = normalizedNext === 'completed';
     let newTaskToSpawn: Task | null = null;
     let targetUpdatedTask: Task | null = null;
 
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
-        const nextCompleted = !t.completed;
-        const nowIso = new Date().toISOString();
-
-        if (nextCompleted && t.recurrence && t.recurrence !== 'none') {
+        if (!t.completed && isCompleted && t.recurrence && t.recurrence !== 'none') {
           const nextDate = getNextRecurrenceDate(t.dueDate, t.recurrence);
           newTaskToSpawn = {
             ...t,
             id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
             dueDate: nextDate,
+            status: 'todo',
             completed: false,
             completedAt: undefined,
             reminderTriggered: false,
@@ -647,9 +756,9 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
 
         targetUpdatedTask = {
           ...t,
-          completed: nextCompleted,
-          status: (nextCompleted ? 'completed' : 'todo') as 'completed' | 'todo',
-          completedAt: nextCompleted ? nowIso : undefined,
+          status: normalizedNext,
+          completed: isCompleted,
+          completedAt: isCompleted ? t.completedAt || nowIso : undefined,
           updatedAt: nowIso,
         };
         return targetUpdatedTask;
@@ -666,6 +775,13 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     } else {
       saveTasks(updated);
     }
+  };
+
+  // Toggle Task Completion (delegates to unified status handler)
+  const handleToggleComplete = (taskId: string) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+    handleUpdateTaskStatus(taskId, targetTask.completed ? 'todo' : 'completed');
   };
 
   // Delete Task
@@ -854,33 +970,6 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     soundManager.playClickSound();
   };
 
-  // Update Status in Kanban
-  const handleUpdateTaskStatus = (
-    taskId: string,
-    newStatus: 'todo' | 'in_progress' | 'completed'
-  ) => {
-    const isCompleted = newStatus === 'completed';
-    const nowIso = new Date().toISOString();
-    let targetUpdatedTask: Task | null = null;
-    const updated = tasks.map((t) => {
-      if (t.id === taskId) {
-        targetUpdatedTask = {
-          ...t,
-          status: newStatus,
-          completed: isCompleted,
-          completedAt: isCompleted ? nowIso : undefined,
-          updatedAt: nowIso,
-        };
-        return targetUpdatedTask;
-      }
-      return t;
-    });
-    if (targetUpdatedTask) {
-      persistTaskToDb(targetUpdatedTask);
-    }
-    saveTasks(updated);
-  };
-
   // Snooze Reminder
   const handleSnoozeReminder = (taskId: string, minutes: number) => {
     const snoozeDate = new Date(Date.now() + minutes * 60 * 1000);
@@ -936,14 +1025,32 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     soundManager.playClickSound();
   };
 
-  // Notifications clear / read
+  // Notifications clear / read (synced with PostgreSQL)
+  const handleMarkNotificationRead = (notifId: string) => {
+    const updated = notifications.map((n) => (n.id === notifId ? { ...n, read: true } : n));
+    saveNotifications(updated);
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: notifId, read: true }),
+    }).catch(() => {});
+  };
+
   const handleMarkAllNotificationsRead = () => {
     const updated = notifications.map((n) => ({ ...n, read: true }));
     saveNotifications(updated);
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markAll: true, read: true }),
+    }).catch(() => {});
   };
 
   const handleClearAllNotifications = () => {
     saveNotifications([]);
+    fetch('/api/notifications', {
+      method: 'DELETE',
+    }).catch(() => {});
   };
 
   const handleSelectTaskFromNotification = (taskId: string) => {
@@ -1115,6 +1222,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
               categories={categories}
               onOpenTaskModal={(task, mode) => handleOpenTaskModal(task, undefined, mode)}
               onToggleComplete={handleToggleComplete}
+              onUpdateTaskStatus={handleUpdateTaskStatus}
               onDeleteTask={handleDeleteTask}
               onDuplicateTask={handleDuplicateTask}
               onQuickAdd={handleQuickAdd}
@@ -1145,6 +1253,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
             <KanbanView
               tasks={visibleTasks}
               categories={categories}
+              currentUser={currentUser}
               onOpenTaskModal={handleOpenTaskModal}
               onUpdateTaskStatus={handleUpdateTaskStatus}
             />
@@ -1190,6 +1299,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           initialTask={editingTask}
           initialMode={taskModalMode}
           onToggleComplete={handleToggleComplete}
+          onUpdateTaskStatus={handleUpdateTaskStatus}
           onPostponeTask={handlePostponeTask}
           categories={categories}
           teamUsers={teamUsers}
@@ -1217,6 +1327,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           onClose={() => setIsNotificationsOpen(false)}
           notifications={userNotifications}
           tasks={tasks}
+          onMarkAsRead={handleMarkNotificationRead}
           onMarkAllAsRead={handleMarkAllNotificationsRead}
           onClearAll={handleClearAllNotifications}
           onSelectTask={handleSelectTaskFromNotification}

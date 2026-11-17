@@ -6,6 +6,7 @@ import {
   RealtimeEventType,
   normalizeRealtimeEvent,
   shouldSurfaceRealtimeAlert,
+  canReceiveRealtimeEvent,
 } from '@/lib/realtime-hub';
 import { PresenceMember, ReviewDossier } from '@/types/review';
 import { soundManager } from '@/lib/sound';
@@ -13,6 +14,9 @@ import { soundManager } from '@/lib/sound';
 export type SSEConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 interface UseRealtimeEventsOptions {
+  enabled?: boolean;
+  currentUserId?: string;
+  currentUserRole?: string;
   onEvent?: (event: RealtimeEvent) => void;
   onPresenceUpdate?: (members: PresenceMember[]) => void;
   onDossierUpdate?: (dossier: ReviewDossier, eventType: RealtimeEventType) => void;
@@ -20,8 +24,16 @@ interface UseRealtimeEventsOptions {
 }
 
 export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
-  const { onEvent, onPresenceUpdate, onDossierUpdate, enableSounds = true } = options;
-  const [status, setStatus] = useState<SSEConnectionStatus>('connecting');
+  const {
+    enabled = true,
+    currentUserId,
+    currentUserRole,
+    onEvent,
+    onPresenceUpdate,
+    onDossierUpdate,
+    enableSounds = true,
+  } = options;
+  const [status, setStatus] = useState<SSEConnectionStatus>(enabled ? 'connecting' : 'disconnected');
   const [lastEvent, setLastEvent] = useState<RealtimeEvent | null>(null);
   const [alerts, setAlerts] = useState<RealtimeEvent[]>([]);
   const [reconnectNonce, setReconnectNonce] = useState(0);
@@ -36,9 +48,14 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
   const playNotificationSound = useCallback((type: RealtimeEventType) => {
     if (!enableSounds) return;
     try {
-      if (type === 'DOSSIER_VALIDATED') {
+      if (type === 'DOSSIER_VALIDATED' || type === 'TASK_COMPLETED') {
         soundManager.playCompleteSound();
-      } else if (type === 'DOSSIER_REJECTED' || type === 'DOSSIER_LOCKED' || type === 'DOSSIER_CONFLICT') {
+      } else if (
+        type === 'DOSSIER_REJECTED' ||
+        type === 'DOSSIER_LOCKED' ||
+        type === 'DOSSIER_CONFLICT' ||
+        type === 'TASK_ASSIGNED'
+      ) {
         soundManager.playReminderChime();
       } else if (type === 'DOSSIER_SUBMITTED' || type === 'DOSSIER_AMENDED') {
         soundManager.playClickSound();
@@ -49,7 +66,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
   }, [enableSounds]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !enabled) return;
 
     let es: EventSource | null = null;
     let reconnectTimeout: NodeJS.Timeout | null = null;
@@ -68,6 +85,15 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
         const handleIncomingEvent = (rawEventData: unknown, fallbackType?: RealtimeEventType) => {
           const eventData = normalizeRealtimeEvent(rawEventData, fallbackType);
           if (!eventData) return;
+
+          const viewerId = optionsRef.current.currentUserId;
+          const viewerRole = optionsRef.current.currentUserRole;
+          if (
+            viewerId &&
+            !canReceiveRealtimeEvent(eventData, { id: viewerId, role: viewerRole })
+          ) {
+            return;
+          }
 
           setLastEvent(eventData);
 
@@ -131,6 +157,9 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           'DOSSIER_CONFLICT',
           'PRESENCE_CHANGED',
           'TASK_UPDATED',
+          'TASK_ASSIGNED',
+          'TASK_COMPLETED',
+          'TASK_DELETED',
         ];
 
         eventTypes.forEach((type) => {
@@ -172,7 +201,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
         clearTimeout(reconnectTimeout);
       }
     };
-  }, [playNotificationSound, reconnectNonce]);
+  }, [enabled, currentUserId, currentUserRole, playNotificationSound, reconnectNonce]);
 
   const reconnect = useCallback(() => {
     setStatus('connecting');

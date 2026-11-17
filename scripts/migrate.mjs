@@ -137,6 +137,23 @@ async function runSafeMigration() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS notifications (
+        id VARCHAR(96) PRIMARY KEY,
+        recipient_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        actor_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+        actor_name VARCHAR(255),
+        task_id VARCHAR(64) NOT NULL,
+        task_title VARCHAR(500) NOT NULL,
+        due_date VARCHAR(32) NOT NULL,
+        due_time VARCHAR(16),
+        type VARCHAR(32) NOT NULL,
+        message TEXT,
+        read BOOLEAN NOT NULL DEFAULT FALSE,
+        trigger_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS notifications_recipient_idx ON notifications (recipient_id, trigger_time DESC);
+
       CREATE TABLE IF NOT EXISTS session (
         id TEXT PRIMARY KEY,
         expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -184,6 +201,7 @@ async function runSafeMigration() {
         ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
         ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
         ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'users_select_policy') THEN
           CREATE POLICY users_select_policy ON users FOR SELECT TO public USING (true);
@@ -255,6 +273,9 @@ async function runSafeMigration() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activity_logs' AND policyname = 'activity_logs_insert_policy') THEN
           CREATE POLICY activity_logs_insert_policy ON activity_logs FOR INSERT TO public WITH CHECK (true);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'notifications_all_policy') THEN
+          CREATE POLICY notifications_all_policy ON notifications FOR ALL TO public USING (true) WITH CHECK (true);
         END IF;
       END
       $$;

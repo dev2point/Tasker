@@ -1,6 +1,6 @@
 ---
-Jour: Mercredi 11 Novembre 2026 (2026-11-11)
-Heure de la dernière modif: 17:15:00 CET (16:15:00 UTC)
+Jour: Mardi 17 Novembre 2026 (2026-11-17)
+Heure de la dernière modif: 13:15:00 CET (12:15:00 UTC)
 Auteur: niceboy
 Module: Circuit de Revue & Validation Collaborative (Maker-Checker)
 ---
@@ -74,6 +74,9 @@ Aucun document fiscal ayant une incidence financière ou juridique (mémo de str
   - **Visualiseur Excel Double Tableau Côte à Côte (`SpreadsheetDiffViewer.tsx`) :** Affichage synchronisé avant/après avec repérage des cellules modifiées (halo ambre, infobulle de transition de valeur), sélecteur d'onglets de classeur et filtre "Lignes modifiées".
   - **Visualiseur Word Mot à Mot (`WordDocxDiffViewer.tsx`) :** Comparaison mot à mot (algorithme LCS adapté aux caractères accentués et à la ponctuation française) avec surlignage vert des ajouts, rouge barré des retraits, et bascule vue unifiée / vue scindée.
   - **Modération Structurée à Motif Obligatoire (`ModerationDecisionModal.tsx`) :** Le superviseur motive obligatoirement ses validations ou ses demandes de correction ($\ge 5$ caractères) avec notification push immédiate au consultant.
+- **Phase 8 (17/11/2026 — Durcissement SSE & Extension aux Tâches) :**
+  - Normalisation stricte des événements SSE (`normalizeRealtimeEvent`, `shouldSurfaceRealtimeAlert`, `formatRealtimeAlertType`) éliminant tout crash `TypeError` lors de la réception d'un événement de handshake `CONNECTED` sans champ `type` dans `CollaborativeReviewPlatform.tsx`.
+  - Extension du hub `realtimeHub` aux événements de tâches (`TASK_ASSIGNED`, `TASK_COMPLETED`, `TASK_UPDATED`, `TASK_DELETED`) avec isolation serveur par destinataire (`canReceiveRealtimeEvent`).
 
 ---
 
@@ -94,11 +97,11 @@ Aucun document fiscal ayant une incidence financière ou juridique (mémo de str
 
 ### DT-REV-02 : Synchronisation temps réel par Server-Sent Events (SSE)
 - **Description :** Remplacement de l'ancien polling HTTP par un flux d'événements SSE natif haute performance.
-- **Statut :** **✅ Résolu (03/11/2026)**
+- **Statut :** **✅ Résolu (03/11/2026) & Durci (17/11/2026)**
 - **Solution déployée :**
-  1. Hub `realtimeHub` singleton gérant la souscription et la diffusion push d'événements métier (`DOSSIER_SUBMITTED`, `DOSSIER_VALIDATED`, `DOSSIER_REJECTED`, `PRESENCE_CHANGED`, `DOSSIER_CONFLICT`).
-  2. Route de streaming `/app/api/events` au format standard W3C `text/event-stream` avec heartbeat toutes les 20s.
-  3. Hook React client `useRealtimeEvents` avec reconnexion exponentielle résiliente, bannières d'alerte interactives et synthèse audio.
+  1. Hub `realtimeHub` singleton gérant la souscription et la diffusion push d'événements métier (`DOSSIER_SUBMITTED`, `DOSSIER_VALIDATED`, `DOSSIER_REJECTED`, `PRESENCE_CHANGED`, `DOSSIER_CONFLICT`, `TASK_ASSIGNED`, `TASK_COMPLETED`, `TASK_UPDATED`, `TASK_DELETED`).
+  2. Route de streaming `/app/api/events` au format standard W3C `text/event-stream` avec heartbeat toutes les 20s, filtrage destinataire (`canReceiveRealtimeEvent`) et import paresseux de l'authentification serveur.
+  3. Hook React client `useRealtimeEvents` avec reconnexion exponentielle résiliente, normalisation des payloads (`normalizeRealtimeEvent`), bannières d'alerte interactives et synthèse audio.
   4. Fin du polling périodique superflue et réduction drastique de la charge serveur.
 
 ### DT-REV-03 : Algorithme de TextDiff non optimisé pour les très longs rapports

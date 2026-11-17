@@ -1,13 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDrizzleDb, isDatabaseConfigured, ensureDatabaseTables } from '@/lib/db/pg';
-import { tasks, users, workspaces, activityLogs } from '@/src/db/schema';
+import { tasks, users, workspaces, activityLogs, notifications as notificationsTable } from '@/src/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { Task } from '@/types/task';
+import { Task, TaskNotification } from '@/types/task';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { isDueDateTimeInPast } from '@/lib/due-date-utils';
 import { sanitizeTaskForPostgres } from '@/lib/db/task-sanitize';
+import { normalizeTaskStatus } from '@/lib/constants';
+import {
+  detectTaskNotificationTransitions,
+  toTaskNotification,
+} from '@/lib/notifications-helper';
+import { realtimeHub } from '@/lib/realtime-hub';
 
 export const dynamic = 'force-dynamic';
+
+function mapDbTaskToDomain(
+  r: typeof tasks.$inferSelect,
+  userDirectory: Map<string, { name: string; image?: string | null }>
+): Task {
+  const creatorInfo = r.creatorId ? userDirectory.get(r.creatorId) : undefined;
+  const assigneeInfo = r.assigneeId ? userDirectory.get(r.assigneeId) : undefined;
+  const status = normalizeTaskStatus(r.status, r.completed);
+
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description || undefined,
+    dueDate: r.dueDate,
+    dueTime: r.dueTime || undefined,
+    priority: r.priority as Task['priority'],
+    category: r.category,
+    completed: status === 'completed',
+    completedAt: r.completedAt ? r.completedAt.toISOString() : undefined,
+    workspaceId: r.workspaceId || undefined,
+    creatorId: r.creatorId || undefined,
+    creatorName: creatorInfo?.name || undefined,
+    assigneeId: r.assigneeId || undefined,
+    assigneeName: assigneeInfo?.name || undefined,
+    assigneeAvatar: assigneeInfo?.image || undefined,
+    reminderMinutesBefore: r.reminderMinutesBefore,
+    reminderTriggered: r.reminderTriggered || false,
+    reminderDismissed: r.reminderDismissed || false,
+    reminderTriggeredAt: r.reminderTriggeredAt ? r.reminderTriggeredAt.toISOString() : undefined,
+    recurrence: r.recurrence as Task['recurrence'],
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    subtasks: Array.isArray(r.subtasks) ? r.subtasks : [],
+    color: r.color || undefined,
+    status,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  };
+}
 
 export async function GET(req: NextRequest) {
   const user = await getAuthenticatedUser(req);
@@ -30,7 +74,15 @@ export async function GET(req: NextRequest) {
 
   try {
     await ensureDatabaseTables();
-    
+
+    // Fetch user names once for resolving creatorName / assigneeName cleanly
+    const allUsers = await db
+      .select({ id: users.id, name: users.name, image: users.image })
+      .from(users);
+    const userDirectory = new Map<string, { name: string; image?: string | null }>(
+      allUsers.map((u) => [u.id, { name: u.name, image: u.image }])
+    );
+
     // RBAC: Admin sees all tasks; regular users only see tasks they created or that are assigned to them
     let rows;
     if (user.role === 'admin') {
@@ -39,39 +91,10 @@ export async function GET(req: NextRequest) {
       rows = await db
         .select()
         .from(tasks)
-        .where(
-          or(
-            eq(tasks.creatorId, user.id),
-            eq(tasks.assigneeId, user.id)
-          )
-        );
+        .where(or(eq(tasks.creatorId, user.id), eq(tasks.assigneeId, user.id)));
     }
 
-    const formatted: Task[] = rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      description: r.description || undefined,
-      dueDate: r.dueDate,
-      dueTime: r.dueTime || undefined,
-      priority: r.priority as Task['priority'],
-      category: r.category,
-      completed: r.completed,
-      completedAt: r.completedAt ? r.completedAt.toISOString() : undefined,
-      workspaceId: r.workspaceId || undefined,
-      creatorId: r.creatorId || undefined,
-      assigneeId: r.assigneeId || undefined,
-      reminderMinutesBefore: r.reminderMinutesBefore,
-      reminderTriggered: r.reminderTriggered || false,
-      reminderDismissed: r.reminderDismissed || false,
-      reminderTriggeredAt: r.reminderTriggeredAt ? r.reminderTriggeredAt.toISOString() : undefined,
-      recurrence: r.recurrence as Task['recurrence'],
-      tags: Array.isArray(r.tags) ? r.tags : [],
-      subtasks: Array.isArray(r.subtasks) ? r.subtasks : [],
-      color: r.color || undefined,
-      status: (r.status as Task['status']) || (r.completed ? 'completed' : 'todo'),
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
-    }));
+    const formatted: Task[] = rows.map((r) => mapDbTaskToDomain(r, userDirectory));
 
     return NextResponse.json({
       source: 'postgresql_supabase',
@@ -154,8 +177,10 @@ export async function POST(req: NextRequest) {
     const isAdmin = user.role === 'admin';
 
     if (existing) {
-      const isCreator = existing.creatorId === user.id || (resolvedAuthUserId && existing.creatorId === resolvedAuthUserId);
-      const isAssignee = existing.assigneeId === user.id || (resolvedAuthUserId && existing.assigneeId === resolvedAuthUserId);
+      const isCreator =
+        existing.creatorId === user.id || (resolvedAuthUserId && existing.creatorId === resolvedAuthUserId);
+      const isAssignee =
+        existing.assigneeId === user.id || (resolvedAuthUserId && existing.assigneeId === resolvedAuthUserId);
 
       if (!isAdmin && !isCreator && !isAssignee) {
         return NextResponse.json(
@@ -193,7 +218,7 @@ export async function POST(req: NextRequest) {
 
     let validCreatorId: string | null = existing
       ? existing.creatorId
-      : (taskData.creatorId || resolvedAuthUserId || user.id);
+      : taskData.creatorId || resolvedAuthUserId || user.id;
     if (validCreatorId) {
       const creatorExists = await db
         .select({ id: users.id })
@@ -263,7 +288,140 @@ export async function POST(req: NextRequest) {
         },
       });
 
-    return NextResponse.json({ success: true });
+    // Resolve creator & assignee display names for task snapshot & SSE payloads
+    const allUsers = await db
+      .select({ id: users.id, name: users.name, image: users.image })
+      .from(users);
+    const userDirectory = new Map<string, { name: string; image?: string | null }>(
+      allUsers.map((u) => [u.id, { name: u.name, image: u.image }])
+    );
+
+    const savedDomainTask: Task = {
+      id: pgTask.id,
+      title: pgTask.title,
+      description: pgTask.description || undefined,
+      dueDate: pgTask.dueDate,
+      dueTime: pgTask.dueTime || undefined,
+      priority: pgTask.priority as Task['priority'],
+      category: pgTask.category,
+      completed: pgTask.completed,
+      completedAt: pgTask.completedAt ? pgTask.completedAt.toISOString() : undefined,
+      workspaceId: pgTask.workspaceId || undefined,
+      creatorId: pgTask.creatorId || undefined,
+      creatorName: pgTask.creatorId ? userDirectory.get(pgTask.creatorId)?.name : taskData.creatorName,
+      assigneeId: pgTask.assigneeId || undefined,
+      assigneeName: pgTask.assigneeId ? userDirectory.get(pgTask.assigneeId)?.name : undefined,
+      assigneeAvatar: pgTask.assigneeId
+        ? userDirectory.get(pgTask.assigneeId)?.image || undefined
+        : undefined,
+      reminderMinutesBefore: pgTask.reminderMinutesBefore,
+      reminderTriggered: pgTask.reminderTriggered,
+      reminderDismissed: pgTask.reminderDismissed,
+      reminderTriggeredAt: pgTask.reminderTriggeredAt
+        ? pgTask.reminderTriggeredAt.toISOString()
+        : undefined,
+      recurrence: pgTask.recurrence as Task['recurrence'],
+      tags: pgTask.tags,
+      subtasks: pgTask.subtasks,
+      color: pgTask.color || undefined,
+      status: normalizeTaskStatus(pgTask.status, pgTask.completed),
+      createdAt: pgTask.createdAt.toISOString(),
+      updatedAt: pgTask.updatedAt.toISOString(),
+    };
+
+    // Detect assignment, reassignment & completion transitions
+    const transitions = detectTaskNotificationTransitions({
+      previousTask: existing
+        ? {
+            id: existing.id,
+            title: existing.title,
+            dueDate: existing.dueDate,
+            dueTime: existing.dueTime,
+            creatorId: existing.creatorId,
+            assigneeId: existing.assigneeId,
+            completed: existing.completed,
+            status: existing.status,
+          }
+        : null,
+      nextTask: {
+        id: pgTask.id,
+        title: pgTask.title,
+        dueDate: pgTask.dueDate,
+        dueTime: pgTask.dueTime,
+        creatorId: pgTask.creatorId,
+        assigneeId: pgTask.assigneeId,
+        completed: pgTask.completed,
+        status: pgTask.status,
+      },
+      actor: { id: resolvedAuthUserId || user.id, name: user.name },
+    });
+
+    const emittedNotifications: TaskNotification[] = [];
+    for (const draft of transitions) {
+      try {
+        await db.insert(notificationsTable).values({
+          id: draft.id,
+          recipientId: draft.recipientId,
+          actorId: draft.actorId,
+          actorName: draft.actorName,
+          taskId: draft.taskId,
+          taskTitle: draft.taskTitle,
+          dueDate: draft.dueDate,
+          dueTime: draft.dueTime || null,
+          type: draft.type,
+          message: draft.message,
+          read: false,
+          triggerTime: new Date(draft.triggerTime),
+          createdAt: new Date(draft.triggerTime),
+        });
+      } catch (notifErr) {
+        console.warn('Notification insert skipped:', notifErr);
+      }
+
+      const taskNotif = toTaskNotification(draft);
+      emittedNotifications.push(taskNotif);
+
+      realtimeHub.broadcast({
+        type: draft.type === 'assigned' ? 'TASK_ASSIGNED' : 'TASK_COMPLETED',
+        actor: { id: user.id, name: user.name, role: user.role },
+        targetId: pgTask.id,
+        targetUserId: draft.recipientId,
+        message: draft.message,
+        payload: {
+          notification: taskNotif,
+          task: savedDomainTask,
+        },
+      });
+    }
+
+    // Broadcast live task update (e.g., status transitions, edits, unassignments) to creator & assignee(s)
+    const visibleToUserIds = Array.from(
+      new Set(
+        [pgTask.creatorId, pgTask.assigneeId, existing?.assigneeId].filter(
+          (id): id is string => Boolean(id)
+        )
+      )
+    );
+
+    if (visibleToUserIds.length > 0) {
+      realtimeHub.broadcast({
+        type: 'TASK_UPDATED',
+        actor: { id: user.id, name: user.name, role: user.role },
+        targetId: pgTask.id,
+        visibleToUserIds,
+        message: '',
+        payload: {
+          task: savedDomainTask,
+          previousAssigneeId: existing?.assigneeId || null,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      task: savedDomainTask,
+      emittedNotifications,
+    });
   } catch (error: any) {
     const causeDetail = error?.cause?.message || error?.detail || undefined;
     console.error('Error saving task to PostgreSQL:', error, causeDetail ? { causeDetail } : '');
@@ -298,8 +456,9 @@ export async function DELETE(req: NextRequest) {
 
     // RBAC: Verify if task exists and check if user is admin or creator
     const existingRows = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-    if (existingRows.length > 0) {
-      const existing = existingRows[0];
+    const existing = existingRows[0];
+
+    if (existing) {
       const isAdmin = user.role === 'admin';
       const isCreator = existing.creatorId === user.id;
 
@@ -328,6 +487,25 @@ export async function DELETE(req: NextRequest) {
     }
 
     await db.delete(tasks).where(eq(tasks.id, id));
+
+    if (existing) {
+      const visibleToUserIds = Array.from(
+        new Set(
+          [existing.creatorId, existing.assigneeId].filter((uid): uid is string => Boolean(uid))
+        )
+      );
+      if (visibleToUserIds.length > 0) {
+        realtimeHub.broadcast({
+          type: 'TASK_DELETED',
+          actor: { id: user.id, name: user.name, role: user.role },
+          targetId: id,
+          visibleToUserIds,
+          message: '',
+          payload: { taskId: id },
+        });
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
@@ -336,3 +514,4 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+
