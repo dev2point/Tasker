@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { RealtimeEvent, RealtimeEventType } from '@/lib/realtime-hub';
+import {
+  RealtimeEvent,
+  RealtimeEventType,
+  normalizeRealtimeEvent,
+  shouldSurfaceRealtimeAlert,
+} from '@/lib/realtime-hub';
 import { PresenceMember, ReviewDossier } from '@/types/review';
 import { soundManager } from '@/lib/sound';
 
@@ -60,15 +65,17 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           attempts = 0;
         };
 
-        const handleIncomingEvent = (eventData: RealtimeEvent) => {
+        const handleIncomingEvent = (rawEventData: unknown, fallbackType?: RealtimeEventType) => {
+          const eventData = normalizeRealtimeEvent(rawEventData, fallbackType);
+          if (!eventData) return;
+
           setLastEvent(eventData);
 
-          if (
-            eventData.type !== 'CONNECTED' &&
-            eventData.type !== 'HEARTBEAT' &&
-            eventData.type !== 'PRESENCE_CHANGED'
-          ) {
-            setAlerts((prev) => [eventData, ...prev.slice(0, 9)]);
+          if (shouldSurfaceRealtimeAlert(eventData)) {
+            setAlerts((prev) => {
+              const deduped = prev.filter((a) => a.id !== eventData.id);
+              return [eventData, ...deduped.slice(0, 9)];
+            });
             playNotificationSound(eventData.type);
           }
 
@@ -121,6 +128,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           'DOSSIER_ARCHIVED',
           'DOSSIER_LOCKED',
           'DOSSIER_UNLOCKED',
+          'DOSSIER_CONFLICT',
           'PRESENCE_CHANGED',
           'TASK_UPDATED',
         ];
@@ -129,7 +137,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           es?.addEventListener(type, (e: MessageEvent) => {
             try {
               const parsed = JSON.parse(e.data);
-              handleIncomingEvent(parsed);
+              handleIncomingEvent(parsed, type);
             } catch {
               // ignore
             }

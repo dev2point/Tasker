@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { realtimeHub, RealtimeEvent, ServerPresenceMember } from '@/lib/realtime-hub';
+import { describe, it, expect, beforeEach } from 'vitest';
+import {
+  realtimeHub,
+  RealtimeEvent,
+  ServerPresenceMember,
+  normalizeRealtimeEvent,
+  shouldSurfaceRealtimeAlert,
+  formatRealtimeAlertType,
+} from '@/lib/realtime-hub';
 import { GET as getPresence, POST as postPresence, DELETE as deletePresence } from '@/app/api/review/presence/route';
 import { POST as postEvents } from '@/app/api/events/route';
 import { NextRequest } from 'next/server';
@@ -146,5 +153,36 @@ describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
     expect((receivedEvent as any)?.targetRef).toBe('DOS-2026-FIS-999');
 
     unsub();
+  });
+
+  it('normalizes handshake SSE payloads safely and never surfaces undefined alert types', () => {
+    const handshakeWithoutType = normalizeRealtimeEvent(
+      {
+        status: 'connected',
+        subscriberId: 'sub-1',
+        connectedAt: '2026-11-17T09:00:00.000Z',
+      },
+      'CONNECTED'
+    );
+
+    expect(handshakeWithoutType).not.toBeNull();
+    expect(handshakeWithoutType?.type).toBe('CONNECTED');
+    expect(shouldSurfaceRealtimeAlert(handshakeWithoutType)).toBe(false);
+    expect(shouldSurfaceRealtimeAlert({ type: undefined as unknown as any, message: 'test' })).toBe(false);
+    expect(shouldSurfaceRealtimeAlert({ type: 'DOSSIER_VALIDATED', message: '   ' })).toBe(false);
+    expect(
+      shouldSurfaceRealtimeAlert({
+        id: 'evt-1',
+        type: 'DOSSIER_VALIDATED',
+        timestamp: '2026-11-17T09:00:00.000Z',
+        actor: { id: 'u1', name: 'Marc' },
+        message: 'Dossier validé',
+      })
+    ).toBe(true);
+
+    expect(formatRealtimeAlertType(undefined)).toBe('NOTIFICATION');
+    expect(formatRealtimeAlertType(null)).toBe('NOTIFICATION');
+    expect(formatRealtimeAlertType('DOSSIER_REVIEW_STARTED')).toBe('REVIEW STARTED');
+    expect(formatRealtimeAlertType('DOSSIER_VALIDATED')).toBe('VALIDATED');
   });
 });

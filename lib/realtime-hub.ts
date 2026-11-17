@@ -45,6 +45,54 @@ export interface ServerPresenceMember {
 
 type EventSubscriber = (event: RealtimeEvent) => void;
 
+const NON_ALERT_EVENT_TYPES = new Set<string>(['CONNECTED', 'HEARTBEAT', 'PRESENCE_CHANGED']);
+
+export function normalizeRealtimeEvent(
+  raw: unknown,
+  fallbackType?: RealtimeEventType
+): RealtimeEvent | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const candidate = raw as Partial<RealtimeEvent>;
+  const resolvedType = (candidate.type || fallbackType) as RealtimeEventType | undefined;
+  if (!resolvedType || typeof resolvedType !== 'string') return null;
+
+  const timestamp =
+    typeof candidate.timestamp === 'string' && candidate.timestamp.trim()
+      ? candidate.timestamp
+      : new Date().toISOString();
+
+  return {
+    id:
+      typeof candidate.id === 'string' && candidate.id.trim()
+        ? candidate.id
+        : `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    type: resolvedType,
+    timestamp,
+    actor: candidate.actor || { id: 'system', name: 'Système' },
+    targetId: candidate.targetId,
+    targetRef: candidate.targetRef,
+    message: typeof candidate.message === 'string' ? candidate.message : '',
+    payload: candidate.payload,
+  };
+}
+
+export function shouldSurfaceRealtimeAlert(event: Partial<RealtimeEvent> | null | undefined): boolean {
+  if (!event || typeof event.type !== 'string' || !event.type.trim()) {
+    return false;
+  }
+  if (NON_ALERT_EVENT_TYPES.has(event.type)) {
+    return false;
+  }
+  return typeof event.message === 'string' && event.message.trim().length > 0;
+}
+
+export function formatRealtimeAlertType(type: unknown): string {
+  if (typeof type !== 'string' || !type.trim()) {
+    return 'NOTIFICATION';
+  }
+  return type.replace(/^DOSSIER_/, '').replace(/_/g, ' ').trim() || 'NOTIFICATION';
+}
+
 class RealtimeEventHub {
   private subscribers: Map<string, EventSubscriber> = new Map();
   private recentEvents: RealtimeEvent[] = [];

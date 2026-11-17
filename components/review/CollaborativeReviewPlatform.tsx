@@ -19,6 +19,7 @@ import {
   updatePresenceFromRemote,
 } from '@/lib/presence-service';
 import { useRealtimeEvents } from '@/lib/use-realtime-events';
+import { formatRealtimeAlertType } from '@/lib/realtime-hub';
 import { DossierReviewStudioModal } from './DossierReviewStudioModal';
 import { NewDossierModal } from './NewDossierModal';
 import {
@@ -240,10 +241,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       const matchesStatus = selectedStatus === 'Tous' || d.status === selectedStatus;
       const matchesSearch =
         !searchQuery.trim() ||
-        d.ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.typology.toLowerCase().includes(searchQuery.toLowerCase());
+        (d.ref || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d.clientName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d.typology || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchesDept && matchesStatus && matchesSearch;
     });
   }, [dossiers, selectedDept, selectedStatus, searchQuery]);
@@ -258,7 +259,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     const validated = dossiers.filter((d) => d.status === 'valide' || d.status === 'archive').length;
     const blockedRequests = dossiers.reduce(
       (acc, d) =>
-        acc + d.interDepRequests.filter((r) => r.status === 'blocked' || r.priority === 'bloquant').length,
+        acc + (d.interDepRequests || []).filter((r) => r.status === 'blocked' || r.priority === 'bloquant').length,
       0
     );
 
@@ -410,7 +411,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                         : 'bg-emerald-400'
                     }`}
                   />
-                  <strong className="text-white">{m.userName.split(' ')[0]}</strong>
+                  <strong className="text-white">{(m.userName || 'Collaborateur').split(' ')[0]}</strong>
                   <span className="text-slate-400">({m.department})</span>
                   {m.status === 'editing' && (
                     <span className="text-[10px] text-amber-300 bg-amber-500/20 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">
@@ -427,15 +428,15 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       {/* Real-time Collaborative Alerts Banner (Server-Sent Events) */}
       {alerts.length > 0 && (
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          {alerts.slice(0, 2).map((alert) => (
+          {alerts.slice(0, 2).map((alert, alertIdx) => (
             <div
-              key={alert.id}
+              key={alert?.id || `alert-${alertIdx}`}
               className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-xl ${
-                alert.type === 'DOSSIER_VALIDATED'
+                alert?.type === 'DOSSIER_VALIDATED'
                   ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-100'
-                  : alert.type === 'DOSSIER_REJECTED'
+                  : alert?.type === 'DOSSIER_REJECTED'
                   ? 'bg-rose-950/80 border-rose-500/50 text-rose-100'
-                  : alert.type === 'DOSSIER_SUBMITTED'
+                  : alert?.type === 'DOSSIER_SUBMITTED'
                   ? 'bg-purple-950/80 border-purple-500/50 text-purple-100'
                   : 'bg-slate-900/90 border-cyan-500/40 text-cyan-100'
               }`}
@@ -443,11 +444,11 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
               <div className="flex items-center gap-2.5 min-w-0">
                 <div
                   className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                    alert.type === 'DOSSIER_VALIDATED'
+                    alert?.type === 'DOSSIER_VALIDATED'
                       ? 'bg-emerald-500/20 text-emerald-300'
-                      : alert.type === 'DOSSIER_REJECTED'
+                      : alert?.type === 'DOSSIER_REJECTED'
                       ? 'bg-rose-500/20 text-rose-300'
-                      : alert.type === 'DOSSIER_SUBMITTED'
+                      : alert?.type === 'DOSSIER_SUBMITTED'
                       ? 'bg-purple-500/20 text-purple-300'
                       : 'bg-cyan-500/20 text-cyan-300'
                   }`}
@@ -457,17 +458,19 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                 <div className="truncate">
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-white uppercase text-[10px] tracking-wider">
-                      {alert.type.replace('DOSSIER_', '').replace('_', ' ')}
+                      {formatRealtimeAlertType(alert?.type)}
                     </span>
-                    <span className="text-[10px] opacity-70">
-                      {new Date(alert.timestamp).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}
-                    </span>
+                    {alert?.timestamp && !Number.isNaN(new Date(alert.timestamp).getTime()) && (
+                      <span className="text-[10px] opacity-70">
+                        {new Date(alert.timestamp).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
+                      </span>
+                    )}
                   </div>
-                  <p className="font-medium text-xs truncate">{alert.message}</p>
+                  <p className="font-medium text-xs truncate">{alert?.message || ''}</p>
                 </div>
               </div>
 
@@ -691,7 +694,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         ) : (
           filteredDossiers.map((dossier) => {
             const statusBadge = getStatusBadge(dossier.status);
-            const hasBlockedRequest = dossier.interDepRequests.some(
+            const hasBlockedRequest = (dossier.interDepRequests || []).some(
               (r) => r.status === 'blocked' || r.priority === 'bloquant'
             );
 
@@ -761,11 +764,11 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                 <div className="pt-3 border-t border-emerald-500/20 flex flex-col gap-2">
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="text-slate-400">
-                      Maker : <strong className="text-slate-200">{dossier.maker.name.split(' ')[0]}</strong>
+                      Maker : <strong className="text-slate-200">{(dossier.maker?.name || 'Auteur').split(' ')[0]}</strong>
                     </span>
                     <span className="text-slate-400">
                       Checker :{' '}
-                      <strong className="text-slate-200">{dossier.checker ? dossier.checker.name.split(' ')[0] : '-'}</strong>
+                      <strong className="text-slate-200">{dossier.checker?.name ? dossier.checker.name.split(' ')[0] : '-'}</strong>
                     </span>
                   </div>
 

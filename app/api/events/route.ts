@@ -18,16 +18,23 @@ export async function GET(req: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       // 1. Send initial CONNECTED handshake event
+      const nowIso = new Date().toISOString();
+      const initId = `init-${Date.now()}`;
       const initialPayload = {
+        id: initId,
+        type: 'CONNECTED' as const,
+        timestamp: nowIso,
+        actor: { id: 'system', name: 'Système' },
+        message: 'Flux collaboratif connecté',
         status: 'connected',
         subscriberId,
-        connectedAt: new Date().toISOString(),
+        connectedAt: nowIso,
         activePresence: realtimeHub.getActivePresence(),
         recentEvents: realtimeHub.getRecentEvents().slice(-10),
       };
 
       controller.enqueue(
-        encoder.encode(`id: init-${Date.now()}\nevent: CONNECTED\ndata: ${JSON.stringify(initialPayload)}\n\n`)
+        encoder.encode(`id: ${initId}\nevent: CONNECTED\ndata: ${JSON.stringify(initialPayload)}\n\n`)
       );
 
       // 2. Subscribe to the real-time event bus
