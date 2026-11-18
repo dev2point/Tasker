@@ -22,6 +22,15 @@ import { signIn, signUp } from '@/lib/auth-client';
 import { UserRole } from '@/types/user';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { BorderBeam } from '@/components/magicui/border-beam';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  evaluatePasswordPolicy,
+  formatAuthErrorFrench,
+  validateSignInFields,
+  validateSignUpFields,
+} from '@/lib/auth-password-policy';
 
 interface AuthGateProps {
   onAuthSuccess?: (user?: any) => void;
@@ -46,6 +55,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [hasAttemptedSignUp, setHasAttemptedSignUp] = useState(false);
+  const [isSignUpPasswordFocused, setIsSignUpPasswordFocused] = useState(false);
+
+  const passwordEvaluation = evaluatePasswordPolicy(signUpPassword);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +68,9 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     const email = signInEmail.trim();
     const password = signInPassword;
 
-    if (!email || !password) {
-      setErrorMessage('Veuillez renseigner votre email et mot de passe.');
+    const fieldError = validateSignInFields({ email, password });
+    if (fieldError) {
+      setErrorMessage(fieldError);
       return;
     }
 
@@ -68,8 +82,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
       });
 
       if (res?.error) {
-        const errDetail = res.error.message || JSON.stringify(res.error);
-        setErrorMessage(`Erreur de connexion (${res.error.status || 'API'}): ${errDetail}`);
+        setErrorMessage(formatAuthErrorFrench(res.error, 'signin'));
         setIsLoading(false);
       } else {
         setSuccessMessage('Connexion réussie ! Chargement de votre espace...');
@@ -81,9 +94,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
         }
         onAuthSuccess?.(user);
       }
-    } catch (err: any) {
-      const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
-      setErrorMessage(`Échec de la requête de connexion: ${msg} (URL: ${window.location.origin})`);
+    } catch (err: unknown) {
+      setErrorMessage(formatAuthErrorFrench(err, 'signin'));
       setIsLoading(false);
     }
   };
@@ -92,18 +104,15 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+    setHasAttemptedSignUp(true);
 
     const name = signUpName.trim();
     const email = signUpEmail.trim();
     const password = signUpPassword;
 
-    if (!name || !email || !password) {
-      setErrorMessage('Veuillez remplir tous les champs obligatoires.');
-      return;
-    }
-
-    if (password.length < 6) {
-      setErrorMessage('Le mot de passe doit contenir au moins 6 caractères.');
+    const fieldError = validateSignUpFields({ name, email, password });
+    if (fieldError) {
+      setErrorMessage(fieldError);
       return;
     }
 
@@ -117,8 +126,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
       } as any);
 
       if (res?.error) {
-        const errDetail = res.error.message || JSON.stringify(res.error);
-        setErrorMessage(`Erreur de création de compte (${res.error.status || 'API'}): ${errDetail}`);
+        setErrorMessage(formatAuthErrorFrench(res.error, 'signup'));
         setIsLoading(false);
         return;
       }
@@ -131,9 +139,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
         } catch {}
       }
       onAuthSuccess?.(user);
-    } catch (err: any) {
-      const msg = err?.message || err?.toString() || 'Erreur réseau ou CORS';
-      setErrorMessage(`Échec de la requête d'inscription: ${msg} (URL: ${window.location.origin})`);
+    } catch (err: unknown) {
+      setErrorMessage(formatAuthErrorFrench(err, 'signup'));
       setIsLoading(false);
     }
   };
@@ -180,6 +187,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                 setMode('signin');
                 setErrorMessage(null);
                 setSuccessMessage(null);
+                setHasAttemptedSignUp(false);
               }}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signin'
@@ -195,6 +203,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                 setMode('signup');
                 setErrorMessage(null);
                 setSuccessMessage(null);
+                setHasAttemptedSignUp(false);
               }}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signup'
@@ -223,7 +232,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
 
           {/* Sign In Form */}
           {mode === 'signin' ? (
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleSignIn} noValidate className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-200 mb-1.5">
                   Adresse email
@@ -289,7 +298,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             </form>
           ) : (
             /* Sign Up Form */
-            <form onSubmit={handleSignUp} className="space-y-3.5">
+            <form onSubmit={handleSignUp} noValidate className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-200 mb-1">
                   Nom complet
@@ -325,22 +334,46 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-1">
-                  Mot de passe (min. 6 caractères)
+                <label
+                  htmlFor="authgate-signup-password"
+                  className="block text-xs font-semibold text-slate-200 mb-1"
+                >
+                  Mot de passe ({MIN_PASSWORD_LENGTH} caractères min.)
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                   <input
+                    id="authgate-signup-password"
                     type={showSignUpPassword ? 'text' : 'password'}
                     required
+                    minLength={MIN_PASSWORD_LENGTH}
+                    maxLength={MAX_PASSWORD_LENGTH}
                     value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                    onFocus={() => setIsSignUpPasswordFocused(true)}
+                    onBlur={() => setIsSignUpPasswordFocused(false)}
+                    onChange={(e) => {
+                      setSignUpPassword(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    aria-invalid={Boolean(
+                      (signUpPassword.length > 0 || hasAttemptedSignUp) &&
+                        !passwordEvaluation.isValidForSignUp
+                    )}
+                    aria-describedby="authgate-password-rules"
+                    placeholder="12 caractères minimum"
+                    className={`w-full pl-10 pr-10 py-2.5 bg-emerald-950/40 border rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-colors ${
+                      (signUpPassword.length > 0 || hasAttemptedSignUp) &&
+                      !passwordEvaluation.isValidForSignUp
+                        ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-400'
+                        : signUpPassword.length > 0 && passwordEvaluation.isValidForSignUp
+                          ? 'border-emerald-400/70 focus:border-emerald-400 focus:ring-emerald-400'
+                          : 'border-emerald-500/30 focus:border-emerald-400 focus:ring-emerald-400'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    aria-label={showSignUpPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                   >
                     {showSignUpPassword ? (
@@ -350,6 +383,14 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
                     )}
                   </button>
                 </div>
+
+                {(isSignUpPasswordFocused || signUpPassword.length > 0 || hasAttemptedSignUp) && (
+                  <PasswordStrengthIndicator
+                    id="authgate-password-rules"
+                    password={signUpPassword}
+                    showBlockingAlert={hasAttemptedSignUp}
+                  />
+                )}
               </div>
 
               <div>

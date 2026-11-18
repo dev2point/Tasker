@@ -5,6 +5,10 @@ import { getDrizzleDb, isDatabaseConfigured } from '@/lib/db/pg';
 import * as schema from '@/src/db/schema';
 import fs from 'fs';
 import path from 'path';
+import {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+} from '@/lib/auth-password-policy';
 
 const DB_FILE = path.join(process.cwd(), 'data', 'auth_fallback.json');
 
@@ -162,7 +166,8 @@ export const auth = betterAuth({
   plugins: [bearer()],
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 12,
+    minPasswordLength: MIN_PASSWORD_LENGTH,
+    maxPasswordLength: MAX_PASSWORD_LENGTH,
     autoSignIn: true,
   },
   user: {

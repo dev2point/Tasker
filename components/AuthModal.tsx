@@ -23,6 +23,15 @@ import { authClient, signIn, signUp, useSession } from '@/lib/auth-client';
 import { User } from '@/types/user';
 import { ViewMode } from '@/types/task';
 import { BorderBeam } from '@/components/magicui/border-beam';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  evaluatePasswordPolicy,
+  formatAuthErrorFrench,
+  validateSignInFields,
+  validateSignUpFields,
+} from '@/lib/auth-password-policy';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -70,14 +79,22 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSignedOut, setIsSignedOut] = useState(false);
+  const [hasAttemptedSignUp, setHasAttemptedSignUp] = useState(false);
+  const [isSignUpPasswordFocused, setIsSignUpPasswordFocused] = useState(false);
+
+  const passwordEvaluation = evaluatePasswordPolicy(signUpPassword);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!signInEmail.trim() || !signInPassword) {
-      setErrorMessage('Veuillez renseigner votre email et mot de passe.');
+    const fieldError = validateSignInFields({
+      email: signInEmail,
+      password: signInPassword,
+    });
+    if (fieldError) {
+      setErrorMessage(fieldError);
       return;
     }
 
@@ -89,8 +106,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
       });
 
       if (res?.error) {
-        const errDetail = res.error.message || JSON.stringify(res.error);
-        setErrorMessage(`Erreur connexion (${res.error.status || 'API'}): ${errDetail}`);
+        setErrorMessage(formatAuthErrorFrench(res.error, 'signin'));
         setIsLoading(false);
       } else {
         setSuccessMessage('Connexion réussie !');
@@ -103,9 +119,8 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
         onAuthSuccess?.(res?.data?.user);
         onClose();
       }
-    } catch (err: any) {
-      const msg = err?.message || err?.toString() || 'Erreur réseau';
-      setErrorMessage(`Échec connexion: ${msg} (URL: ${window.location.origin})`);
+    } catch (err: unknown) {
+      setErrorMessage(formatAuthErrorFrench(err, 'signin'));
       setIsLoading(false);
     }
   };
@@ -114,14 +129,15 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+    setHasAttemptedSignUp(true);
 
-    if (!signUpName.trim() || !signUpEmail.trim() || !signUpPassword) {
-      setErrorMessage('Veuillez remplir tous les champs obligatoires.');
-      return;
-    }
-
-    if (signUpPassword.length < 12) {
-      setErrorMessage('Le mot de passe doit contenir au moins 12 caractères pour des raisons de sécurité.');
+    const fieldError = validateSignUpFields({
+      name: signUpName,
+      email: signUpEmail,
+      password: signUpPassword,
+    });
+    if (fieldError) {
+      setErrorMessage(fieldError);
       return;
     }
 
@@ -136,8 +152,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
       } as any);
 
       if (res?.error) {
-        const errDetail = res.error.message || JSON.stringify(res.error);
-        setErrorMessage(`Erreur inscription (${res.error.status || 'API'}): ${errDetail}`);
+        setErrorMessage(formatAuthErrorFrench(res.error, 'signup'));
         setIsLoading(false);
       } else {
         setSuccessMessage('Compte créé avec succès et connecté !');
@@ -150,9 +165,8 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
         onAuthSuccess?.(res?.data?.user);
         onClose();
       }
-    } catch (err: any) {
-      const msg = err?.message || err?.toString() || 'Erreur réseau';
-      setErrorMessage(`Échec inscription: ${msg} (URL: ${window.location.origin})`);
+    } catch (err: unknown) {
+      setErrorMessage(formatAuthErrorFrench(err, 'signup'));
       setIsLoading(false);
     }
   };
@@ -186,10 +200,8 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
       } catch {}
       setIsSignedOut(true);
       onClose();
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Erreur lors de la déconnexion.'
-      );
+    } catch (err: unknown) {
+      setErrorMessage(formatAuthErrorFrench(err, 'signout'));
       setIsLoading(false);
     }
   };
@@ -410,6 +422,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                     onClick={() => {
                       setMode('signin');
                       setErrorMessage(null);
+                      setHasAttemptedSignUp(false);
                     }}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       mode === 'signin'
@@ -425,6 +438,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                     onClick={() => {
                       setMode('signup');
                       setErrorMessage(null);
+                      setHasAttemptedSignUp(false);
                     }}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       mode === 'signup'
@@ -438,7 +452,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
 
                 {/* SIGN IN FORM */}
                 {mode === 'signin' && (
-                  <form onSubmit={handleSignIn} className="space-y-3.5">
+                  <form onSubmit={handleSignIn} noValidate className="space-y-3.5">
                     <div>
                       <label
                         htmlFor="signin-email-input"
@@ -505,7 +519,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
 
                 {/* SIGN UP FORM */}
                 {mode === 'signup' && (
-                  <form onSubmit={handleSignUp} className="space-y-3">
+                  <form onSubmit={handleSignUp} noValidate className="space-y-3">
                     <div>
                       <label
                         htmlFor="signup-name-input"
@@ -553,7 +567,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                         htmlFor="signup-password-input"
                         className="block text-xs font-semibold text-slate-200 mb-1"
                       >
-                        Mot de passe sécurisé (6 caractères min)
+                        Mot de passe sécurisé ({MIN_PASSWORD_LENGTH} caractères min.)
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -561,15 +575,34 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                           id="signup-password-input"
                           type={showSignUpPassword ? 'text' : 'password'}
                           required
-                          minLength={6}
+                          minLength={MIN_PASSWORD_LENGTH}
+                          maxLength={MAX_PASSWORD_LENGTH}
                           value={signUpPassword}
-                          onChange={(e) => setSignUpPassword(e.target.value)}
-                          placeholder="Mot de passe"
-                          className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 transition-colors"
+                          onFocus={() => setIsSignUpPasswordFocused(true)}
+                          onBlur={() => setIsSignUpPasswordFocused(false)}
+                          onChange={(e) => {
+                            setSignUpPassword(e.target.value);
+                            if (errorMessage) setErrorMessage(null);
+                          }}
+                          aria-invalid={Boolean(
+                            (signUpPassword.length > 0 || hasAttemptedSignUp) &&
+                              !passwordEvaluation.isValidForSignUp
+                          )}
+                          aria-describedby="authmodal-password-rules"
+                          placeholder="12 caractères minimum"
+                          className={`w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-emerald-950/40 border rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-colors ${
+                            (signUpPassword.length > 0 || hasAttemptedSignUp) &&
+                            !passwordEvaluation.isValidForSignUp
+                              ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-400/40'
+                              : signUpPassword.length > 0 && passwordEvaluation.isValidForSignUp
+                                ? 'border-emerald-400/70 focus:border-emerald-400 focus:ring-emerald-400/40'
+                                : 'border-emerald-500/30 focus:ring-emerald-400/40 focus:border-emerald-400'
+                          }`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                          aria-label={showSignUpPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                         >
                           {showSignUpPassword ? (
@@ -579,6 +612,14 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                           )}
                         </button>
                       </div>
+
+                      {(isSignUpPasswordFocused || signUpPassword.length > 0 || hasAttemptedSignUp) && (
+                        <PasswordStrengthIndicator
+                          id="authmodal-password-rules"
+                          password={signUpPassword}
+                          showBlockingAlert={hasAttemptedSignUp}
+                        />
+                      )}
                     </div>
 
                     <div className="pt-0.5">
