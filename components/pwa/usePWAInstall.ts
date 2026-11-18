@@ -23,11 +23,6 @@ if (typeof window !== 'undefined') {
 
   window.addEventListener('appinstalled', () => {
     globalDeferredPrompt = null;
-    try {
-      localStorage.setItem('planit_pwa_installed', 'true');
-    } catch {
-      // ignore
-    }
     notifyPromptListeners();
   });
 }
@@ -144,16 +139,23 @@ const getServerClientInfo = () => defaultClientInfo;
 
 function getIsInstalledSnapshot(): boolean {
   if (typeof window === 'undefined') return false;
-  const standaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
+  const standaloneMedia =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches;
   const navigatorStandalone =
     (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-  let localFlag = false;
+
+  // Clean up legacy persistent install flag if present so uninstalling correctly restores browser install button
   try {
-    localFlag = localStorage.getItem('planit_pwa_installed') === 'true';
+    if (localStorage.getItem('planit_pwa_installed')) {
+      localStorage.removeItem('planit_pwa_installed');
+    }
   } catch {
-    localFlag = false;
+    // ignore
   }
-  return standaloneMedia || navigatorStandalone || localFlag;
+
+  return standaloneMedia || navigatorStandalone;
 }
 
 export function usePWAInstall() {
@@ -182,11 +184,6 @@ export function usePWAInstall() {
       const { outcome } = await globalDeferredPrompt.userChoice;
       if (outcome === 'accepted') {
         globalDeferredPrompt = null;
-        try {
-          localStorage.setItem('planit_pwa_installed', 'true');
-        } catch {
-          // ignore
-        }
         notifyPromptListeners();
         return true;
       }
