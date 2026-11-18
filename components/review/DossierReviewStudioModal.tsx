@@ -40,6 +40,7 @@ import {
   ShieldAlert,
   RefreshCw,
   GitCompare,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,6 +63,10 @@ interface DossierReviewStudioModalProps {
     dossier?: ReviewDossier;
     message?: string;
   }> | void;
+  onDeleteDossier?: (
+    dossierId: string
+  ) => Promise<{ success: boolean; message?: string }> | void;
+  canDelete?: boolean;
   activeViewers?: Array<{ userName: string; department: Department; status: string }>;
   isSidebarCollapsed?: boolean;
 }
@@ -93,6 +98,8 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   dossier,
   currentUser,
   onUpdateDossier,
+  onDeleteDossier,
+  canDelete = false,
   activeViewers = [],
   isSidebarCollapsed = false,
 }) => {
@@ -102,6 +109,9 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   const [amendmentNote, setAmendmentNote] = useState('');
   const [isCorrectionsModalOpen, setIsCorrectionsModalOpen] = useState(false);
   const [correctionsInput, setCorrectionsInput] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Optimistic Concurrency Control (OCC) conflict resolution state
   const [conflictState, setConflictState] = useState<{
@@ -188,9 +198,31 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     });
 
     if (res.success) {
+      setActionError(null);
       applyDossierUpdate(res.dossier);
     } else {
-      alert(res.error || 'Erreur de transition de workflow');
+      setActionError(res.error || 'Erreur de transition de workflow');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!onDeleteDossier || isDeleting) return;
+    setIsDeleting(true);
+    setActionError(null);
+    try {
+      const result = await onDeleteDossier(dossier.id);
+      if (result && result.success === false) {
+        setActionError(result.message || 'Impossible de supprimer ce dossier.');
+        setIsDeleteConfirmOpen(false);
+      } else {
+        setIsDeleteConfirmOpen(false);
+        onClose();
+      }
+    } catch {
+      setActionError('Erreur lors de la suppression du dossier.');
+      setIsDeleteConfirmOpen(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -667,6 +699,20 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           )}
         </div>
 
+        {actionError && (
+          <div className="px-6 py-2.5 bg-rose-500/20 border-t border-rose-500/30 text-rose-200 text-xs flex items-center justify-between gap-2">
+            <span>{actionError}</span>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="text-rose-300 hover:text-white cursor-pointer"
+              aria-label="Fermer le message d'erreur"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* 7. Action Bar (Maker-Checker Decisions & Workflow Progression) */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-t border-emerald-500/30">
           <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -681,6 +727,20 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {canDelete && onDeleteDossier && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  soundManager.playClickSound();
+                  setIsDeleteConfirmOpen(true);
+                }}
+                className="border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 font-semibold text-xs gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Supprimer
+              </Button>
+            )}
             {/* Transition: Brouillon -> Soumis */}
             {(dossier.status === 'brouillon' || dossier.status === 'demande_corrections') && (
               <Button
@@ -902,6 +962,43 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
                   Forcer mes modifications (v{conflictState.serverVersion + 1})
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
+            <h4 className="text-base font-bold text-white flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              Supprimer ce dossier ?
+            </h4>
+            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              Le dossier <span className="font-mono text-emerald-300">{dossier.ref}</span> («{' '}
+              <strong className="text-white">{dossier.title}</strong> ») sera définitivement supprimé. Cette action est irréversible.
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                disabled={isDeleting}
+                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
+              >
+                {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
+              </Button>
             </div>
           </div>
         </div>

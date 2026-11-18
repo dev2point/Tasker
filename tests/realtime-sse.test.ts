@@ -184,5 +184,6 @@ describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
     expect(formatRealtimeAlertType(null)).toBe('NOTIFICATION');
     expect(formatRealtimeAlertType('DOSSIER_REVIEW_STARTED')).toBe('REVIEW STARTED');
     expect(formatRealtimeAlertType('DOSSIER_VALIDATED')).toBe('VALIDATED');
+    expect(formatRealtimeAlertType('DOSSIER_DELETED')).toBe('DOSSIER SUPPRIMÉ');
   });
 });

@@ -52,11 +52,44 @@ export function saveStoredDossiers(dossiers: ReviewDossier[]) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dossiers));
-    // Trigger storage event for cross-tab reactivity
-    window.dispatchEvent(new Event('storage'));
+    // Trigger custom event for same-tab reactivity (cross-tab sync still uses native storage event)
+    window.dispatchEvent(new CustomEvent('planit_dossiers_change'));
   } catch (err) {
     console.warn('Failed to persist review dossiers:', err);
   }
+}
+
+/**
+ * Checks whether a user is allowed to delete a review dossier.
+ * - Admin: can delete any dossier.
+ * - Creator (Maker): can delete their own dossier unless it is already validated/archived
+ *   or currently locked by another user.
+ */
+export function canUserDeleteDossier(
+  dossier: Pick<ReviewDossier, 'maker' | 'status' | 'lock'>,
+  user: { id?: string; email?: string; role?: string } | null | undefined
+): boolean {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+
+  const isMaker = Boolean(
+    (user.id && dossier.maker?.id && dossier.maker.id === user.id) ||
+      (user.email &&
+        dossier.maker?.email &&
+        dossier.maker.email.toLowerCase() === user.email.toLowerCase())
+  );
+
+  if (!isMaker) return false;
+  if (dossier.status === 'valide' || dossier.status === 'archive') return false;
+  if (
+    dossier.lock?.isLocked &&
+    dossier.lock.lockedBy?.id &&
+    dossier.lock.lockedBy.id !== user.id
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

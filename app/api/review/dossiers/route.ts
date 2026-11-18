@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-server';
-import { INITIAL_DOSSIERS } from '@/lib/review-service';
+import { INITIAL_DOSSIERS, canUserDeleteDossier } from '@/lib/review-service';
 import { ReviewDossier, ReviewStatus } from '@/types/review';
 import { realtimeHub, RealtimeEventType } from '@/lib/realtime-hub';
 
@@ -291,6 +291,64 @@ export async function PATCH(req: NextRequest) {
       success: true,
       dossier: finalizedDossier,
       version: finalizedDossier.version,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Erreur serveur' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(req.url);
+    let dossierId = searchParams.get('id') || searchParams.get('dossierId');
+
+    if (!dossierId) {
+      const body = await req.json().catch(() => null);
+      dossierId = body?.id || body?.dossierId || null;
+    }
+
+    if (!dossierId || typeof dossierId !== 'string') {
+      return NextResponse.json({ error: 'Identifiant du dossier manquant' }, { status: 400 });
+    }
+
+    const existing = runtimeDossiers.find((d) => d.id === dossierId);
+    if (existing && !canUserDeleteDossier(existing, user)) {
+      return NextResponse.json(
+        {
+          error:
+            "Action non autorisée. Seul le créateur (avant validation) ou un administrateur peut supprimer ce dossier.",
+        },
+        { status: 403 }
+      );
+    }
+
+    runtimeDossiers = runtimeDossiers.filter((d) => d.id !== dossierId);
+
+    realtimeHub.broadcast({
+      type: 'DOSSIER_DELETED',
+      actor: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        role: user.role,
+      },
+      targetId: dossierId,
+      targetRef: existing?.ref,
+      message: existing
+        ? `Le dossier ${existing.ref} (« ${existing.title} ») a été supprimé par ${user.name}.`
+        : `Dossier supprimé par ${user.name}.`,
+      payload: { dossierId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletedId: dossierId,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Erreur serveur' }, { status: 500 });

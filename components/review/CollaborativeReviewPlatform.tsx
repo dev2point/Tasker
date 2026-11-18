@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   ReviewDossier,
   Department,
@@ -11,6 +11,7 @@ import {
 import {
   getStoredDossiers,
   saveStoredDossiers,
+  canUserDeleteDossier,
 } from '@/lib/review-service';
 import {
   getActivePresence,
@@ -26,29 +27,15 @@ import {
   GitPullRequest,
   Plus,
   Lock,
-  Unlock,
-  Users,
-  CheckCircle2,
   AlertTriangle,
-  ArrowRightLeft,
-  Clock,
   Search,
-  Filter,
-  Eye,
-  ShieldCheck,
-  Building2,
-  Scale,
-  Calculator,
-  RefreshCw,
-  Lightbulb,
-  FileText,
   Printer,
-  Radio,
   BellRing,
   X,
+  ChevronRight,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { soundManager } from '@/lib/sound';
 
 interface CollaborativeReviewPlatformProps {
@@ -75,6 +62,17 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
   const [activeDossier, setActiveDossier] = useState<ReviewDossier | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [presenceMembers, setPresenceMembers] = useState<PresenceMember[]>(() => getActivePresence());
+  const [dossierToDelete, setDossierToDelete] = useState<ReviewDossier | null>(null);
+  const [isDeletingDossier, setIsDeletingDossier] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const shouldPersistDossiersRef = useRef(false);
+
+  // Persist dossiers cleanly after commit (never inside a setState updater)
+  useEffect(() => {
+    if (!shouldPersistDossiersRef.current) return;
+    shouldPersistDossiersRef.current = false;
+    saveStoredDossiers(dossiers);
+  }, [dossiers]);
 
   // Construct current actor
   const actor: WorkflowActor = useMemo(() => {
@@ -91,22 +89,24 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
   }, [currentUser]);
 
   // Real-time Server-Sent Events (SSE) hook
-  const { status: sseStatus, alerts, dismissAlert } = useRealtimeEvents({
+  const { alerts, dismissAlert } = useRealtimeEvents({
     onDossierUpdate: (remoteDossier) => {
+      shouldPersistDossiersRef.current = true;
       setDossiers((prev) => {
         const index = prev.findIndex((d) => d.id === remoteDossier.id);
-        let next: ReviewDossier[];
         if (index >= 0) {
-          next = prev.map((d) => (d.id === remoteDossier.id ? remoteDossier : d));
-        } else {
-          next = [remoteDossier, ...prev];
+          return prev.map((d) => (d.id === remoteDossier.id ? remoteDossier : d));
         }
-        saveStoredDossiers(next);
-        return next;
+        return [remoteDossier, ...prev];
       });
 
       // Synchronize currently opened studio modal if same dossier
       setActiveDossier((cur) => (cur && cur.id === remoteDossier.id ? remoteDossier : cur));
+    },
+    onDossierDelete: (deletedId) => {
+      shouldPersistDossiersRef.current = true;
+      setDossiers((prev) => prev.filter((d) => d.id !== deletedId));
+      setActiveDossier((cur) => (cur && cur.id === deletedId ? null : cur));
     },
     onPresenceUpdate: (remoteMembers) => {
       setPresenceMembers(remoteMembers);
@@ -124,15 +124,18 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       setPresenceMembers(members);
     });
 
-    // Listen for storage events across tabs
+    // Listen for storage events across tabs and same-tab dossier updates
     const handleStorage = () => {
+      shouldPersistDossiersRef.current = false;
       setDossiers(getStoredDossiers());
     };
     window.addEventListener('storage', handleStorage);
+    window.addEventListener('planit_dossiers_change', handleStorage);
 
     return () => {
       unsubPresence();
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('planit_dossiers_change', handleStorage);
     };
   }, [actor]);
 
@@ -186,11 +189,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         const data = await res.json();
         const finalized: ReviewDossier = data.dossier || updated;
 
-        setDossiers((prev) => {
-          const next = prev.map((d) => (d.id === finalized.id ? finalized : d));
-          saveStoredDossiers(next);
-          return next;
-        });
+        shouldPersistDossiersRef.current = true;
+        setDossiers((prev) => prev.map((d) => (d.id === finalized.id ? finalized : d)));
         setActiveDossier(finalized);
 
         return { success: true, dossier: finalized };
@@ -201,11 +201,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           version: (updated.version || 1) + 1,
           updatedAt: new Date().toISOString(),
         };
-        setDossiers((prev) => {
-          const next = prev.map((d) => (d.id === fallbackDossier.id ? fallbackDossier : d));
-          saveStoredDossiers(next);
-          return next;
-        });
+        shouldPersistDossiersRef.current = true;
+        setDossiers((prev) => prev.map((d) => (d.id === fallbackDossier.id ? fallbackDossier : d)));
         setActiveDossier(fallbackDossier);
         return { success: true, dossier: fallbackDossier };
       }
@@ -215,11 +212,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
   // Create a new dossier & persist + broadcast
   const handleCreateDossier = useCallback(async (newDossier: ReviewDossier) => {
-    setDossiers((prev) => {
-      const next = [newDossier, ...prev];
-      saveStoredDossiers(next);
-      return next;
-    });
+    shouldPersistDossiersRef.current = true;
+    setDossiers((prev) => [newDossier, ...prev]);
     setActiveDossier(newDossier);
 
     // Async broadcast to server SSE endpoint
@@ -233,6 +227,34 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       // Safe offline fallback
     }
   }, []);
+
+  // Delete a dossier & persist + broadcast
+  const handleDeleteDossier = useCallback(
+    async (dossierId: string): Promise<{ success: boolean; message?: string }> => {
+      try {
+        const res = await fetch(`/api/review/dossiers?id=${encodeURIComponent(dossierId)}`, {
+          method: 'DELETE',
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData?.error || 'Suppression refusée.';
+          setDeleteError(msg);
+          return { success: false, message: msg };
+        }
+      } catch {
+        // Offline / localStorage fallback
+      }
+
+      soundManager.playClickSound();
+      shouldPersistDossiersRef.current = true;
+      setDossiers((prev) => prev.filter((d) => d.id !== dossierId));
+      setActiveDossier((cur) => (cur && cur.id === dossierId ? null : cur));
+      setDeleteError(null);
+      return { success: true };
+    },
+    []
+  );
 
   // Filtered dossiers list
   const filteredDossiers = useMemo(() => {
@@ -283,203 +305,131 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     pingPresence(actor, d.id, 'viewing');
   };
 
-  const getStatusBadge = (status: ReviewStatus) => {
+  const resetFilters = () => {
+    setSelectedDept('Tous');
+    setSelectedStatus('Tous');
+    setSearchQuery('');
+  };
+
+  const hasActiveFilters =
+    selectedDept !== 'Tous' || selectedStatus !== 'Tous' || searchQuery.trim().length > 0;
+
+  const getStatusMeta = (status: ReviewStatus) => {
     switch (status) {
       case 'brouillon':
-        return { label: 'Brouillon', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
+        return { label: 'Brouillon', dot: 'bg-slate-400', text: 'text-slate-300' };
       case 'soumis':
-        return { label: 'Soumis pour Revue', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' };
+        return { label: 'Soumis', dot: 'bg-sky-400', text: 'text-sky-300' };
       case 'en_revision':
-        return { label: 'En Révision', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
+        return { label: 'En révision', dot: 'bg-violet-400', text: 'text-violet-300' };
       case 'amendements':
-        return { label: 'Amendements N+1', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' };
+        return { label: 'Amendements', dot: 'bg-amber-400', text: 'text-amber-300' };
       case 'demande_corrections':
-        return {
-          label: 'Demande de Corrections',
-          color: 'bg-rose-500/20 text-rose-300 border-rose-500/30 font-bold',
-        };
+        return { label: 'À corriger', dot: 'bg-rose-400', text: 'text-rose-300 font-semibold' };
       case 'valide':
-        return {
-          label: 'Validé & Verrouillé',
-          color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-bold',
-        };
+        return { label: 'Validé', dot: 'bg-emerald-400', text: 'text-emerald-300 font-semibold' };
       case 'archive':
-        return { label: 'Archivé', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' };
+        return { label: 'Archivé', dot: 'bg-slate-500', text: 'text-slate-400' };
     }
   };
 
+  const departmentTabs: Array<{ id: 'Tous' | Department; label: string; count: number }> = [
+    { id: 'Tous', label: 'Tous', count: dossiers.length },
+    { id: 'Fiscalité', label: 'Fiscalité', count: deptCounts['Fiscalité'] },
+    { id: 'Comptabilité', label: 'Comptabilité', count: deptCounts['Comptabilité'] },
+    { id: 'Juridique', label: 'Juridique', count: deptCounts['Juridique'] },
+    { id: 'Recherche & Innovation', label: 'R&I', count: deptCounts['Recherche & Innovation'] },
+  ];
+
+  const otherActiveMembersCount = presenceMembers.filter((m) => m.userId !== actor.id).length;
+
   return (
-    <div className="flex flex-col gap-6 w-full pb-16">
-      {/* 1. Header Banner & Title (Dark Glassmorphism) */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#061A13]/85 backdrop-blur-2xl p-5 sm:p-7 shadow-2xl border border-emerald-500/30 text-slate-100">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex flex-col gap-1.5 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
-                <GitPullRequest className="w-5 h-5 stroke-[2.2]" />
-              </span>
-              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">
-                Plateforme Collaborative &amp; Circuit de Revue Métier
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Revue Maker-Checker, Diff &amp; Traçabilité Interdépartements
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Décloisonnez et sécurisez le travail entre <strong className="text-emerald-300">Fiscalité</strong>,{' '}
-              <strong className="text-emerald-300">Comptabilité</strong> et <strong className="text-blue-300">Juridique</strong>. Validation hiérarchique
-              stricte, comparateur de versions et journal d&apos;audit légal immuable pour conformité
-              zéro défaut.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {onOpenReportModal && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenReportModal(selectedDept)}
-                className="border-emerald-500/40 bg-emerald-950/60 text-emerald-200 hover:bg-emerald-500/20 hover:text-white font-bold text-xs gap-1.5 shadow-md cursor-pointer transition-all rounded-xl"
-              >
-                <Printer className="w-4 h-4 text-emerald-300" />
-                <span>Rapport Revue (PDF)</span>
-              </Button>
+    <div className="flex flex-col gap-5 w-full pb-14">
+      {/* 1. Essential Workspace Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-emerald-500/15">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-white">Revue métier</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 tabular-nums">
+            <span>
+              {stats.total} {stats.total > 1 ? 'dossiers' : 'dossier'}
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>{stats.inReview} en revue</span>
+            {stats.needsCorrections > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-rose-400 font-medium">
+                  {stats.needsCorrections} à corriger
+                </span>
+              </>
             )}
-
-            <Button
-              type="button"
-              onClick={() => setIsNewModalOpen(true)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer transition-all rounded-xl"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>Nouveau Dossier Métier</span>
-            </Button>
+            <span aria-hidden="true">·</span>
+            <span className="text-emerald-400/90">
+              {stats.validated} {stats.validated > 1 ? 'validés' : 'validé'}
+            </span>
+            {stats.blockedRequests > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-amber-400 font-medium">
+                  {stats.blockedRequests} {stats.blockedRequests > 1 ? 'blocages' : 'blocage'}
+                </span>
+              </>
+            )}
+            {otherActiveMembersCount > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-slate-300">
+                  {otherActiveMembersCount} {otherActiveMembersCount > 1 ? 'collaborateurs actifs' : 'collaborateur actif'}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Real-time Phoenix Presence & SSE Live Bar */}
-        <div className="relative z-10 mt-5 pt-4 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="font-bold text-slate-200">
-                Membres actifs en direct (Phoenix Presence) :
-              </span>
-            </div>
-
-            {/* Real-time SSE Connection Indicator */}
-            <div
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                sseStatus === 'connected'
-                  ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
-                  : sseStatus === 'connecting'
-                  ? 'bg-amber-950/80 border-amber-500/40 text-amber-300'
-                  : 'bg-slate-900 border-slate-700 text-slate-400'
-              }`}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {onOpenReportModal && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenReportModal(selectedDept)}
+              className="border-emerald-500/30 bg-[#061A13]/80 text-slate-200 hover:bg-emerald-500/15 hover:text-white font-medium text-xs gap-1.5 px-3.5 py-2 rounded-lg cursor-pointer transition-colors whitespace-nowrap shrink-0"
             >
-              <Radio className={`w-3 h-3 ${sseStatus === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
-              <span>
-                {sseStatus === 'connected'
-                  ? 'SSE Push Connecté'
-                  : sseStatus === 'connecting'
-                  ? 'Connexion SSE...'
-                  : 'Mode Reconnexion'}
-              </span>
-            </div>
-          </div>
+              <Printer className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Rapport PDF</span>
+            </Button>
+          )}
 
-          <div className="flex flex-wrap items-center gap-2">
-            {presenceMembers.length === 0 ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-slate-400 text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                <span>En attente d&apos;activité</span>
-              </div>
-            ) : (
-              presenceMembers.map((m) => (
-                <div
-                  key={m.userId}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-slate-200 text-[11px]"
-                  title={`${m.userName} (${m.role}) - Statut: ${m.status}`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      m.status === 'editing'
-                        ? 'bg-amber-400 animate-pulse'
-                        : 'bg-emerald-400'
-                    }`}
-                  />
-                  <strong className="text-white">{(m.userName || 'Collaborateur').split(' ')[0]}</strong>
-                  <span className="text-slate-400">({m.department})</span>
-                  {m.status === 'editing' && (
-                    <span className="text-[10px] text-amber-300 bg-amber-500/20 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">
-                      Modifie
-                    </span>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+          <Button
+            type="button"
+            onClick={() => setIsNewModalOpen(true)}
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs gap-1.5 px-4 py-2 rounded-lg cursor-pointer transition-colors whitespace-nowrap shrink-0"
+          >
+            <Plus className="w-4 h-4 stroke-[2.2]" />
+            <span>Nouveau dossier</span>
+          </Button>
         </div>
       </div>
 
-      {/* Real-time Collaborative Alerts Banner (Server-Sent Events) */}
+      {/* 2. Live Alerts (Only shown when actionable events occur) */}
       {alerts.length > 0 && (
-        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="flex flex-col gap-2">
           {alerts.slice(0, 2).map((alert, alertIdx) => (
             <div
               key={alert?.id || `alert-${alertIdx}`}
-              className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-xl ${
-                alert?.type === 'DOSSIER_VALIDATED'
-                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-100'
-                  : alert?.type === 'DOSSIER_REJECTED'
-                  ? 'bg-rose-950/80 border-rose-500/50 text-rose-100'
-                  : alert?.type === 'DOSSIER_SUBMITTED'
-                  ? 'bg-purple-950/80 border-purple-500/50 text-purple-100'
-                  : 'bg-slate-900/90 border-cyan-500/40 text-cyan-100'
-              }`}
+              className="px-4 py-2.5 rounded-lg bg-[#061A13]/90 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs text-slate-200"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                    alert?.type === 'DOSSIER_VALIDATED'
-                      ? 'bg-emerald-500/20 text-emerald-300'
-                      : alert?.type === 'DOSSIER_REJECTED'
-                      ? 'bg-rose-500/20 text-rose-300'
-                      : alert?.type === 'DOSSIER_SUBMITTED'
-                      ? 'bg-purple-500/20 text-purple-300'
-                      : 'bg-cyan-500/20 text-cyan-300'
-                  }`}
-                >
-                  <BellRing className="w-4 h-4 animate-bounce" />
-                </div>
-                <div className="truncate">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-white uppercase text-[10px] tracking-wider">
-                      {formatRealtimeAlertType(alert?.type)}
-                    </span>
-                    {alert?.timestamp && !Number.isNaN(new Date(alert.timestamp).getTime()) && (
-                      <span className="text-[10px] opacity-70">
-                        {new Date(alert.timestamp).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        })}
-                      </span>
-                    )}
-                  </div>
-                  <p className="font-medium text-xs truncate">{alert?.message || ''}</p>
-                </div>
+                <BellRing className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="font-medium text-white shrink-0">
+                  {formatRealtimeAlertType(alert?.type)}
+                </span>
+                <span className="text-slate-400 truncate">{alert?.message || ''}</span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {alert.targetId && (
-                  <Button
+                  <button
                     type="button"
-                    size="sm"
-                    variant="outline"
                     onClick={() => {
                       const target = dossiers.find((d) => d.id === alert.targetId);
                       if (target) {
@@ -487,18 +437,18 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                         dismissAlert(alert.id);
                       }
                     }}
-                    className="h-7 px-2.5 text-[11px] font-bold border-white/20 bg-white/10 hover:bg-white/20 text-white rounded-lg cursor-pointer"
+                    className="px-2.5 py-1 text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
                   >
-                    Ouvrir le dossier
-                  </Button>
+                    Ouvrir
+                  </button>
                 )}
                 <button
                   type="button"
                   onClick={() => dismissAlert(alert.id)}
-                  className="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Fermer"
+                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                  aria-label="Fermer la notification"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -506,300 +456,253 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         </div>
       )}
 
-      {/* 2. Top Metrics Overview Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-emerald-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-slate-400 text-xs font-medium">Total Dossiers</span>
-          <span className="text-xl font-black text-white mt-1">{stats.total}</span>
-          <span className="text-[10px] text-slate-400 mt-0.5">3 départements</span>
+      {/* 3. Unified Filter Toolbar (Department Segmented Tabs + Search + Status) */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div className="flex items-center gap-1 p-1 bg-[#061A13]/85 border border-emerald-500/20 rounded-lg overflow-x-auto scrollbar-none">
+          {departmentTabs.map((tab) => {
+            const isActive = selectedDept === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedDept(tab.id)}
+                title={tab.id === 'Recherche & Innovation' ? 'Recherche & Innovation' : undefined}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 tabular-nums ${
+                  isActive
+                    ? 'bg-emerald-500/20 text-emerald-200'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                }`}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`ml-1.5 ${isActive ? 'text-emerald-300' : 'text-slate-500'}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-purple-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-purple-300 text-xs font-semibold">En Revue N+1</span>
-          <span className="text-xl font-black text-purple-200 mt-1">{stats.inReview}</span>
-          <span className="text-[10px] text-purple-400 mt-0.5">Maker ➔ Checker</span>
-        </div>
-
-        <div className="p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-rose-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-rose-300 text-xs font-semibold">À Corriger</span>
-          <span className="text-xl font-black text-rose-200 mt-1">{stats.needsCorrections}</span>
-          <span className="text-[10px] text-rose-400 mt-0.5">Consignes formulées</span>
-        </div>
-
-        <div className="p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-emerald-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-emerald-300 text-xs font-semibold">Validés &amp; Verrouillés</span>
-          <span className="text-xl font-black text-emerald-200 mt-1">{stats.validated}</span>
-          <span className="text-[10px] text-emerald-400 mt-0.5">Conformité certifiée</span>
-        </div>
-
-        <div className="col-span-2 sm:col-span-1 p-3.5 bg-[#061A13]/85 backdrop-blur-2xl rounded-xl border border-emerald-500/30 shadow-xl flex flex-col text-slate-100">
-          <span className="text-emerald-300 text-xs font-semibold">Passerelles Bloquantes</span>
-          <span className="text-xl font-black text-emerald-200 mt-1">{stats.blockedRequests}</span>
-          <span className="text-[10px] text-emerald-400 mt-0.5">Pièces en attente</span>
-        </div>
-      </div>
-
-      {/* 3. Department Tabs Selector */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-emerald-950/60 backdrop-blur-xl rounded-xl border border-emerald-500/30 shadow-xl">
-        <button
-          type="button"
-          onClick={() => setSelectedDept('Tous')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            selectedDept === 'Tous'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md font-bold'
-              : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
-          }`}
-        >
-          <Building2 className="w-4 h-4 text-emerald-400" />
-          Tous les Pôles ({dossiers.length})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedDept('Fiscalité')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            selectedDept === 'Fiscalité'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md font-bold'
-              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
-          }`}
-        >
-          <Calculator className="w-4 h-4 text-emerald-400" />
-          Fiscalité ({deptCounts['Fiscalité']})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedDept('Comptabilité')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            selectedDept === 'Comptabilité'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md'
-              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
-          }`}
-        >
-          <Calculator className="w-4 h-4 text-emerald-400" />
-          Comptabilité ({deptCounts['Comptabilité']})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedDept('Juridique')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            selectedDept === 'Juridique'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md'
-              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
-          }`}
-        >
-          <Scale className="w-4 h-4 text-emerald-400" />
-          Juridique ({deptCounts['Juridique']})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedDept('Recherche & Innovation')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            selectedDept === 'Recherche & Innovation'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-md'
-              : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10'
-          }`}
-        >
-          <Lightbulb className="w-4 h-4 text-emerald-400" />
-          Recherche &amp; Innovation ({deptCounts['Recherche & Innovation']})
-        </button>
-      </div>
-
-      {/* 4. Filter & Search Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#061A13]/85 backdrop-blur-2xl p-3.5 rounded-xl border border-emerald-500/30 shadow-xl">
-        <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher par référence, client, typologie..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 bg-[#061A13] text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          />
-        </div>
-
-        {/* Workflow State filters */}
-        <div className="flex flex-wrap items-center gap-1 text-xs">
-          {(
-            [
-              'Tous',
-              'brouillon',
-              'soumis',
-              'en_revision',
-              'demande_corrections',
-              'valide',
-              'archive',
-            ] as const
-          ).map((st) => (
-            <button
-              key={st}
-              type="button"
-              onClick={() => setSelectedStatus(st)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
-                selectedStatus === st
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-xs'
-                  : 'bg-emerald-950/40 text-slate-300 hover:bg-emerald-500/20 hover:text-white'
-              }`}
-            >
-              {st === 'Tous'
-                ? 'Tous statuts'
-                : st === 'brouillon'
-                  ? 'Brouillon'
-                  : st === 'soumis'
-                    ? 'Soumis'
-                    : st === 'en_revision'
-                      ? 'En Révision'
-                      : st === 'demande_corrections'
-                        ? 'Corrections'
-                        : st === 'valide'
-                          ? 'Validé'
-                          : 'Archivé'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Dossiers Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredDossiers.length === 0 ? (
-          <div className="col-span-full p-12 text-center bg-[#061A13]/85 backdrop-blur-2xl rounded-2xl border border-dashed border-emerald-500/30 text-slate-300 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center mx-auto mb-3 shadow-md">
-              <GitPullRequest className="w-6 h-6 stroke-[2.2]" />
-            </div>
-            <h4 className="text-sm font-bold text-white">
-              {dossiers.length === 0
-                ? 'Aucun dossier métier pour le moment'
-                : 'Aucun dossier correspondant aux filtres'}
-            </h4>
-            <p className="text-xs text-slate-300 mt-1.5 max-w-md mx-auto leading-relaxed">
-              {dossiers.length === 0
-                ? 'Initiez votre premier dossier pour activer le circuit de validation Maker-Checker, le comparateur de versions et la traçabilité interdépartements.'
-                : 'Modifiez vos critères de recherche ou réinitialisez les filtres pour afficher vos dossiers.'}
-            </p>
-            {dossiers.length === 0 && (
-              <div className="mt-4">
-                <Button
-                  type="button"
-                  onClick={() => setIsNewModalOpen(true)}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                  Créer un premier dossier
-                </Button>
-              </div>
+        <div className="flex items-center gap-2.5 w-full lg:w-auto">
+          <div className="relative flex-1 lg:w-64">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher un dossier, client..."
+              className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-emerald-500/20 bg-[#061A13]/85 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400/60 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                aria-label="Effacer la recherche"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
-        ) : (
-          filteredDossiers.map((dossier) => {
-            const statusBadge = getStatusBadge(dossier.status);
-            const hasBlockedRequest = (dossier.interDepRequests || []).some(
-              (r) => r.status === 'blocked' || r.priority === 'bloquant'
-            );
 
-            return (
-              <div
-                key={dossier.id}
-                onClick={() => handleOpenStudio(dossier)}
-                className="group relative flex flex-col justify-between bg-[#061A13]/85 backdrop-blur-2xl rounded-2xl p-5 border border-emerald-500/30 hover:border-emerald-500/60 shadow-xl hover:shadow-2xl transition-all duration-200 cursor-pointer text-xs text-slate-100"
+          <select
+            aria-label="Filtrer par statut"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as 'Tous' | ReviewStatus)}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-500/20 bg-[#061A13]/95 text-slate-200 focus:outline-none focus:border-emerald-400/60 cursor-pointer shrink-0"
+          >
+            <option value="Tous">Tous les statuts</option>
+            <option value="brouillon">Brouillon</option>
+            <option value="soumis">Soumis</option>
+            <option value="en_revision">En révision</option>
+            <option value="amendements">Amendements</option>
+            <option value="demande_corrections">À corriger</option>
+            <option value="valide">Validé</option>
+            <option value="archive">Archivé</option>
+          </select>
+        </div>
+      </div>
+
+      {deleteError && (
+        <div className="px-4 py-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-between gap-3 text-xs text-rose-200">
+          <span>{deleteError}</span>
+          <button
+            type="button"
+            onClick={() => setDeleteError(null)}
+            className="text-rose-300 hover:text-white cursor-pointer"
+            aria-label="Fermer l'erreur"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* 4. Essential Dossiers List */}
+      {filteredDossiers.length === 0 ? (
+        <div className="rounded-xl bg-[#061A13]/75 border border-emerald-500/20 py-14 px-6 text-center">
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3">
+            <GitPullRequest className="w-5 h-5" />
+          </div>
+          <h2 className="text-sm font-semibold text-white">
+            {dossiers.length === 0
+              ? 'Aucun dossier en revue'
+              : 'Aucun dossier ne correspond aux filtres'}
+          </h2>
+          <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+            {dossiers.length === 0
+              ? 'Créez un dossier pour démarrer la validation collaborative et le suivi des versions.'
+              : 'Modifiez vos critères ou réinitialisez les filtres pour afficher vos dossiers.'}
+          </p>
+          <div className="mt-4">
+            {dossiers.length === 0 ? (
+              <Button
+                type="button"
+                onClick={() => setIsNewModalOpen(true)}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs gap-1.5 px-4 py-2 rounded-lg cursor-pointer whitespace-nowrap"
               >
-                <div>
-                  {/* Card Top: Ref & Badges */}
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <span className="font-mono text-[11px] font-black bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded">
-                      {dossier.ref}
-                    </span>
+                <Plus className="w-4 h-4" />
+                <span>Nouveau dossier</span>
+              </Button>
+            ) : (
+              hasActiveFilters && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="border-emerald-500/30 bg-transparent text-slate-200 hover:bg-emerald-500/15 text-xs px-4 py-2 rounded-lg cursor-pointer whitespace-nowrap"
+                >
+                  Réinitialiser les filtres
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl bg-[#061A13]/85 border border-emerald-500/20 overflow-hidden">
+          {/* Desktop Table Header */}
+          <div className="hidden md:grid md:grid-cols-[minmax(0,2.4fr)_140px_170px_120px_110px] gap-4 px-5 py-2.5 border-b border-emerald-500/15 text-[11px] font-medium text-slate-400">
+            <span>Dossier</span>
+            <span>Pôle</span>
+            <span>Maker / Checker</span>
+            <span>Statut</span>
+            <span className="text-right">Actions</span>
+          </div>
 
-                    <div className="flex items-center gap-1.5">
-                      {dossier.lock.isLocked && (
-                        <span
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          title={`Verrouillé par ${dossier.lock.lockedBy?.name || 'Superviseur'}`}
-                        >
-                          <Lock className="w-3 h-3 text-amber-400" />
-                          Verrouillé
-                        </span>
-                      )}
+          <div className="divide-y divide-emerald-500/10">
+            {filteredDossiers.map((dossier) => {
+              const statusMeta = getStatusMeta(dossier.status);
+              const hasBlockedRequest = (dossier.interDepRequests || []).some(
+                (r) => r.status === 'blocked' || r.priority === 'bloquant'
+              );
+              const makerName = (dossier.maker?.name || 'Auteur').split(' ')[0];
+              const checkerName = dossier.checker?.name
+                ? dossier.checker.name.split(' ')[0]
+                : 'À assigner';
+              const allowDelete = canUserDeleteDossier(dossier, actor);
 
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          dossier.department === 'Fiscalité'
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                            : dossier.department === 'Comptabilité'
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                              : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                        }`}
-                      >
-                        {dossier.department}
+              return (
+                <div
+                  key={dossier.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleOpenStudio(dossier)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleOpenStudio(dossier);
+                    }
+                  }}
+                  className="group grid grid-cols-1 md:grid-cols-[minmax(0,2.4fr)_140px_170px_120px_110px] gap-2 md:gap-4 items-center px-5 py-3.5 hover:bg-emerald-500/[0.06] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:bg-emerald-500/10"
+                >
+                  {/* Dossier Title + Clean Unboxed Metadata */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors truncate">
+                        {dossier.title}
                       </span>
+                      {dossier.lock.isLocked && (
+                        <Lock
+                          className="w-3.5 h-3.5 text-amber-400 shrink-0"
+                          aria-label={`Verrouillé par ${dossier.lock.lockedBy?.name || 'Superviseur'}`}
+                        />
+                      )}
+                      {hasBlockedRequest && (
+                        <AlertTriangle
+                          className="w-3.5 h-3.5 text-rose-400 shrink-0"
+                          aria-label="Passerelle inter-pôle bloquante"
+                        />
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400 truncate">
+                      <span className="font-mono text-emerald-300/90 tabular-nums shrink-0">
+                        {dossier.ref}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-slate-300 truncate">{dossier.clientName}</span>
+                      <span aria-hidden="true" className="hidden sm:inline">·</span>
+                      <span className="hidden sm:inline truncate">{dossier.typology}</span>
                     </div>
                   </div>
 
-                  {/* Title & Client */}
-                  <h3 className="text-sm font-bold text-white mb-1 group-hover:text-amber-300 transition-colors leading-snug">
-                    {dossier.title}
-                  </h3>
-
-                  <div className="text-slate-400 font-semibold mb-3">
-                    Client : <span className="text-slate-200">{dossier.clientName}</span>
+                  {/* Department */}
+                  <div className="flex items-center justify-between md:block text-xs">
+                    <span className="text-slate-500 md:hidden">Pôle</span>
+                    <span className="text-slate-300 truncate block">
+                      {dossier.department === 'Recherche & Innovation' ? 'R&I' : dossier.department}
+                    </span>
                   </div>
 
-                  {/* Typology & Priority */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
-                    <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-slate-300 text-[10px] font-medium border border-emerald-500/30">
-                      {dossier.typology}
-                    </span>
-
-                    {hasBlockedRequest && (
-                      <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 text-rose-400" />
-                        Passerelle bloquante
+                  {/* Maker -> Checker */}
+                  <div className="flex items-center justify-between md:block text-xs">
+                    <span className="text-slate-500 md:hidden">Revue</span>
+                    <span className="text-slate-300 truncate block">
+                      {makerName} <span className="text-slate-500">→</span>{' '}
+                      <span className={dossier.checker?.name ? 'text-slate-200' : 'text-slate-500'}>
+                        {checkerName}
                       </span>
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center justify-between md:justify-start gap-2 text-xs">
+                    <span className="text-slate-500 md:hidden">Statut</span>
+                    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap ${statusMeta.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusMeta.dot}`} />
+                      <span>{statusMeta.label}</span>
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2">
+                    {allowDelete && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          soundManager.playClickSound();
+                          setDossierToDelete(dossier);
+                        }}
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        title="Supprimer le dossier"
+                        aria-label={`Supprimer ${dossier.title}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     )}
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 group-hover:text-emerald-300 whitespace-nowrap">
+                      Ouvrir
+                      <ChevronRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
+                    </span>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-                {/* Card Bottom: Maker-Checker & Action */}
-                <div className="pt-3 border-t border-emerald-500/20 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400">
-                      Maker : <strong className="text-slate-200">{(dossier.maker?.name || 'Auteur').split(' ')[0]}</strong>
-                    </span>
-                    <span className="text-slate-400">
-                      Checker :{' '}
-                      <strong className="text-slate-200">{dossier.checker?.name ? dossier.checker.name.split(' ')[0] : '-'}</strong>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2 mt-1">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge.color}`}
-                    >
-                      {statusBadge.label}
-                    </span>
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenStudio(dossier);
-                      }}
-                      className="h-7 px-2 text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer"
-                    >
-                      Revue Métier ➔
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* 6. Review Studio Modal */}
+      {/* 5. Review Studio Modal */}
       {activeDossier && (
         <DossierReviewStudioModal
           isOpen={Boolean(activeDossier)}
@@ -810,12 +713,14 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           dossier={activeDossier}
           currentUser={actor}
           onUpdateDossier={handleUpdateDossier}
+          onDeleteDossier={handleDeleteDossier}
+          canDelete={canUserDeleteDossier(activeDossier, actor)}
           activeViewers={presenceMembers.filter((m) => m.dossierId === activeDossier.id)}
           isSidebarCollapsed={isSidebarCollapsed}
         />
       )}
 
-      {/* 7. New Dossier Modal */}
+      {/* 6. New Dossier Modal */}
       <NewDossierModal
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
@@ -823,6 +728,52 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         onCreateDossier={handleCreateDossier}
         isSidebarCollapsed={isSidebarCollapsed}
       />
+
+      {/* 7. Delete Confirmation Dialog */}
+      {dossierToDelete && (
+        <div
+          className={`fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm ${
+            isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
+          }`}
+        >
+          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
+            <h4 className="text-base font-bold text-white flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              Supprimer ce dossier ?
+            </h4>
+            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              Le dossier <span className="font-mono text-emerald-300">{dossierToDelete.ref}</span> («{' '}
+              <strong className="text-white">{dossierToDelete.title}</strong> » · {dossierToDelete.clientName}) sera définitivement supprimé.
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDossierToDelete(null)}
+                disabled={isDeletingDossier}
+                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isDeletingDossier}
+                onClick={async () => {
+                  setIsDeletingDossier(true);
+                  await handleDeleteDossier(dossierToDelete.id);
+                  setIsDeletingDossier(false);
+                  setDossierToDelete(null);
+                }}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
+              >
+                {isDeletingDossier ? 'Suppression...' : 'Supprimer'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

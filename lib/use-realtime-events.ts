@@ -20,6 +20,7 @@ interface UseRealtimeEventsOptions {
   onEvent?: (event: RealtimeEvent) => void;
   onPresenceUpdate?: (members: PresenceMember[]) => void;
   onDossierUpdate?: (dossier: ReviewDossier, eventType: RealtimeEventType) => void;
+  onDossierDelete?: (dossierId: string) => void;
   enableSounds?: boolean;
 }
 
@@ -132,6 +133,13 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           ) {
             optionsRef.current.onDossierUpdate(eventData.payload.dossier, eventData.type);
           }
+
+          if (eventData.type === 'DOSSIER_DELETED' && optionsRef.current.onDossierDelete) {
+            const deletedId = eventData.targetId || eventData.payload?.dossierId;
+            if (deletedId) {
+              optionsRef.current.onDossierDelete(deletedId);
+            }
+          }
         };
 
         es.onmessage = (e) => {
@@ -155,6 +163,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           'DOSSIER_LOCKED',
           'DOSSIER_UNLOCKED',
           'DOSSIER_CONFLICT',
+          'DOSSIER_DELETED',
           'PRESENCE_CHANGED',
           'TASK_UPDATED',
           'TASK_ASSIGNED',

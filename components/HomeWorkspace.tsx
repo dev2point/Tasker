@@ -191,9 +191,11 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       setReviewDossiers(getStoredDossiers());
     };
     window.addEventListener('storage', handleStorage);
+    window.addEventListener('planit_dossiers_change', handleStorage);
     return () => {
       clearTimeout(hydrateTimer);
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('planit_dossiers_change', handleStorage);
     };
   }, []);
 

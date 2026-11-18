@@ -11,6 +11,7 @@ export type RealtimeEventType =
   | 'DOSSIER_LOCKED'
   | 'DOSSIER_UNLOCKED'
   | 'DOSSIER_CONFLICT'
+  | 'DOSSIER_DELETED'
   | 'PRESENCE_CHANGED'
   | 'TASK_UPDATED'
   | 'TASK_ASSIGNED'
@@ -119,6 +120,7 @@ export function formatRealtimeAlertType(type: unknown): string {
   if (type === 'TASK_COMPLETED') return 'TÂCHE TERMINÉE';
   if (type === 'TASK_UPDATED') return 'TÂCHE MISE À JOUR';
   if (type === 'TASK_DELETED') return 'TÂCHE SUPPRIMÉE';
+  if (type === 'DOSSIER_DELETED') return 'DOSSIER SUPPRIMÉ';
   return type.replace(/^DOSSIER_/, '').replace(/_/g, ' ').trim() || 'NOTIFICATION';
 }
 

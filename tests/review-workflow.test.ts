@@ -6,6 +6,7 @@ import {
   executeWorkflowTransition,
   togglePreventiveLock,
   computeLineDiff,
+  canUserDeleteDossier,
 } from '@/lib/review-service';
 import { ReviewDossier, WorkflowActor } from '@/types/review';
 
@@ -229,6 +230,36 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
 
       expect(diff.every((d) => d.type === 'unchanged')).toBe(true);
       expect(diff).toHaveLength(3);
+    });
+  });
+
+  describe('Dossier Deletion RBAC (canUserDeleteDossier)', () => {
+    it('allows creator to delete their own non-validated, unlocked dossier', () => {
+      expect(canUserDeleteDossier(testDossier, mockMaker)).toBe(true);
+    });
+
+    it('forbids creator from deleting a validated or archived dossier', () => {
+      expect(
+        canUserDeleteDossier({ ...testDossier, status: 'valide' }, mockMaker)
+      ).toBe(false);
+      expect(
+        canUserDeleteDossier({ ...testDossier, status: 'archive' }, mockMaker)
+      ).toBe(false);
+    });
+
+    it('forbids creator from deleting a dossier locked by another supervisor', () => {
+      const lockedByOther = togglePreventiveLock(testDossier, mockChecker, true);
+      expect(canUserDeleteDossier(lockedByOther, mockMaker)).toBe(false);
+    });
+
+    it('forbids unrelated users from deleting someone else dossier, while allowing admin', () => {
+      expect(canUserDeleteDossier(testDossier, mockChecker)).toBe(false);
+      expect(
+        canUserDeleteDossier(
+          { ...testDossier, status: 'valide' },
+          { id: 'usr-admin', email: 'admin@cabinet.fr', role: 'admin' }
+        )
+      ).toBe(true);
     });
   });
 });
