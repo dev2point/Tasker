@@ -34,6 +34,10 @@ import { soundManager } from '@/lib/sound';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePWAInstall } from '@/components/pwa/usePWAInstall';
+import {
+  SIDEBAR_HOVER_DELAY_MS,
+  computeSidebarVisualState,
+} from '@/lib/sidebar-layout';
 
 export interface SidebarProps {
   currentView: ViewMode;
@@ -86,11 +90,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [localCollapsed, setLocalCollapsed] = useState<boolean>(false);
   const isCollapsed = controlledCollapsed !== undefined ? controlledCollapsed : localCollapsed;
 
-  // Clean collapse state - Sidebar takes exact layout space without floating overlay
-  const isVisuallyCollapsed = isCollapsed;
+  // Hover-intent floating drawer state (200ms debounce to avoid accidental flicker)
+  const [isHoverExpanded, setIsHoverExpanded] = useState<boolean>(false);
+  const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPointerInsideRef = useRef<boolean>(false);
+
+  const clearHoverTimers = () => {
+    if (openTimerRef.current) {
+      clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (openTimerRef.current) clearTimeout(openTimerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const { isVisuallyCollapsed, isFloatingHoverDrawer } = computeSidebarVisualState(
+    isCollapsed,
+    isHoverExpanded
+  );
 
   const toggleCollapse = () => {
     soundManager.playClickSound();
+    clearHoverTimers();
+    setIsHoverExpanded(false);
     if (onToggleCollapse) {
       onToggleCollapse();
     } else {
@@ -103,6 +135,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { isCompatible, isInstalled, install } = usePWAInstall();
+
+  const handleMouseEnter = () => {
+    isPointerInsideRef.current = true;
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    if (!isCollapsed || isHoverExpanded) return;
+    if (openTimerRef.current) clearTimeout(openTimerRef.current);
+    openTimerRef.current = setTimeout(() => {
+      openTimerRef.current = null;
+      setIsHoverExpanded(true);
+    }, SIDEBAR_HOVER_DELAY_MS);
+  };
+
+  const handleMouseLeave = () => {
+    isPointerInsideRef.current = false;
+    if (openTimerRef.current) {
+      clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (!isCollapsed || !isHoverExpanded || isUserMenuOpen) return;
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null;
+      setIsHoverExpanded(false);
+    }, SIDEBAR_HOVER_DELAY_MS);
+  };
+
+  // Close hover drawer cleanly once user profile popover closes while pointer is outside
+  useEffect(() => {
+    if (isUserMenuOpen || isPointerInsideRef.current || !isCollapsed || !isHoverExpanded) return;
+    const timer = setTimeout(() => {
+      if (!isPointerInsideRef.current) {
+        setIsHoverExpanded(false);
+      }
+    }, SIDEBAR_HOVER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isUserMenuOpen, isCollapsed, isHoverExpanded]);
 
   // Live time & date
   useEffect(() => {
@@ -188,10 +259,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="main-desktop-sidebar"
-      className={`hidden md:flex flex-col fixed top-0 bottom-0 left-0 bg-[#061A13]/90 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 select-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-40 ${
-        isVisuallyCollapsed ? 'w-20 shadow-xl shadow-black/50' : 'w-64 shadow-2xl shadow-emerald-950/40'
+      className={`hidden md:block md:sticky md:top-0 md:h-screen shrink-0 select-none z-30 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
+      <div
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`flex flex-col h-full bg-[#061A13]/95 backdrop-blur-2xl border-r border-emerald-500/20 text-slate-100 transition-[width,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isFloatingHoverDrawer
+            ? 'absolute top-0 bottom-0 left-0 w-64 shadow-[24px_0_60px_-15px_rgba(0,0,0,0.85)] border-emerald-500/35'
+            : isVisuallyCollapsed
+              ? 'w-20 shadow-xl shadow-black/50'
+              : 'w-64 shadow-2xl shadow-emerald-950/40'
+        }`}
+      >
       {/* 1. Header: Brand Logo & Collapse Toggle */}
       <div className="h-16 px-3.5 flex items-center justify-between border-b border-emerald-500/20 shrink-0">
         {isVisuallyCollapsed ? (
@@ -800,6 +882,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
+      </div>
       </div>
     </aside>
   );

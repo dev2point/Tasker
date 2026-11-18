@@ -103,6 +103,8 @@ export function executeWorkflowTransition(
   options?: {
     correctionNotes?: string;
     amendmentNotes?: string;
+    submissionNote?: string;
+    targetChecker?: WorkflowActor;
     updatedDataFields?: DataFieldDiff[];
     updatedCurrentContent?: string;
     ipAddress?: string;
@@ -116,9 +118,18 @@ export function executeWorkflowTransition(
   let actionName: AuditLogEntry['action'] = 'modification_chiffree';
   let logDetails = '';
 
-  if (current === 'brouillon' && targetStatus === 'soumis') {
+  if (
+    (current === 'brouillon' || current === 'demande_corrections') &&
+    targetStatus === 'soumis'
+  ) {
     actionName = 'soumission_n1';
-    logDetails = `Dossier soumis pour revue au superviseur par le collaborateur ${actor.name}.`;
+    const recipientText = options?.targetChecker?.name
+      ? ` à ${options.targetChecker.name}`
+      : ' au superviseur';
+    const noteText = options?.submissionNote?.trim()
+      ? ` — Consigne : ${options.submissionNote.trim()}`
+      : '';
+    logDetails = `Dossier soumis pour revue${recipientText} par ${actor.name}.${noteText}`;
   } else if (current === 'soumis' && targetStatus === 'en_revision') {
     actionName = 'prise_en_charge';
     logDetails = `Prise en charge de la révision par ${actor.name} (${actor.department} - ${actor.role}).`;
@@ -167,6 +178,13 @@ export function executeWorkflowTransition(
     details: logDetails,
   };
 
+  const assignedChecker =
+    targetStatus === 'soumis' && options?.targetChecker
+      ? options.targetChecker
+      : targetStatus === 'en_revision' || targetStatus === 'valide'
+        ? actor
+        : dossier.checker;
+
   const updatedDossier: ReviewDossier = {
     ...dossier,
     version: (dossier.version || 1) + 1,
@@ -182,10 +200,7 @@ export function executeWorkflowTransition(
           ? dossier.correctionNotes
           : undefined,
     correctionRequestedAt: targetStatus === 'demande_corrections' ? now : dossier.correctionRequestedAt,
-    checker:
-      targetStatus === 'en_revision' || targetStatus === 'valide'
-        ? actor
-        : dossier.checker,
+    checker: assignedChecker,
     // Auto lock on validation
     lock:
       targetStatus === 'valide'

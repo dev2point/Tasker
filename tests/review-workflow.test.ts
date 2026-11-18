@@ -100,6 +100,32 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
       expect(latestAudit.actorId).toBe(mockMaker.id);
     });
 
+    it('Maker submits dossier to a specific user and supports resubmission after corrections', () => {
+      const customTarget: WorkflowActor = {
+        id: 'usr-specific-reviewer',
+        name: 'Claire Delacroix',
+        email: 'c.delacroix@cabinet.fr',
+        department: 'Juridique',
+        role: 'collaborateur',
+      };
+      const res = executeWorkflowTransition(testDossier, 'soumis', mockMaker, {
+        targetChecker: customTarget,
+        submissionNote: 'Merci de vérifier la clause fiscale.',
+      });
+      expect(res.success).toBe(true);
+      expect(res.dossier.status).toBe('soumis');
+      expect(res.dossier.checker?.id).toBe(customTarget.id);
+      expect(res.dossier.checker?.name).toBe('Claire Delacroix');
+      expect(res.dossier.auditTrail[0].details).toContain('Claire Delacroix');
+
+      const returned = { ...res.dossier, status: 'demande_corrections' as const };
+      const resubmitted = executeWorkflowTransition(returned, 'soumis', mockMaker, {
+        targetChecker: customTarget,
+      });
+      expect(resubmitted.success).toBe(true);
+      expect(resubmitted.dossier.status).toBe('soumis');
+    });
+
     it('Checker takes charge of submitted file: soumis -> en_revision', () => {
       const submitted = executeWorkflowTransition(testDossier, 'soumis', mockMaker).dossier;
       const res = executeWorkflowTransition(submitted, 'en_revision', mockChecker);

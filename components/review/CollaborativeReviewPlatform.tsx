@@ -8,6 +8,7 @@ import {
   WorkflowActor,
   PresenceMember,
 } from '@/types/review';
+import { User } from '@/types/user';
 import {
   getStoredDossiers,
   saveStoredDossiers,
@@ -36,6 +37,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { soundManager } from '@/lib/sound';
 
 interface CollaborativeReviewPlatformProps {
@@ -46,14 +48,18 @@ interface CollaborativeReviewPlatformProps {
     role?: string;
     department?: string;
   } | null;
+  teamUsers?: User[];
   onOpenReportModal?: (department?: 'Tous' | Department) => void;
   isSidebarCollapsed?: boolean;
+  onStudioOpenChange?: (isOpen: boolean) => void;
 }
 
 export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformProps> = ({
   currentUser,
+  teamUsers = [],
   onOpenReportModal,
   isSidebarCollapsed = false,
+  onStudioOpenChange,
 }) => {
   const [dossiers, setDossiers] = useState<ReviewDossier[]>(() => getStoredDossiers());
   const [selectedDept, setSelectedDept] = useState<'Tous' | Department>('Tous');
@@ -73,6 +79,18 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     shouldPersistDossiersRef.current = false;
     saveStoredDossiers(dossiers);
   }, [dossiers]);
+
+  // Synchronize studio open state with parent sidebar layout
+  const isStudioOpen = Boolean(activeDossier);
+  useEffect(() => {
+    onStudioOpenChange?.(isStudioOpen);
+  }, [isStudioOpen, onStudioOpenChange]);
+
+  useEffect(() => {
+    return () => {
+      onStudioOpenChange?.(false);
+    };
+  }, [onStudioOpenChange]);
 
   // Construct current actor
   const actor: WorkflowActor = useMemo(() => {
@@ -712,6 +730,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           }}
           dossier={activeDossier}
           currentUser={actor}
+          teamUsers={teamUsers}
           onUpdateDossier={handleUpdateDossier}
           onDeleteDossier={handleDeleteDossier}
           canDelete={canUserDeleteDossier(activeDossier, actor)}
@@ -731,48 +750,46 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
       {/* 7. Delete Confirmation Dialog */}
       {dossierToDelete && (
-        <div
-          className={`fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm ${
-            isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-          }`}
-        >
-          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
-            <h4 className="text-base font-bold text-white flex items-center gap-2">
-              <Trash2 className="w-4 h-4 text-rose-400" />
-              Supprimer ce dossier ?
-            </h4>
-            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              Le dossier <span className="font-mono text-emerald-300">{dossierToDelete.ref}</span> («{' '}
-              <strong className="text-white">{dossierToDelete.title}</strong> » · {dossierToDelete.clientName}) sera définitivement supprimé.
-            </p>
-            <div className="flex justify-end gap-2 mt-5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDossierToDelete(null)}
-                disabled={isDeletingDossier}
-                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={isDeletingDossier}
-                onClick={async () => {
-                  setIsDeletingDossier(true);
-                  await handleDeleteDossier(dossierToDelete.id);
-                  setIsDeletingDossier(false);
-                  setDossierToDelete(null);
-                }}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
-              >
-                {isDeletingDossier ? 'Suppression...' : 'Supprimer'}
-              </Button>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                Supprimer ce dossier ?
+              </h4>
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                Le dossier <span className="font-mono text-emerald-300">{dossierToDelete.ref}</span> («{' '}
+                <strong className="text-white">{dossierToDelete.title}</strong> » · {dossierToDelete.clientName}) sera définitivement supprimé.
+              </p>
+              <div className="flex justify-end gap-2 mt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDossierToDelete(null)}
+                  disabled={isDeletingDossier}
+                  className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isDeletingDossier}
+                  onClick={async () => {
+                    setIsDeletingDossier(true);
+                    await handleDeleteDossier(dossierToDelete.id);
+                    setIsDeletingDossier(false);
+                    setDossierToDelete(null);
+                  }}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
+                >
+                  {isDeletingDossier ? 'Suppression...' : 'Supprimer'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, useReducer } from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { ListView } from '@/components/ListView';
@@ -65,6 +65,12 @@ import { getDefaultDueDateTime, isDueDateTimeInPast } from '@/lib/due-date-utils
 import { normalizeTaskStatus } from '@/lib/constants';
 import { mergeNotificationsById } from '@/lib/notifications-helper';
 import { useRealtimeEvents } from '@/lib/use-realtime-events';
+import {
+  INITIAL_SIDEBAR_LAYOUT_STATE,
+  NARROW_DESKTOP_BREAKPOINT_PX,
+  reduceSidebarLayoutState,
+  resolveSidebarCollapsed,
+} from '@/lib/sidebar-layout';
 
 export interface HomeWorkspaceProps {
   initialSession: InitialAuthSession | null;
@@ -129,7 +135,28 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isCategoryTagModalOpen, setIsCategoryTagModalOpen] = useState<boolean>(false);
   const [categoryTagModalInitialTab, setCategoryTagModalInitialTab] = useState<'categories' | 'tags'>('categories');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [sidebarLayout, dispatchSidebarLayout] = useReducer(
+    reduceSidebarLayoutState,
+    INITIAL_SIDEBAR_LAYOUT_STATE
+  );
+  const isSidebarCollapsed = resolveSidebarCollapsed(sidebarLayout);
+  const handleToggleSidebar = useCallback(() => {
+    dispatchSidebarLayout({ type: 'TOGGLE_MANUAL' });
+  }, []);
+  const handleStudioOpenChange = useCallback((isOpen: boolean) => {
+    dispatchSidebarLayout({ type: 'SET_STUDIO_OPEN', isOpen });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(`(max-width: ${NARROW_DESKTOP_BREAKPOINT_PX - 1}px)`);
+    const syncViewport = () => {
+      dispatchSidebarLayout({ type: 'SET_VIEWPORT_NARROW', isNarrow: mq.matches });
+    };
+    syncViewport();
+    mq.addEventListener('change', syncViewport);
+    return () => mq.removeEventListener('change', syncViewport);
+  }, []);
 
   // Executive Report & Committee PDF Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
@@ -514,7 +541,11 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
 
   const handleViewChange = (view: ViewMode) => {
     closeAllModals();
-    setCurrentView(getEffectiveViewMode(view, currentUser?.role));
+    const nextView = getEffectiveViewMode(view, currentUser?.role);
+    if (nextView !== 'review') {
+      dispatchSidebarLayout({ type: 'SET_STUDIO_OPEN', isOpen: false });
+    }
+    setCurrentView(nextView);
   };
 
   // Automatic Reminder Background Evaluation Engine (Every 10 seconds)
@@ -1118,7 +1149,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     : null;
 
   return (
-    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col text-slate-100 selection:bg-emerald-500 selection:text-slate-950 pb-24 md:pb-12 overflow-x-clip">
+    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col md:flex-row text-slate-100 selection:bg-emerald-500 selection:text-slate-950 overflow-x-clip">
       {/* Ambient Radial Glass Light Orbs */}
       <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none z-0" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-emerald-600/12 blur-[140px] pointer-events-none z-0" />
@@ -1168,7 +1199,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         onToggleSound={handleToggleSound}
         pendingTasksCount={visibleTasks.filter((t) => !t.completed).length}
         isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        onToggleCollapse={handleToggleSidebar}
       />
 
       {/* Global Navigation Header for Mobile Devices */}
@@ -1201,12 +1232,8 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         pendingTasksCount={visibleTasks.filter((t) => !t.completed).length}
       />
 
-      {/* Main Content Area */}
-      <div
-        className={`relative z-10 flex flex-col flex-1 pt-14 md:pt-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${
-          isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-        }`}
-      >
+      {/* Main Content Area (Flex Flow — never overlaps or hides behind sidebar) */}
+      <div className="flex flex-col flex-1 min-w-0 pt-14 md:pt-6 pb-24 md:pb-12">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 flex-1 w-full min-w-0">
           <OverdueReminderBanner
             overdueTasks={overdueTasks}
@@ -1237,8 +1264,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           {effectiveView === 'review' && (
             <CollaborativeReviewPlatform
               currentUser={currentUser}
+              teamUsers={teamUsers}
               onOpenReportModal={(dept) => handleOpenReportModal('review_progress', dept || 'Tous')}
               isSidebarCollapsed={isSidebarCollapsed}
+              onStudioOpenChange={handleStudioOpenChange}
             />
           )}
 

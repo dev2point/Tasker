@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Category, Task, TagItem } from '@/types/task';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import {
   AVAILABLE_CATEGORY_ICONS,
   PRESET_CATEGORY_COLORS,
@@ -234,15 +235,14 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
   };
 
   return (
-    <div
-      id="category-tag-manager-modal"
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <ModalPortal>
+      <div
+        id="category-tag-manager-modal"
+        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
       <div
         className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 text-slate-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
@@ -797,5 +797,6 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };

@@ -18,6 +18,7 @@ import { TaskNotification, Task } from '@/types/task';
 import { formatDueDateFrench } from '@/lib/reminders';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 
 interface NotificationDropdownProps {
   notifications: TaskNotification[];
@@ -54,11 +55,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div
-      id="notifications-modal-backdrop"
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-start justify-end p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
-    >
+    <ModalPortal>
+      <div
+        id="notifications-modal-backdrop"
+        onClick={onClose}
+        className="fixed inset-0 z-[95] flex items-start justify-end p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+      >
       <div
         role="dialog"
         aria-modal="true"
@@ -273,6 +275,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

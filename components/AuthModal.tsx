@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { authClient, signIn, signUp, useSession } from '@/lib/auth-client';
 import { User } from '@/types/user';
 import { ViewMode } from '@/types/task';
@@ -196,13 +197,12 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
   const currentUser = isSignedOut ? null : (propCurrentUser || (session?.user as any));
 
   return (
-    <div
-      id="auth-modal-backdrop"
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-      onClick={onClose}
-    >
+    <ModalPortal>
+      <div
+        id="auth-modal-backdrop"
+        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150"
+        onClick={onClose}
+      >
       <div
         id="auth-modal-dialog"
         className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 w-full max-w-4xl overflow-hidden flex flex-col md:flex-row max-h-[92vh] animate-in zoom-in-95 duration-150 relative text-slate-100"
@@ -614,5 +614,6 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };

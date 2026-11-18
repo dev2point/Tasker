@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { User, UserRole } from '@/types/user';
 import { Task, Category } from '@/types/task';
 import { soundManager } from '@/lib/sound';
@@ -1269,12 +1270,13 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       {/* MODAL: Add New Member */}
       {showAddUserModal && (
-        <div
-          onClick={() => setShowAddUserModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-150 cursor-pointer"
-          role="dialog"
-          aria-modal="true"
-        >
+        <ModalPortal>
+          <div
+            onClick={() => setShowAddUserModal(false)}
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-150 cursor-pointer"
+            role="dialog"
+            aria-modal="true"
+          >
           <div
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden text-slate-100 cursor-default"
@@ -1366,7 +1368,8 @@ export const AdminView: React.FC<AdminViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
     </div>
   );

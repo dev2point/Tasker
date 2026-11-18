@@ -20,6 +20,7 @@ import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-p
 import { SpreadsheetDiffViewer } from '@/components/review/SpreadsheetDiffViewer';
 import { WordDocxDiffViewer } from '@/components/review/WordDocxDiffViewer';
 import { ModerationDecisionModal } from '@/components/review/ModerationDecisionModal';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { sendBrowserNotification } from '@/lib/reminders';
 import {
   FileText,
@@ -705,7 +706,8 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
       {/* Modal: New Tracked File */}
       {isNewFileModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="relative w-full max-w-lg bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -832,12 +834,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Modal: New Version of existing file */}
       {isNewVersionModalOpen && uploadFileTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="relative w-full max-w-lg bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
               <div>
@@ -959,12 +963,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Modal: Inspect Snapshot Details */}
       {inspectingSnapshot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="relative w-full max-w-2xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
               <div className="flex items-center gap-2">
@@ -1053,12 +1059,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </Button>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Modal: Diff comparison between two versions */}
       {diffComparison && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
           <div className="relative w-full max-w-5xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-4 sm:p-5 text-slate-100 flex flex-col gap-4 max-h-[92vh] overflow-hidden my-auto">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
               <div className="flex items-center gap-2">
@@ -1172,7 +1180,8 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </Button>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Modal: Moderation Decision with mandatory motive */}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { User, UserRole } from '@/types/user';
 import { Task } from '@/types/task';
 
@@ -168,14 +169,13 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      onClick={onClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-      role="dialog"
-      aria-modal="true"
-    >
+    <ModalPortal>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150 cursor-pointer"
+        role="dialog"
+        aria-modal="true"
+      >
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl rounded-2xl bg-[#061A13]/95 text-slate-100 shadow-2xl border border-emerald-500/30 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 cursor-default"
@@ -635,5 +635,6 @@ export const PostgresTeamModal: React.FC<PostgresTeamModalProps> = ({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };

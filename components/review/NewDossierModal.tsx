@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Department, DossierPriority, ReviewDossier, WorkflowActor } from '@/types/review';
 import { X, Plus, FileText, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { soundManager } from '@/lib/sound';
 
 interface NewDossierModalProps {
@@ -157,12 +158,9 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-    >
-      <div className="relative w-full max-w-2xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden my-auto text-slate-100">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div className="relative w-full max-w-2xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 overflow-hidden my-auto text-slate-100">
         <div className="flex items-center justify-between px-5 py-4 bg-emerald-950/80 border-b border-emerald-500/30 text-white">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-amber-400">
@@ -333,5 +331,6 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
         </form>
       </div>
     </div>
+  </ModalPortal>
   );
 };

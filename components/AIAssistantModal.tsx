@@ -23,6 +23,7 @@ import { soundManager } from '@/lib/sound';
 import { PRIORITY_CONFIG } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { Textarea } from '@/components/ui/textarea';
 
 interface AIAssistantModalProps {
@@ -171,12 +172,11 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   };
 
   return (
-    <div
-      onClick={onClose}
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-    >
+    <ModalPortal>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+      >
       <div
         role="dialog"
         aria-modal="true"
@@ -497,7 +497,8 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         </div>
       </>
     )}
+    </div>
   </div>
-</div>
+  </ModalPortal>
   );
 };

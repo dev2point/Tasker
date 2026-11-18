@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Task, Priority, Recurrence, Category, Subtask, TaskStatus } from '@/types/task';
 import { TrackedFile } from '@/types/file-version';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { FileVersionManager } from '@/components/FileVersionManager';
 import { User } from '@/types/user';
 import {
@@ -392,15 +393,14 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
   const priorityConfig = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
 
   return (
-    <div
-      id="task-modal-backdrop"
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 sm:pt-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto transition-[padding] duration-300 ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <ModalPortal>
+      <div
+        id="task-modal-backdrop"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 sm:pt-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
       <div
         className="bg-[#061A13]/98 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 text-slate-100 w-full max-w-2xl lg:max-w-3xl xl:max-w-5xl max-h-[90vh] my-auto flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 shrink-0"
         onClick={(e) => e.stopPropagation()}
@@ -1406,6 +1406,7 @@ const TaskModalInner: React.FC<Omit<TaskModalProps, 'isOpen'>> = ({
         )}
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

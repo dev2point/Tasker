@@ -11,6 +11,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { soundManager } from '@/lib/sound';
 
 interface ModerationDecisionModalProps {
@@ -60,7 +61,8 @@ export const ModerationDecisionModal: React.FC<ModerationDecisionModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[105] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
       <div className="relative w-full max-w-lg bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
@@ -202,6 +204,7 @@ export const ModerationDecisionModal: React.FC<ModerationDecisionModalProps> = (
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 };

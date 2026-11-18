@@ -241,7 +241,9 @@ export async function PATCH(req: NextRequest) {
       switch (finalizedDossier.status) {
         case 'soumis':
           eventType = 'DOSSIER_SUBMITTED';
-          alertMessage = `Le Maker ${user.name} a soumis le dossier ${finalizedDossier.ref} (v${finalizedDossier.version}) pour validation.`;
+          alertMessage = finalizedDossier.checker?.name
+            ? `${user.name} a soumis le dossier ${finalizedDossier.ref} (v${finalizedDossier.version}) à ${finalizedDossier.checker.name} pour revue.`
+            : `Le Maker ${user.name} a soumis le dossier ${finalizedDossier.ref} (v${finalizedDossier.version}) pour validation.`;
           break;
         case 'en_revision':
           eventType = 'DOSSIER_REVIEW_STARTED';

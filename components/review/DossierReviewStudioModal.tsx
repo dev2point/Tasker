@@ -9,6 +9,7 @@ import {
   InterDepRequest,
   DataFieldDiff,
 } from '@/types/review';
+import { User } from '@/types/user';
 import {
   executeWorkflowTransition,
   togglePreventiveLock,
@@ -41,9 +42,12 @@ import {
   RefreshCw,
   GitCompare,
   Trash2,
+  Search,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import { soundManager } from '@/lib/sound';
 
 interface DossierReviewStudioModalProps {
@@ -67,6 +71,7 @@ interface DossierReviewStudioModalProps {
     dossierId: string
   ) => Promise<{ success: boolean; message?: string }> | void;
   canDelete?: boolean;
+  teamUsers?: User[];
   activeViewers?: Array<{ userName: string; department: Department; status: string }>;
   isSidebarCollapsed?: boolean;
 }
@@ -100,6 +105,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   onUpdateDossier,
   onDeleteDossier,
   canDelete = false,
+  teamUsers = [],
   activeViewers = [],
   isSidebarCollapsed = false,
 }) => {
@@ -112,6 +118,10 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [selectedRecipientId, setSelectedRecipientId] = useState<string>(dossier.checker?.id || '');
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const [submissionNote, setSubmissionNote] = useState('');
 
   // Optimistic Concurrency Control (OCC) conflict resolution state
   const [conflictState, setConflictState] = useState<{
@@ -188,6 +198,8 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     options?: {
       correctionNotes?: string;
       amendmentNotes?: string;
+      submissionNote?: string;
+      targetChecker?: WorkflowActor;
       updatedCurrentContent?: string;
     }
   ) => {
@@ -203,6 +215,77 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     } else {
       setActionError(res.error || 'Erreur de transition de workflow');
     }
+  };
+
+  const availableRecipients = React.useMemo(() => {
+    const baseList =
+      teamUsers.length > 0
+        ? teamUsers
+        : [
+            {
+              id: currentUser.id,
+              name: currentUser.name,
+              email: currentUser.email,
+              role: currentUser.role === 'admin' ? 'admin' : 'member',
+              department: currentUser.department,
+            } as User,
+          ];
+
+    const sorted = [...baseList].sort((a, b) => {
+      if (a.id === currentUser.id && b.id !== currentUser.id) return 1;
+      if (b.id === currentUser.id && a.id !== currentUser.id) return -1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const query = recipientSearch.trim().toLowerCase();
+    if (!query) return sorted;
+    return sorted.filter(
+      (u) =>
+        (u.name || '').toLowerCase().includes(query) ||
+        (u.email || '').toLowerCase().includes(query) ||
+        (u.department || '').toLowerCase().includes(query)
+    );
+  }, [teamUsers, currentUser, recipientSearch]);
+
+  const selectedRecipient = availableRecipients.find((u) => u.id === selectedRecipientId) ||
+    teamUsers.find((u) => u.id === selectedRecipientId) ||
+    null;
+
+  const handleOpenSubmitModal = () => {
+    soundManager.playClickSound();
+    const defaultTarget =
+      dossier.checker?.id ||
+      availableRecipients.find((u) => u.id !== currentUser.id)?.id ||
+      availableRecipients[0]?.id ||
+      '';
+    setSelectedRecipientId(defaultTarget);
+    setRecipientSearch('');
+    setSubmissionNote('');
+    setIsSubmitModalOpen(true);
+  };
+
+  const handleConfirmSubmitToUser = () => {
+    if (!selectedRecipient) return;
+    const mappedRole: WorkflowActor['role'] =
+      selectedRecipient.role === 'admin'
+        ? 'admin'
+        : selectedRecipient.role === 'manager'
+          ? 'manager'
+          : 'collaborateur';
+    const targetChecker: WorkflowActor = {
+      id: selectedRecipient.id,
+      name: selectedRecipient.name,
+      email: selectedRecipient.email,
+      department: (selectedRecipient.department as Department) || dossier.department,
+      role: mappedRole,
+      avatarUrl: selectedRecipient.avatarUrl,
+    };
+
+    handleTransition('soumis', {
+      targetChecker,
+      submissionNote: submissionNote.trim() || undefined,
+    });
+    setIsSubmitModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -343,12 +426,9 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
       : WORKFLOW_STEPS.findIndex((s) => s.id === dossier.status);
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      }`}
-    >
-      <div className="relative w-full max-w-6xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 flex flex-col max-h-[92vh] overflow-hidden my-auto text-slate-100">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div className="relative w-full max-w-6xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 flex flex-col max-h-[92vh] overflow-hidden my-auto text-slate-100">
         {/* 1. Modal Top Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-b border-emerald-500/30">
           <div className="flex flex-wrap items-center gap-2.5 min-w-0">
@@ -745,11 +825,11 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
             {(dossier.status === 'brouillon' || dossier.status === 'demande_corrections') && (
               <Button
                 type="button"
-                onClick={() => handleTransition('soumis')}
+                onClick={handleOpenSubmitModal}
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
-                Soumettre au Superviseur N+1
+                Soumettre à un utilisateur
               </Button>
             )}
 
@@ -806,7 +886,8 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
 
       {/* Rejet avec Consignes Dialog Modal */}
       {isCorrectionsModalOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-emerald-500/30 text-slate-100">
             <h4 className="text-base font-bold text-white mb-2 flex items-center gap-2 text-rose-400">
               <AlertTriangle className="w-5 h-5 text-rose-400" />
@@ -852,12 +933,14 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
               </Button>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* OCC Conflict Resolution Modal */}
       {conflictState?.isOpen && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div className="w-full max-w-xl bg-[#071F17] rounded-2xl shadow-2xl p-6 border-2 border-amber-500/50 text-slate-100 flex flex-col gap-4">
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
@@ -964,12 +1047,14 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Delete Confirmation Dialog */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
             <h4 className="text-base font-bold text-white flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-rose-400" />
@@ -1001,8 +1086,126 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
               </Button>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
-    </div>
+
+      {/* Submit to Specific User Modal */}
+      {isSubmitModalOpen && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-emerald-500/35 text-slate-100">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <Send className="w-4 h-4 text-emerald-400" />
+                Soumettre à un utilisateur
+              </h4>
+              <button
+                type="button"
+                onClick={() => setIsSubmitModalOpen(false)}
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 cursor-pointer"
+                aria-label="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-3">
+              Choisissez la personne chargée de relire et valider le dossier{' '}
+              <span className="font-mono text-emerald-300">{dossier.ref}</span>.
+            </p>
+
+            <div className="relative mb-2.5">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={recipientSearch}
+                onChange={(e) => setRecipientSearch(e.target.value)}
+                placeholder="Rechercher un utilisateur..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 bg-emerald-950/60 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+
+            <div className="max-h-52 overflow-y-auto divide-y divide-emerald-500/15 border border-emerald-500/25 rounded-lg bg-emerald-950/35 mb-3">
+              {availableRecipients.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400">
+                  Aucun utilisateur trouvé.
+                </div>
+              ) : (
+                availableRecipients.map((u) => {
+                  const isSelected = u.id === selectedRecipientId;
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => setSelectedRecipientId(u.id)}
+                      className={`w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left text-xs transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-emerald-500/20 text-white'
+                          : 'text-slate-200 hover:bg-emerald-500/10'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">
+                          {u.name}
+                          {u.id === currentUser.id && (
+                            <span className="ml-1.5 text-[11px] font-normal text-slate-400">
+                              (vous)
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate">
+                          {u.department || 'Équipe'} · {u.role} · {u.email}
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                Message pour le relecteur (optionnel)
+              </label>
+              <textarea
+                value={submissionNote}
+                onChange={(e) => setSubmissionNote(e.target.value)}
+                rows={2}
+                placeholder="Ex : Merci de vérifier les montants de TVA avant clôture..."
+                className="w-full p-2 text-xs border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSubmitModalOpen(false)}
+                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={!selectedRecipient}
+                onClick={handleConfirmSubmitToUser}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {selectedRecipient
+                  ? `Soumettre à ${selectedRecipient.name.split(' ')[0]}`
+                  : 'Soumettre'}
+              </Button>
+            </div>
+          </div>
+          </div>
+        </ModalPortal>
+      )}
+      </div>
+    </ModalPortal>
   );
 };
