@@ -7,7 +7,6 @@ import {
   WorkflowActor,
   Department,
   InterDepRequest,
-  DataFieldDiff,
 } from '@/types/review';
 import { User } from '@/types/user';
 import {
@@ -32,9 +31,7 @@ import {
   TrendingUp,
   History,
   ArrowRightLeft,
-  Users,
   Send,
-  RotateCcw,
   Archive,
   Eye,
   Edit3,
@@ -44,9 +41,10 @@ import {
   Trash2,
   Search,
   Check,
+  ChevronDown,
+  MoreHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ModalPortal } from '@/components/ui/ModalPortal';
 import { soundManager } from '@/lib/sound';
 
@@ -76,14 +74,16 @@ interface DossierReviewStudioModalProps {
   isSidebarCollapsed?: boolean;
 }
 
-const WORKFLOW_STEPS: Array<{ id: ReviewStatus; label: string; stage: string }> = [
-  { id: 'brouillon', label: 'Brouillon', stage: 'Collaborateur' },
-  { id: 'soumis', label: 'Soumis pour Revue', stage: 'N+1' },
-  { id: 'en_revision', label: 'En Révision', stage: 'Superviseur' },
-  { id: 'amendements', label: 'Amendements', stage: 'Revue' },
-  { id: 'valide', label: 'Validé & Verrouillé', stage: 'Approuvé' },
-  { id: 'archive', label: 'Archivé', stage: 'Clôturé' },
+const REVIEW_PHASES: Array<{ number: number; label: string; statuses: ReviewStatus[] }> = [
+  { number: 1, label: 'Dépôt', statuses: ['brouillon', 'demande_corrections'] },
+  { number: 2, label: 'Envoi', statuses: ['soumis'] },
+  { number: 3, label: 'Revue', statuses: ['en_revision', 'amendements'] },
+  { number: 4, label: 'Validation', statuses: ['valide'] },
+  { number: 5, label: 'Clôture', statuses: ['archive'] },
 ];
+
+const phaseLabelFor = (status: ReviewStatus): string =>
+  REVIEW_PHASES.find((phase) => phase.statuses.includes(status))?.label || status;
 
 export const DossierReviewStudioModal: React.FC<DossierReviewStudioModalProps> = ({
   isOpen,
@@ -109,7 +109,8 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   activeViewers = [],
   isSidebarCollapsed = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'diff' | 'data' | 'files' | 'gateway' | 'audit'>('diff');
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [draftContent, setDraftContent] = useState<string>(() => dossier.textDocument.currentContent || '');
   const [amendmentNote, setAmendmentNote] = useState('');
@@ -123,7 +124,6 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   const [recipientSearch, setRecipientSearch] = useState('');
   const [submissionNote, setSubmissionNote] = useState('');
 
-  // Optimistic Concurrency Control (OCC) conflict resolution state
   const [conflictState, setConflictState] = useState<{
     isOpen: boolean;
     serverDossier: ReviewDossier;
@@ -144,7 +144,10 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     currentUser.role === 'associe' ||
     currentUser.role === 'admin';
 
-  // Centralized update dispatcher with OCC conflict interception
+  const currentPhase =
+    REVIEW_PHASES.find((phase) => phase.statuses.includes(dossier.status)) || REVIEW_PHASES[0];
+  const progressPercent = (currentPhase.number / REVIEW_PHASES.length) * 100;
+
   const applyDossierUpdate = async (
     candidate: ReviewDossier,
     options?: { force?: boolean }
@@ -153,6 +156,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
       const res = await onUpdateDossier(candidate, options);
       if (res && res.conflict && res.serverDossier) {
         soundManager.playReminderChime();
+        setIsDeleteConfirmOpen(false);
         setConflictState({
           isOpen: true,
           serverDossier: res.serverDossier,
@@ -160,7 +164,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           clientVersion: res.clientVersion || candidate.version || 1,
           message:
             res.message ||
-            'Conflit de concurrence détecté : le dossier a été modifié par un autre intervenant.',
+            'Le dossier a été modifié par un autre intervenant pendant votre travail.',
           pendingUpdate: candidate,
         });
         return false;
@@ -192,7 +196,6 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     }
   };
 
-  // State transitions handlers
   const handleTransition = (
     nextStatus: ReviewStatus,
     options?: {
@@ -316,7 +319,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
       dossier,
       currentUser,
       newLockState,
-      newLockState ? 'Révision active par le superviseur' : undefined
+      newLockState ? 'En cours de révision' : undefined
     );
     applyDossierUpdate(updated);
   };
@@ -324,7 +327,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   const handleSaveDraftAmendments = () => {
     soundManager.playClickSound();
     handleTransition('amendements', {
-      amendmentNotes: amendmentNote.trim() || 'Modifications directes du superviseur',
+      amendmentNotes: amendmentNote.trim() || 'Modifications directes du texte',
       updatedCurrentContent: draftContent,
     });
     setIsEditingContent(false);
@@ -350,7 +353,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           actorRole: currentUser.role,
           ipAddress: '192.168.1.42',
           action: 'requete_inter_pole',
-          details: `Passerelle inter-pôle émise vers le ${newReq.toDepartment} : "${newReq.title}".`,
+          details: `Demande envoyée au ${newReq.toDepartment} : "${newReq.title}".`,
         },
         ...dossier.auditTrail,
       ],
@@ -388,7 +391,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           actorRole: currentUser.role,
           ipAddress: '192.168.1.42',
           action: 'requete_inter_pole',
-          details: `Statut de la passerelle #${reqId} mis à jour vers "${status}".`,
+          details: `Statut de la demande #${reqId} mis à jour vers "${status}".`,
         },
         ...dossier.auditTrail,
       ],
@@ -419,792 +422,729 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     applyDossierUpdate(updated);
   };
 
-  // Get current active step index in workflow
-  const currentStepIndex =
-    dossier.status === 'demande_corrections'
-      ? 0
-      : WORKFLOW_STEPS.findIndex((s) => s.id === dossier.status);
-
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[80] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
         <div className="relative w-full max-w-6xl bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 flex flex-col max-h-[92vh] overflow-hidden my-auto text-slate-100">
-        {/* 1. Modal Top Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-b border-emerald-500/30">
-          <div className="flex flex-wrap items-center gap-2.5 min-w-0">
-            <span className="font-mono text-xs font-black bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-md">
-              {dossier.ref}
-            </span>
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-b border-emerald-500/30 shrink-0">
+            <div className="flex flex-wrap items-center gap-2.5 min-w-0">
+              <span className="font-mono text-xs font-black bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-md">
+                {dossier.ref}
+              </span>
 
-            {/* OCC Version indicator badge */}
-            <span
-              title={`Version actuelle du livrable : v${dossier.version || 1} (Contrôle de concurrence optimiste)`}
-              className="font-mono text-[11px] font-bold bg-emerald-900/50 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-inner"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              v{dossier.version || 1} • OCC
-            </span>
+              <span
+                title={`Version actuelle du dossier : v${dossier.version || 1}`}
+                className="font-mono text-[11px] font-bold bg-emerald-900/50 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                v{dossier.version || 1}
+              </span>
 
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                dossier.department === 'Fiscalité'
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  : dossier.department === 'Comptabilité'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                    : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-              }`}
-            >
-              {dossier.department}
-            </span>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                  dossier.department === 'Fiscalité'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : dossier.department === 'Comptabilité'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                }`}
+              >
+                {dossier.department}
+              </span>
 
-            <h3 className="text-base sm:text-lg font-black text-white truncate">
-              {dossier.title}
-            </h3>
-          </div>
+              <h3 className="text-base sm:text-lg font-black text-white truncate">
+                {dossier.title}
+              </h3>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {/* Live Presence indicator on this dossier */}
-            {activeViewers.length > 0 && (
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-bold">{activeViewers[0].userName}</span>
-                <span className="text-emerald-300">consulte en direct</span>
-              </div>
-            )}
-
-            {/* Preventive Lock Toggle Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleToggleLock}
-              disabled={Boolean(isLockedByOther && !isSupervisorOrAdmin)}
-              title={
-                dossier.lock.isLocked
-                  ? `Verrouillé par ${dossier.lock.lockedBy?.name || 'Superviseur'}`
-                  : 'Verrouiller pour empêcher les modifications concurrentes'
-              }
-              className={`h-8 px-2.5 text-xs font-bold gap-1.5 cursor-pointer ${
-                dossier.lock.isLocked
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30'
-                  : 'bg-emerald-950/40 border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20'
-              }`}
-            >
-              {dossier.lock.isLocked ? (
-                <>
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Verrouillé ({dossier.lock.lockedBy?.name.split(' ')[0]})</span>
-                </>
-              ) : (
-                <>
-                  <Unlock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Verrouiller</span>
-                </>
-              )}
-            </Button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* 2. Preventive Lock Alert if locked */}
-        {dossier.lock.isLocked && (
-          <div className="px-6 py-2 bg-amber-500/20 border-b border-amber-500/30 text-amber-200 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>
-                <strong>Verrouillage Préventif Actif :</strong> Ce dossier est actuellement sous revue par{' '}
-                <strong>{dossier.lock.lockedBy?.name}</strong> ({dossier.lock.lockedBy?.department}). L&apos;édition collaborative est sécurisée.
-              </span>
-            </div>
-            {dossier.lock.reason && (
-              <span className="italic text-amber-300 font-medium">« {dossier.lock.reason} »</span>
-            )}
-          </div>
-        )}
-
-        {/* 3. Corrections Alert Banner if state is demande_corrections */}
-        {dossier.status === 'demande_corrections' && (
-          <div className="px-6 py-3 bg-rose-500/20 border-b border-rose-500/30 text-rose-200 text-xs flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-rose-300">
-                Demande de corrections formulée par le superviseur :
-              </span>
-              <p className="mt-0.5 font-medium leading-relaxed">
-                {dossier.correctionNotes || 'Veuillez réviser les éléments surlignés avant nouvelle soumission.'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* 4. Workflow Stepper Bar (State Machine Representation) */}
-        <div className="px-4 sm:px-6 py-3 bg-emerald-950/40 border-b border-emerald-500/20 overflow-x-auto">
-          <div className="flex items-center justify-between min-w-[620px] gap-2">
-            {WORKFLOW_STEPS.map((step, idx) => {
-              const isPast = currentStepIndex > idx;
-              const isCurrent =
-                dossier.status === step.id ||
-                (dossier.status === 'demande_corrections' && step.id === 'brouillon');
-              return (
-                <div key={step.id} className="flex items-center flex-1 last:flex-none">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-black shrink-0 transition-colors ${
-                        isCurrent
-                          ? 'bg-emerald-400 text-slate-950 ring-4 ring-emerald-500/40 font-bold'
-                          : isPast
-                            ? 'bg-emerald-500 text-slate-950'
-                            : 'bg-emerald-950 border border-emerald-500/30 text-slate-400'
-                      }`}
-                    >
-                      {isPast ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
-                    </div>
-                    <div className="flex flex-col">
-                      <span
-                        className={`text-xs font-bold leading-tight ${
-                          isCurrent
-                            ? 'text-white'
-                            : isPast
-                              ? 'text-emerald-300'
-                              : 'text-slate-400'
-                        }`}
-                      >
-                        {step.label}
-                      </span>
-                      <span className="text-[10px] text-slate-400">{step.stage}</span>
-                    </div>
-                  </div>
-                  {idx < WORKFLOW_STEPS.length - 1 && (
-                    <div
-                      className={`h-0.5 flex-1 mx-2 ${
-                        isPast ? 'bg-emerald-500' : 'bg-emerald-500/20'
-                      }`}
-                    />
-                  )}
+              {activeViewers.length > 0 && (
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-bold">{activeViewers[0].userName}</span>
+                  <span className="text-emerald-300">consulte en direct</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              )}
 
-        {/* 5. Navigation Tabs */}
-        <div className="flex items-center gap-2 px-4 sm:px-6 pt-3 bg-emerald-950/60 border-b border-emerald-500/30">
-          <button
-            type="button"
-            onClick={() => setActiveTab('diff')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
-              activeTab === 'diff'
-                ? 'bg-[#061A13] text-amber-300 border-emerald-500/40 shadow-md -mb-px'
-                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
-            }`}
-          >
-            <History className="w-3.5 h-3.5 text-amber-400" />
-            Diff &amp; Modifications Textuelles
-          </button>
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-expanded={isActionsMenuOpen}
+                  aria-controls="dossier-studio-actions"
+                  onClick={() => setIsActionsMenuOpen((open) => !open)}
+                  className="h-8 px-2.5 text-xs font-bold gap-1.5 bg-emerald-950/40 border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                  Plus d&apos;actions
+                  <ChevronDown className={`w-3.5 h-3.5 ${isActionsMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('data')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
-              activeTab === 'data'
-                ? 'bg-[#061A13] text-emerald-300 border-emerald-500/40 shadow-md -mb-px'
-                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-            Données &amp; Ratios ({dossier.dataFields.length})
-          </button>
+                {isActionsMenuOpen && (
+                  <div
+                    id="dossier-studio-actions"
+                    className="absolute right-0 top-full mt-1 z-30 w-56 rounded-xl border border-emerald-500/30 bg-[#061A13] p-1.5 shadow-2xl"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleToggleLock();
+                        setIsActionsMenuOpen(false);
+                      }}
+                      disabled={Boolean(isLockedByOther && !isSupervisorOrAdmin)}
+                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-200 hover:bg-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50 cursor-pointer"
+                    >
+                      {dossier.lock.isLocked ? (
+                        <Unlock className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <Lock className="w-4 h-4 text-slate-400" />
+                      )}
+                      {dossier.lock.isLocked ? 'Déverrouiller' : 'Verrouiller'}
+                    </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('files')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
-              activeTab === 'files'
-                ? 'bg-[#061A13] text-emerald-300 border-emerald-500/40 shadow-md -mb-px'
-                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 text-emerald-400" />
-            Fichiers &amp; Versions ({dossier.trackedFiles?.length || 0})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('gateway')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
-              activeTab === 'gateway'
-                ? 'bg-[#061A13] text-amber-300 border-emerald-500/40 shadow-md -mb-px'
-                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
-            }`}
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5 text-amber-400" />
-            Passerelles Inter-Pôles ({dossier.interDepRequests.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-t-xl text-xs font-bold border-t border-x transition-all cursor-pointer ${
-              activeTab === 'audit'
-                ? 'bg-[#061A13] text-purple-300 border-emerald-500/40 shadow-md -mb-px'
-                : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-emerald-500/10'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-            Journal d&apos;Audit Immuable ({dossier.auditTrail.length})
-          </button>
-        </div>
-
-        {/* 6. Active Tab Content Area */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#061A13]/90">
-          {activeTab === 'diff' && (
-            <div className="flex flex-col gap-4">
-              {/* If supervisor wants to amend text directly */}
-              {isSupervisorOrAdmin && dossier.status === 'en_revision' && (
-                <div className="p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 shadow-md">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Edit3 className="w-4 h-4 text-emerald-400" />
-                      Édition directe des amendements par le Superviseur
-                    </span>
-                    {!isEditingContent ? (
-                      <Button
+                    {canDelete && onDeleteDossier && (
+                      <button
                         type="button"
-                        size="sm"
-                        onClick={() => setIsEditingContent(true)}
-                        className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
+                        onClick={() => {
+                          soundManager.playClickSound();
+                          setIsActionsMenuOpen(false);
+                          setConflictState(null);
+                          setIsDeleteConfirmOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer"
                       >
-                        Activer le mode modification
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer le dossier
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fermer la revue"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Lock banner */}
+          {dossier.lock.isLocked && (
+            <div className="px-4 sm:px-6 py-2 bg-amber-500/15 border-b border-amber-500/30 text-amber-200 text-xs flex items-start gap-2 shrink-0">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span>
+                En cours de révision par{' '}
+                <strong className="text-amber-100">
+                  {dossier.lock.lockedBy?.name || 'un intervenant'}
+                </strong>
+                {dossier.lock.reason ? ` · ${dossier.lock.reason}` : ''}
+              </span>
+            </div>
+          )}
+
+          {/* Corrections banner */}
+          {dossier.status === 'demande_corrections' && (
+            <div className="px-4 sm:px-6 py-3 bg-rose-500/15 border-b border-rose-500/30 text-rose-200 text-xs flex items-start gap-2.5 shrink-0">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-rose-300">Corrections demandées</span>
+                <p className="mt-0.5 font-medium leading-relaxed">
+                  {dossier.correctionNotes ||
+                    'Veuillez réviser les éléments signalés avant une nouvelle soumission.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 5-phase progress */}
+          <div className="px-4 sm:px-6 py-3 bg-emerald-950/40 border-b border-emerald-500/20 shrink-0">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="font-semibold text-emerald-200">
+                Étape {currentPhase.number} sur {REVIEW_PHASES.length} · {currentPhase.label}
+              </span>
+            </div>
+            <div
+              className="mt-2 h-1 w-full rounded-full bg-emerald-500/15"
+              role="progressbar"
+              aria-valuenow={currentPhase.number}
+              aria-valuemin={0}
+              aria-valuemax={REVIEW_PHASES.length}
+              aria-label={`Progression : étape ${currentPhase.number} sur ${REVIEW_PHASES.length}`}
+            >
+              <div className="h-1 rounded-full bg-emerald-400" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+
+          {/* Scrollable middle */}
+          <div className="flex-1 min-h-0 overflow-y-auto bg-[#061A13]/90">
+            {/* Primary Révision view */}
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col gap-4">
+                {isSupervisorOrAdmin && dossier.status === 'en_revision' && (
+                  <div className="p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 shadow-md">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Edit3 className="w-4 h-4 text-emerald-400" />
+                        Modifier le texte
+                      </span>
+                      {!isEditingContent ? (
                         <Button
                           type="button"
-                          variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setDraftContent(dossier.textDocument.currentContent);
-                            setIsEditingContent(false);
-                          }}
-                          className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300 cursor-pointer"
+                          onClick={() => setIsEditingContent(true)}
+                          className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
                         >
-                          Annuler
+                          Modifier le texte
                         </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleSaveDraftAmendments}
-                          className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer"
-                        >
-                          Consigner les amendements
-                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setDraftContent(dossier.textDocument.currentContent);
+                              setIsEditingContent(false);
+                            }}
+                            className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleSaveDraftAmendments}
+                            className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                          >
+                            Enregistrer les modifications
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditingContent && (
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="draft-content" className="sr-only">
+                          Texte du dossier
+                        </label>
+                        <textarea
+                          id="draft-content"
+                          value={draftContent}
+                          onChange={(e) => setDraftContent(e.target.value)}
+                          rows={8}
+                          className="w-full p-3 font-sans text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 leading-relaxed"
+                          placeholder="Rédigez vos modifications directement dans ce texte..."
+                        />
+                        <label htmlFor="amendment-note" className="sr-only">
+                          Note sur les modifications
+                        </label>
+                        <input
+                          id="amendment-note"
+                          type="text"
+                          value={amendmentNote}
+                          onChange={(e) => setAmendmentNote(e.target.value)}
+                          placeholder="Note sur les modifications (ex : Rectification de la clause 4.2)..."
+                          className="w-full px-3 py-1.5 text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                        />
                       </div>
                     )}
                   </div>
+                )}
 
-                  {isEditingContent && (
-                    <div className="flex flex-col gap-2">
-                      <textarea
-                        value={draftContent}
-                        onChange={(e) => setDraftContent(e.target.value)}
-                        rows={8}
-                        className="w-full p-3 font-sans text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 leading-relaxed"
-                        placeholder="Rédigez vos amendements directement dans ce texte..."
-                      />
-                      <input
-                        type="text"
-                        value={amendmentNote}
-                        onChange={(e) => setAmendmentNote(e.target.value)}
-                        placeholder="Consignes d'amendement (ex: Rectification de la clause 4.2)..."
-                        className="w-full px-3 py-1.5 text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      />
+                <TextDiffViewer
+                  previousText={dossier.textDocument.previousContent}
+                  currentText={dossier.textDocument.currentContent}
+                  title={dossier.textDocument.title}
+                  lastAmendedBy={dossier.textDocument.lastAmendedBy}
+                  lastAmendedAt={dossier.textDocument.lastAmendedAt}
+                  amendmentNotes={dossier.textDocument.amendmentNotes}
+                />
+              </div>
+            </div>
+
+            {/* Détails disclosure */}
+            <div className="border-t border-emerald-500/20">
+              <button
+                type="button"
+                aria-expanded={isDetailsOpen}
+                aria-controls="dossier-studio-details"
+                onClick={() => setIsDetailsOpen((open) => !open)}
+                className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-3 text-left text-sm font-bold text-slate-200 hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400 cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-emerald-400" />
+                  Détails
+                </span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 ${isDetailsOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDetailsOpen && (
+                <div id="dossier-studio-details" className="px-4 sm:px-6 pb-6 flex flex-col gap-6">
+                  <section className="flex flex-col gap-2">
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
+                      <TrendingUp className="w-4 h-4" />
+                      Chiffres
+                    </h4>
+                    <DataDiffViewer dataFields={dossier.dataFields} />
+                  </section>
+
+                  <section className="flex flex-col gap-2">
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
+                      <FileText className="w-4 h-4" />
+                      Fichiers
+                    </h4>
+                    <FileVersionManager
+                      files={dossier.trackedFiles || []}
+                      onChangeFiles={handleUpdateTrackedFiles}
+                      currentUser={{
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        email: currentUser.email,
+                        role: currentUser.role,
+                        department: currentUser.department,
+                      }}
+                      contextTitle={`Dossier ${dossier.ref} - ${dossier.title}`}
+                      readOnly={dossier.status === 'archive' || (dossier.lock.isLocked && Boolean(isLockedByOther))}
+                    />
+                  </section>
+
+                  <section className="flex flex-col gap-2">
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
+                      <ArrowRightLeft className="w-4 h-4" />
+                      Demandes
+                    </h4>
+                    <InterDepGatewayViewer
+                      requests={dossier.interDepRequests}
+                      dossierId={dossier.id}
+                      dossierRef={dossier.ref}
+                      currentDepartment={dossier.department}
+                      currentUser={currentUser}
+                      onAddRequest={handleAddInterDepRequest}
+                      onUpdateRequestStatus={handleUpdateInterDepStatus}
+                    />
+                  </section>
+
+                  <section className="flex flex-col gap-2">
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
+                      <History className="w-4 h-4" />
+                      Historique
+                    </h4>
+                    <AuditTrailViewer auditTrail={dossier.auditTrail} dossierRef={dossier.ref} />
+                  </section>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {actionError && (
+            <div className="px-4 sm:px-6 py-2.5 bg-rose-500/20 border-t border-rose-500/30 text-rose-200 text-xs flex items-center justify-between gap-2 shrink-0">
+              <span>{actionError}</span>
+              <button
+                type="button"
+                onClick={() => setActionError(null)}
+                className="text-rose-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer"
+                aria-label="Fermer le message d'erreur"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Sticky footer */}
+          <div className="shrink-0 bg-emerald-950/80 border-t border-emerald-500/30">
+            <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-slate-400">
+                Préparé par <strong className="text-white">{dossier.maker.name}</strong>
+                {dossier.checker?.name && (
+                  <>
+                    {' · En cours de révision par '}
+                    <strong className="text-white">{dossier.checker.name}</strong>
+                  </>
+                )}
+              </div>
+
+              <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
+                {(dossier.status === 'brouillon' || dossier.status === 'demande_corrections') && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setIsCorrectionsModalOpen(false);
+                      handleOpenSubmitModal();
+                    }}
+                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Envoyer en revue
+                  </Button>
+                )}
+
+                {dossier.status === 'soumis' && (
+                  <Button
+                    type="button"
+                    onClick={() => handleTransition('en_revision')}
+                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Commencer la revue
+                  </Button>
+                )}
+
+                {(dossier.status === 'en_revision' || dossier.status === 'amendements') && (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => handleTransition('valide')}
+                      className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Valider le dossier
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSubmitModalOpen(false);
+                        setIsCorrectionsModalOpen(true);
+                      }}
+                      className="text-xs font-semibold text-rose-300 hover:text-rose-200 underline underline-offset-4 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer"
+                    >
+                      Demander des corrections
+                    </button>
+                  </>
+                )}
+
+                {dossier.status === 'valide' && (
+                  <Button
+                    type="button"
+                    onClick={() => handleTransition('archive')}
+                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    Archiver le dossier
+                  </Button>
+                )}
+
+                {dossier.status === 'archive' && (
+                  <span className="text-xs font-semibold text-slate-300">Dossier clôturé</span>
+                )}
+              </div>
+            </div>
+
+            {/* Inline submit panel */}
+            {isSubmitModalOpen && (
+              <div className="px-4 sm:px-6 pb-4 pt-4 border-t border-emerald-500/20 max-h-[50vh] overflow-y-auto">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Send className="w-4 h-4 text-emerald-400" />
+                    Envoyer en revue
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setIsSubmitModalOpen(false)}
+                    aria-label="Fermer le panneau d'envoi"
+                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-slate-300 mb-3">
+                  Choisissez la personne chargée de relire et valider le dossier{' '}
+                  <span className="font-mono text-emerald-300">{dossier.ref}</span>.
+                </p>
+
+                <div className="relative mb-2.5">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={recipientSearch}
+                    onChange={(e) => setRecipientSearch(e.target.value)}
+                    aria-label="Rechercher un destinataire"
+                    placeholder="Rechercher un utilisateur..."
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 bg-emerald-950/60 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
+                <div className="max-h-40 overflow-y-auto divide-y divide-emerald-500/15 border border-emerald-500/25 rounded-lg bg-emerald-950/35 mb-3">
+                  {availableRecipients.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">
+                      Aucun utilisateur trouvé.
                     </div>
+                  ) : (
+                    availableRecipients.map((u) => {
+                      const isSelected = u.id === selectedRecipientId;
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => setSelectedRecipientId(u.id)}
+                          className={`w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400 ${
+                            isSelected
+                              ? 'bg-emerald-500/20 text-white'
+                              : 'text-slate-200 hover:bg-emerald-500/10'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <div className="font-semibold truncate">
+                              {u.name}
+                              {u.id === currentUser.id && (
+                                <span className="ml-1.5 text-[11px] font-normal text-slate-400">
+                                  (vous)
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate">
+                              {u.department || 'Équipe'} · {u.email}
+                            </div>
+                          </div>
+                          {isSelected && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
+                        </button>
+                      );
+                    })
                   )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="submission-note" className="block text-[11px] font-medium text-slate-300 mb-1">
+                    Message pour le relecteur (optionnel)
+                  </label>
+                  <textarea
+                    id="submission-note"
+                    value={submissionNote}
+                    onChange={(e) => setSubmissionNote(e.target.value)}
+                    rows={2}
+                    placeholder="Ex : Merci de vérifier les montants de TVA avant clôture..."
+                    className="w-full p-2 text-xs border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsSubmitModalOpen(false)}
+                    className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!selectedRecipient}
+                    onClick={handleConfirmSubmitToUser}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {selectedRecipient
+                      ? `Envoyer à ${selectedRecipient.name.split(' ')[0]}`
+                      : 'Envoyer en revue'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Inline corrections panel */}
+            {isCorrectionsModalOpen && (
+              <div className="px-4 sm:px-6 pb-4 pt-4 border-t border-emerald-500/20 max-h-[50vh] overflow-y-auto">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+                  Demander des corrections
+                </h4>
+                <p className="text-xs text-slate-300 mb-3 leading-relaxed">
+                  Précisez les points à revoir. Le dossier sera renvoyé à son auteur avec ces consignes.
+                </p>
+
+                <label htmlFor="corrections-input" className="sr-only">
+                  Consignes de correction
+                </label>
+                <textarea
+                  id="corrections-input"
+                  value={correctionsInput}
+                  onChange={(e) => setCorrectionsInput(e.target.value)}
+                  rows={3}
+                  placeholder="Ex : Réajuster l'assiette CIR sur le projet BioGen, abaisser le seuil de minimis GAP à 15 000 €..."
+                  className="w-full p-2.5 text-xs border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  required
+                />
+
+                <div className="flex flex-wrap justify-end gap-2 mt-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCorrectionsModalOpen(false)}
+                    className="text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      if (!correctionsInput.trim()) return;
+                      handleTransition('demande_corrections', {
+                        correctionNotes: correctionsInput.trim(),
+                      });
+                      setIsCorrectionsModalOpen(false);
+                    }}
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-rose-400"
+                  >
+                    Transmettre les consignes
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Conflict dialog */}
+        {conflictState?.isOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+            <div className="w-full max-w-xl bg-[#071F17] rounded-2xl shadow-2xl p-5 sm:p-6 border border-amber-500/50 text-slate-100 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-bold text-white">
+                    Ce dossier a changé pendant votre travail
+                  </h4>
+                  <p className="text-xs text-amber-200/90 mt-1 leading-relaxed">
+                    Le dossier <span className="font-mono font-bold text-white">{dossier.ref}</span> a été modifié par un autre intervenant ou dans une autre session pendant vos travaux.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 space-y-2 text-xs">
+                <div className="flex justify-between items-center gap-3 text-slate-300">
+                  <span className="text-slate-400">Dernier enregistrement :</span>
+                  <span className="font-semibold text-white text-right">
+                    {conflictState.serverDossier.auditTrail?.[0]?.actorName || 'Intervenant'} (v{conflictState.serverVersion})
+                  </span>
+                </div>
+                <div className="flex justify-between items-center gap-3 text-slate-300">
+                  <span className="text-slate-400">Heure de modification :</span>
+                  <span className="font-mono text-emerald-300">
+                    {new Date(conflictState.serverDossier.updatedAt).toLocaleTimeString('fr-FR')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center gap-3 text-slate-300">
+                  <span className="text-slate-400">Étape sur le serveur :</span>
+                  <span className="font-bold text-amber-300 text-right">
+                    {phaseLabelFor(conflictState.serverDossier.status)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center gap-3 text-slate-300">
+                  <span className="text-slate-400">Votre action en attente :</span>
+                  <span className="font-bold text-rose-300 text-right">
+                    {conflictState.pendingUpdate.status !== conflictState.serverDossier.status
+                      ? `Passage à l'étape ${phaseLabelFor(conflictState.pendingUpdate.status)}`
+                      : 'Enregistrement de vos modifications'}
+                  </span>
+                </div>
+              </div>
+
+              {showConflictDiff && (
+                <div className="p-3 bg-black/40 rounded-xl border border-emerald-500/20 max-h-48 overflow-y-auto space-y-2 text-xs font-mono">
+                  <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider font-sans">
+                    Comparaison du texte :
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div className="p-2 rounded bg-rose-950/30 border border-rose-500/30 text-rose-200">
+                      <span className="block font-bold text-rose-300 mb-1 font-sans">
+                        Version récente (v{conflictState.serverVersion}) :
+                      </span>
+                      <pre className="whitespace-pre-wrap">{conflictState.serverDossier.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
+                    </div>
+                    <div className="p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-emerald-200">
+                      <span className="block font-bold text-emerald-300 mb-1 font-sans">Vos modifications :</span>
+                      <pre className="whitespace-pre-wrap">{conflictState.pendingUpdate.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Text Diff Viewer Component */}
-              <TextDiffViewer
-                previousText={dossier.textDocument.previousContent}
-                currentText={dossier.textDocument.currentContent}
-                title={dossier.textDocument.title}
-                lastAmendedBy={dossier.textDocument.lastAmendedBy}
-                lastAmendedAt={dossier.textDocument.lastAmendedAt}
-                amendmentNotes={dossier.textDocument.amendmentNotes}
-              />
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-500/20">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowConflictDiff(!showConflictDiff)}
+                  className="text-xs text-slate-300 hover:text-white gap-1.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                >
+                  <GitCompare className="w-3.5 h-3.5 text-amber-400" />
+                  {showConflictDiff ? 'Masquer la comparaison' : 'Comparer les textes'}
+                </Button>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAcceptServerVersion}
+                    className="text-xs font-bold bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                    Utiliser la version récente
+                  </Button>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleForceApplyChanges}
+                    className="text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white gap-1.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-300"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                    Conserver mes modifications
+                  </Button>
+                </div>
+              </div>
             </div>
-          )}
-
-          {activeTab === 'data' && <DataDiffViewer dataFields={dossier.dataFields} />}
-
-          {activeTab === 'files' && (
-            <div className="space-y-4">
-              <FileVersionManager
-                files={dossier.trackedFiles || []}
-                onChangeFiles={handleUpdateTrackedFiles}
-                currentUser={{
-                  id: currentUser.id,
-                  name: currentUser.name,
-                  email: currentUser.email,
-                  role: currentUser.role,
-                  department: currentUser.department,
-                }}
-                contextTitle={`Dossier ${dossier.ref} - ${dossier.title}`}
-                readOnly={dossier.status === 'archive' || (dossier.lock.isLocked && Boolean(isLockedByOther))}
-              />
-            </div>
-          )}
-
-          {activeTab === 'gateway' && (
-            <InterDepGatewayViewer
-              requests={dossier.interDepRequests}
-              dossierId={dossier.id}
-              dossierRef={dossier.ref}
-              currentDepartment={dossier.department}
-              currentUser={currentUser}
-              onAddRequest={handleAddInterDepRequest}
-              onUpdateRequestStatus={handleUpdateInterDepStatus}
-            />
-          )}
-
-          {activeTab === 'audit' && (
-            <AuditTrailViewer auditTrail={dossier.auditTrail} dossierRef={dossier.ref} />
-          )}
-        </div>
-
-        {actionError && (
-          <div className="px-6 py-2.5 bg-rose-500/20 border-t border-rose-500/30 text-rose-200 text-xs flex items-center justify-between gap-2">
-            <span>{actionError}</span>
-            <button
-              type="button"
-              onClick={() => setActionError(null)}
-              className="text-rose-300 hover:text-white cursor-pointer"
-              aria-label="Fermer le message d'erreur"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
           </div>
         )}
 
-        {/* 7. Action Bar (Maker-Checker Decisions & Workflow Progression) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-emerald-950/80 border-t border-emerald-500/30">
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <div>
-              Collaborateur (Maker) : <strong className="text-white">{dossier.maker.name}</strong>
-            </div>
-            <span>•</span>
-            <div>
-              Superviseur (Checker) :{' '}
-              <strong className="text-white">{dossier.checker?.name || 'Attribution en cours'}</strong>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {canDelete && onDeleteDossier && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  soundManager.playClickSound();
-                  setIsDeleteConfirmOpen(true);
-                }}
-                className="border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 font-semibold text-xs gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Supprimer
-              </Button>
-            )}
-            {/* Transition: Brouillon -> Soumis */}
-            {(dossier.status === 'brouillon' || dossier.status === 'demande_corrections') && (
-              <Button
-                type="button"
-                onClick={handleOpenSubmitModal}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Soumettre à un utilisateur
-              </Button>
-            )}
-
-            {/* Transition: Soumis -> En Révision */}
-            {dossier.status === 'soumis' && (
-              <Button
-                type="button"
-                onClick={() => handleTransition('en_revision')}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs gap-1.5 shadow-md"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Prendre en charge la Révision (Manager)
-              </Button>
-            )}
-
-            {/* Actions while En Révision or Amendements */}
-            {(dossier.status === 'en_revision' || dossier.status === 'amendements') && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCorrectionsModalOpen(true)}
-                  className="border-rose-500/40 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 font-bold text-xs gap-1.5"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                  Demander des Corrections (Rejet annoté)
-                </Button>
-
-                <Button
-                  type="button"
-                  onClick={() => handleTransition('valide')}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs gap-1.5 shadow-md"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Valider &amp; Verrouiller (Conforme Zéro Défaut)
-                </Button>
-              </>
-            )}
-
-            {/* Transition: Valide -> Archive */}
-            {dossier.status === 'valide' && (
-              <Button
-                type="button"
-                onClick={() => handleTransition('archive')}
-                className="bg-slate-900 border border-emerald-500/30 text-white font-bold text-xs gap-1.5 shadow-md"
-              >
-                <Archive className="w-3.5 h-3.5" />
-                Archiver &amp; Clôturer le Livrable
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Rejet avec Consignes Dialog Modal */}
-      {isCorrectionsModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-emerald-500/30 text-slate-100">
-            <h4 className="text-base font-bold text-white mb-2 flex items-center gap-2 text-rose-400">
-              <AlertTriangle className="w-5 h-5 text-rose-400" />
-              Demande de Corrections au Collaborateur
-            </h4>
-            <p className="text-xs text-slate-300 mb-3 leading-relaxed">
-              Précisez au collaborateur les points à amender, les calculs à rectifier ou les pièces manquantes.
-              Le dossier sera repassé au collaborateur avec historique d&apos;audit.
-            </p>
-
-            <textarea
-              value={correctionsInput}
-              onChange={(e) => setCorrectionsInput(e.target.value)}
-              rows={4}
-              placeholder="Ex : Réajuster l'assiette CIR sur le projet BioGen, abaisser le seuil de minimis GAP à 15 000 €..."
-              className="w-full p-2.5 text-xs border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 mb-4"
-              required
-            />
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsCorrectionsModalOpen(false)}
-                className="text-xs border-emerald-500/30 bg-emerald-950/40 text-slate-300"
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  if (!correctionsInput.trim()) return;
-                  handleTransition('demande_corrections', {
-                    correctionNotes: correctionsInput.trim(),
-                  });
-                  setIsCorrectionsModalOpen(false);
-                }}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
-              >
-                Transmettre les consignes
-              </Button>
-            </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
-
-      {/* OCC Conflict Resolution Modal */}
-      {conflictState?.isOpen && (
-        <ModalPortal>
+        {/* Delete confirmation dialog */}
+        {isDeleteConfirmOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="w-full max-w-xl bg-[#071F17] rounded-2xl shadow-2xl p-6 border-2 border-amber-500/50 text-slate-100 flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-base font-bold text-white">
-                    Conflit de Concurrence Détecté (OCC)
-                  </h4>
-                  <Badge variant="outline" className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] font-mono">
-                    v{conflictState.clientVersion} ➔ v{conflictState.serverVersion}
-                  </Badge>
-                </div>
-                <p className="text-xs text-amber-200/90 mt-1 leading-relaxed">
-                  Le dossier <span className="font-mono font-bold text-white">{dossier.ref}</span> a été modifié simultanément par un autre intervenant ou dans une autre session pendant vos travaux.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Dernier enregistrement serveur :</span>
-                <span className="font-semibold text-white">
-                  {conflictState.serverDossier.auditTrail?.[0]?.actorName || 'Superviseur'} (v{conflictState.serverVersion})
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Heure de modification distante :</span>
-                <span className="font-mono text-emerald-300">
-                  {new Date(conflictState.serverDossier.updatedAt).toLocaleTimeString('fr-FR')}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Statut actuel sur le serveur :</span>
-                <span className="font-bold text-amber-300 uppercase text-[11px]">
-                  {conflictState.serverDossier.status}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Votre action en attente :</span>
-                <span className="font-bold text-rose-300 uppercase text-[11px]">
-                  {conflictState.pendingUpdate.status !== conflictState.serverDossier.status
-                    ? `Passage vers ${conflictState.pendingUpdate.status}`
-                    : 'Sauvegarde d’amendements & notes'}
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Diff View toggle if comparing */}
-            {showConflictDiff && (
-              <div className="p-3 bg-black/40 rounded-xl border border-emerald-500/20 max-h-48 overflow-y-auto space-y-2 text-xs font-mono">
-                <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider font-sans">
-                  Comparaison du texte :
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="p-2 rounded bg-rose-950/30 border border-rose-500/30 text-rose-200">
-                    <span className="block font-bold text-rose-300 mb-1 font-sans">
-                      Texte Distant (Serveur v{conflictState.serverVersion}) :
-                    </span>
-                    <pre className="whitespace-pre-wrap">{conflictState.serverDossier.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
-                  </div>
-                  <div className="p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-emerald-200">
-                    <span className="block font-bold text-emerald-300 mb-1 font-sans">Votre Texte Local :</span>
-                    <pre className="whitespace-pre-wrap">{conflictState.pendingUpdate.textDocument.currentContent.slice(0, 300) || '(vide)'}</pre>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-500/20">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowConflictDiff(!showConflictDiff)}
-                className="text-xs text-slate-300 hover:text-white gap-1.5 cursor-pointer"
-              >
-                <GitCompare className="w-3.5 h-3.5 text-amber-400" />
-                {showConflictDiff ? 'Masquer la comparaison' : 'Comparer les textes'}
-              </Button>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAcceptServerVersion}
-                  className="text-xs font-bold bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
-                  Recharger la version serveur
-                </Button>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleForceApplyChanges}
-                  className="text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white gap-1.5 cursor-pointer shadow-lg shadow-amber-900/30"
-                >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                  Forcer mes modifications (v{conflictState.serverVersion + 1})
-                </Button>
-              </div>
-            </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      {isDeleteConfirmOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
-            <h4 className="text-base font-bold text-white flex items-center gap-2">
-              <Trash2 className="w-4 h-4 text-rose-400" />
-              Supprimer ce dossier ?
-            </h4>
-            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              Le dossier <span className="font-mono text-emerald-300">{dossier.ref}</span> («{' '}
-              <strong className="text-white">{dossier.title}</strong> ») sera définitivement supprimé. Cette action est irréversible.
-            </p>
-            <div className="flex justify-end gap-2 mt-5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                disabled={isDeleting}
-                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
-              >
-                {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
-              </Button>
-            </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
-
-      {/* Submit to Specific User Modal */}
-      {isSubmitModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-emerald-500/35 text-slate-100">
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="w-full max-w-md bg-[#061A13] rounded-xl shadow-2xl p-5 border border-rose-500/35 text-slate-100">
               <h4 className="text-base font-bold text-white flex items-center gap-2">
-                <Send className="w-4 h-4 text-emerald-400" />
-                Soumettre à un utilisateur
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                Supprimer ce dossier ?
               </h4>
-              <button
-                type="button"
-                onClick={() => setIsSubmitModalOpen(false)}
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                aria-label="Fermer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-300 mb-3">
-              Choisissez la personne chargée de relire et valider le dossier{' '}
-              <span className="font-mono text-emerald-300">{dossier.ref}</span>.
-            </p>
-
-            <div className="relative mb-2.5">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={recipientSearch}
-                onChange={(e) => setRecipientSearch(e.target.value)}
-                placeholder="Rechercher un utilisateur..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 bg-emerald-950/60 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              />
-            </div>
-
-            <div className="max-h-52 overflow-y-auto divide-y divide-emerald-500/15 border border-emerald-500/25 rounded-lg bg-emerald-950/35 mb-3">
-              {availableRecipients.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-400">
-                  Aucun utilisateur trouvé.
-                </div>
-              ) : (
-                availableRecipients.map((u) => {
-                  const isSelected = u.id === selectedRecipientId;
-                  return (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => setSelectedRecipientId(u.id)}
-                      className={`w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left text-xs transition-colors cursor-pointer ${
-                        isSelected
-                          ? 'bg-emerald-500/20 text-white'
-                          : 'text-slate-200 hover:bg-emerald-500/10'
-                      }`}
-                    >
-                      <div className="min-w-0">
-                        <div className="font-semibold truncate">
-                          {u.name}
-                          {u.id === currentUser.id && (
-                            <span className="ml-1.5 text-[11px] font-normal text-slate-400">
-                              (vous)
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-400 truncate">
-                          {u.department || 'Équipe'} · {u.role} · {u.email}
-                        </div>
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                Message pour le relecteur (optionnel)
-              </label>
-              <textarea
-                value={submissionNote}
-                onChange={(e) => setSubmissionNote(e.target.value)}
-                rows={2}
-                placeholder="Ex : Merci de vérifier les montants de TVA avant clôture..."
-                className="w-full p-2 text-xs border border-emerald-500/30 bg-emerald-950/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSubmitModalOpen(false)}
-                className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer"
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={!selectedRecipient}
-                onClick={handleConfirmSubmitToUser}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <Send className="w-3.5 h-3.5" />
-                {selectedRecipient
-                  ? `Soumettre à ${selectedRecipient.name.split(' ')[0]}`
-                  : 'Soumettre'}
-              </Button>
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                Le dossier <span className="font-mono text-emerald-300">{dossier.ref}</span> («{' '}
+                <strong className="text-white">{dossier.title}</strong> ») sera définitivement supprimé. Cette action est irréversible.
+              </p>
+              <div className="flex justify-end gap-2 mt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  disabled={isDeleting}
+                  className="text-xs border-emerald-500/30 bg-transparent text-slate-300 hover:bg-white/5 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-rose-400"
+                >
+                  {isDeleting ? 'Suppression...' : 'Supprimer définitivement'}
+                </Button>
+              </div>
             </div>
           </div>
-          </div>
-        </ModalPortal>
-      )}
+        )}
       </div>
     </ModalPortal>
   );
