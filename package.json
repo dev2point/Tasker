@@ -34,11 +34,13 @@
     "mammoth": "^1.13.0",
     "motion": "^12.23.24",
     "next": "^16.3.5",
+    "pdf-lib": "^1.17.1",
     "postcss": "^8.5.6",
     "postgres": "^3.4.9",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "unpdf": "^2.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",

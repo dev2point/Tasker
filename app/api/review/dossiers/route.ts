@@ -1,13 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { getAuthenticatedUser } from '@/lib/auth-server';
-import { INITIAL_DOSSIERS, canUserDeleteDossier } from '@/lib/review-service';
+import {
+  canUserDeleteDossier,
+  stripDossierFileBytesForBroadcast,
+} from '@/lib/review-service';
+import {
+  getRuntimeDossiers,
+  setRuntimeDossiers,
+} from '@/lib/review-runtime-store';
+import { dataUrlToUint8Array } from '@/lib/file-version-service';
 import { ReviewDossier, ReviewStatus } from '@/types/review';
+import { TrackedFile } from '@/types/file-version';
 import { realtimeHub, RealtimeEventType } from '@/lib/realtime-hub';
 
 export const dynamic = 'force-dynamic';
 
-// In-memory runtime cache for dossiers when PostgreSQL is not configured
-let runtimeDossiers: ReviewDossier[] = [...INITIAL_DOSSIERS];
+function extractClientIp(req: NextRequest): string {
+  return (
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    '127.0.0.1'
+  );
+}
+
+function isPlaceholderIp(ip?: string): boolean {
+  return (
+    !ip ||
+    ip === 'server-pending' ||
+    ip === 'client-pending' ||
+    ip === '192.168.1.42' ||
+    ip === '192.168.1.88'
+  );
+}
+
+/**
+ * Compute real server-side SHA-256 on uploaded file bytes when available (DT-ARCH-17).
+ */
+function normalizeTrackedFilesWithServerSha256(files: unknown): TrackedFile[] {
+  if (!Array.isArray(files)) return [];
+  return files
+    .filter((f): f is TrackedFile => Boolean(f && typeof f === 'object' && typeof f.id === 'string'))
+    .map((file) => ({
+      ...file,
+      versions: Array.isArray(file.versions)
+        ? file.versions.map((ver) => {
+            const bytes = ver.contentUrl ? dataUrlToUint8Array(ver.contentUrl) : null;
+            if (bytes && bytes.byteLength > 0) {
+              const serverSha = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+              return { ...ver, checksum: serverSha };
+            }
+            return ver;
+          })
+        : [],
+    }));
+}
 
 export async function GET(req: NextRequest) {
   const user = await getAuthenticatedUser(req);
@@ -22,7 +69,7 @@ export async function GET(req: NextRequest) {
   const department = searchParams.get('department');
   const status = searchParams.get('status');
 
-  let filtered = [...runtimeDossiers];
+  let filtered = [...getRuntimeDossiers()];
   if (department && department !== 'Tous') {
     filtered = filtered.filter((d) => d.department === department);
   }
@@ -44,15 +91,22 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const clientIp =
-      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      req.headers.get('x-real-ip') ||
-      '127.0.0.1';
-
+    const clientIp = extractClientIp(req);
     const now = new Date().toISOString();
+
+    const normalizedTrackedFiles = normalizeTrackedFilesWithServerSha256(body.trackedFiles);
+    const incomingAudit = Array.isArray(body.auditTrail)
+      ? body.auditTrail.map((entry: any) => ({
+          ...entry,
+          ipAddress: isPlaceholderIp(entry?.ipAddress) ? clientIp : entry.ipAddress,
+        }))
+      : [];
+
     const newDossier: ReviewDossier = {
-      id: `dossier-${Date.now()}`,
-      ref: body.ref || `DOS-${new Date().getFullYear()}-${body.department?.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
+      id: typeof body.id === 'string' && body.id.trim() ? body.id : `dossier-${Date.now()}`,
+      ref:
+        body.ref ||
+        `DOS-${new Date().getFullYear()}-${body.department?.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
       title: body.title,
       clientName: body.clientName,
       clientSiret: body.clientSiret || '',
@@ -68,10 +122,11 @@ export async function POST(req: NextRequest) {
         department: (user.department as any) || body.department,
         role: (user.role as any) || 'collaborateur',
       },
+      checker: body.checker || undefined,
       lock: {
         isLocked: false,
       },
-      dataFields: body.dataFields || [],
+      dataFields: Array.isArray(body.dataFields) ? body.dataFields : [],
       textDocument: body.textDocument || {
         documentId: `doc-${Date.now()}`,
         title: body.title,
@@ -79,28 +134,33 @@ export async function POST(req: NextRequest) {
         previousContent: '',
         currentContent: body.initialContent || '',
       },
-      interDepRequests: [],
-      auditTrail: [
-        {
-          id: `aud-${Date.now()}`,
-          timestamp: now,
-          actorId: user.id,
-          actorName: user.name,
-          actorDepartment: (user.department as any) || body.department,
-          actorRole: user.role || 'Collaborateur',
-          ipAddress: clientIp,
-          action: 'creation',
-          details: `Création du dossier "${body.title}" pour le client ${body.clientName}.`,
-        },
-      ],
-      createdAt: now,
+      trackedFiles: normalizedTrackedFiles,
+      interDepRequests: Array.isArray(body.interDepRequests) ? body.interDepRequests : [],
+      auditTrail:
+        incomingAudit.length > 0
+          ? incomingAudit
+          : [
+              {
+                id: `aud-${Date.now()}`,
+                timestamp: now,
+                actorId: user.id,
+                actorName: user.name,
+                actorDepartment: (user.department as any) || body.department,
+                actorRole: user.role || 'Collaborateur',
+                ipAddress: clientIp,
+                action: 'creation',
+                details: `Création du dossier "${body.title}" pour le client ${body.clientName}.`,
+              },
+            ],
+      createdAt: body.createdAt || now,
       updatedAt: now,
       estimatedDeliverableDate: body.estimatedDeliverableDate || now.split('T')[0],
     };
 
-    runtimeDossiers = [newDossier, ...runtimeDossiers];
+    setRuntimeDossiers([newDossier, ...getRuntimeDossiers()]);
 
-    // Broadcast SSE event for real-time collaborative updates
+    // Broadcast SSE event WITHOUT inline base64 file bytes (DT-ARCH-18)
+    const safeBroadcastDossier = stripDossierFileBytesForBroadcast(newDossier);
     realtimeHub.broadcast({
       type: 'DOSSIER_CREATED',
       actor: {
@@ -113,7 +173,7 @@ export async function POST(req: NextRequest) {
       targetId: newDossier.id,
       targetRef: newDossier.ref,
       message: `Nouveau dossier fiscal "${newDossier.title}" (${newDossier.ref}) créé par ${user.name}.`,
-      payload: { dossier: newDossier },
+      payload: { dossier: safeBroadcastDossier },
     });
 
     return NextResponse.json({
@@ -134,6 +194,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
     const { dossierId, updatedDossier, expectedVersion, force } = body;
+    const clientIp = extractClientIp(req);
 
     if (!dossierId || !updatedDossier) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
@@ -143,9 +204,23 @@ export async function PATCH(req: NextRequest) {
     let previousLock = false;
     let finalizedDossier: ReviewDossier;
 
-    const index = runtimeDossiers.findIndex((d) => d.id === dossierId);
+    const currentList = getRuntimeDossiers();
+    const index = currentList.findIndex((d) => d.id === dossierId);
+
+    // Stamp real server-extracted IP on new or placeholder audit entries (DT-ARCH-05)
+    const stampedAuditTrail = Array.isArray(updatedDossier.auditTrail)
+      ? updatedDossier.auditTrail.map((entry: any) => ({
+          ...entry,
+          ipAddress: isPlaceholderIp(entry?.ipAddress) ? clientIp : entry.ipAddress,
+        }))
+      : [];
+
+    const normalizedTrackedFiles = updatedDossier.trackedFiles
+      ? normalizeTrackedFilesWithServerSha256(updatedDossier.trackedFiles)
+      : undefined;
+
     if (index >= 0) {
-      const existing = runtimeDossiers[index];
+      const existing = currentList[index];
       const existingVersion = existing.version || 1;
       const clientExpectedVersion =
         typeof expectedVersion === 'number'
@@ -154,7 +229,7 @@ export async function PATCH(req: NextRequest) {
 
       // OCC Validation: Check if client version is behind existing server version
       if (!force && clientExpectedVersion < existingVersion) {
-        // Broadcast conflict notification via SSE
+        const safeExisting = stripDossierFileBytesForBroadcast(existing);
         realtimeHub.broadcast({
           type: 'DOSSIER_CONFLICT',
           actor: {
@@ -170,7 +245,7 @@ export async function PATCH(req: NextRequest) {
           payload: {
             serverVersion: existingVersion,
             clientVersion: clientExpectedVersion,
-            existingDossier: existing,
+            existingDossier: safeExisting,
           },
         });
 
@@ -189,11 +264,15 @@ export async function PATCH(req: NextRequest) {
       previousStatus = existing.status;
       previousLock = Boolean(existing.lock?.isLocked);
 
-      // SEC-05: RBAC check - Admin / Manager has global edit rights; Maker, assigned Checker, or Department colleagues have access
+      // SEC-05: RBAC check
       const isAdminOrManager = user.role === 'admin' || user.role === 'manager';
       const isMaker = existing.maker?.id === user.id || existing.maker?.email === user.email;
       const isChecker = existing.checker?.id === user.id || existing.checker?.email === user.email;
-      const isSameDepartment = Boolean(user.department && existing.department && user.department.toLowerCase() === existing.department.toLowerCase());
+      const isSameDepartment = Boolean(
+        user.department &&
+          existing.department &&
+          user.department.toLowerCase() === existing.department.toLowerCase()
+      );
 
       if (!isAdminOrManager && !isMaker && !isChecker && !isSameDepartment) {
         return NextResponse.json(
@@ -206,26 +285,33 @@ export async function PATCH(req: NextRequest) {
       const nextVersion = Math.max(existingVersion, clientExpectedVersion) + 1;
       finalizedDossier = {
         ...updatedDossier,
+        trackedFiles: normalizedTrackedFiles ?? existing.trackedFiles,
+        auditTrail: stampedAuditTrail,
         version: nextVersion,
         updatedAt: new Date().toISOString(),
       };
 
-      runtimeDossiers[index] = finalizedDossier;
+      const nextList = [...currentList];
+      nextList[index] = finalizedDossier;
+      setRuntimeDossiers(nextList);
     } else {
       const isAdminOrManager = user.role === 'admin' || user.role === 'manager';
-      const isMaker = updatedDossier.maker?.id === user.id || updatedDossier.maker?.email === user.email;
+      const isMaker =
+        updatedDossier.maker?.id === user.id || updatedDossier.maker?.email === user.email;
       if (!isAdminOrManager && !isMaker) {
         return NextResponse.json(
-          { error: "Action non autorisée pour créer un dossier assigné à autrui." },
+          { error: 'Action non autorisée pour créer un dossier assigné à autrui.' },
           { status: 403 }
         );
       }
       finalizedDossier = {
         ...updatedDossier,
+        trackedFiles: normalizedTrackedFiles ?? updatedDossier.trackedFiles,
+        auditTrail: stampedAuditTrail,
         version: updatedDossier.version || 1,
         updatedAt: new Date().toISOString(),
       };
-      runtimeDossiers = [finalizedDossier, ...runtimeDossiers];
+      setRuntimeDossiers([finalizedDossier, ...currentList]);
     }
 
     // Determine specific real-time event type for collaborative alerts
@@ -268,7 +354,8 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Broadcast SSE event to all connected active sessions
+    // Broadcast SSE event WITHOUT inline base64 file bytes (DT-ARCH-18)
+    const safeBroadcastDossier = stripDossierFileBytesForBroadcast(finalizedDossier);
     realtimeHub.broadcast({
       type: eventType,
       actor: {
@@ -282,7 +369,7 @@ export async function PATCH(req: NextRequest) {
       targetRef: finalizedDossier.ref,
       message: alertMessage,
       payload: {
-        dossier: finalizedDossier,
+        dossier: safeBroadcastDossier,
         version: finalizedDossier.version,
         previousStatus,
         newStatus: finalizedDossier.status,
@@ -318,7 +405,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Identifiant du dossier manquant' }, { status: 400 });
     }
 
-    const existing = runtimeDossiers.find((d) => d.id === dossierId);
+    const currentList = getRuntimeDossiers();
+    const existing = currentList.find((d) => d.id === dossierId);
     if (existing && !canUserDeleteDossier(existing, user)) {
       return NextResponse.json(
         {
@@ -329,7 +417,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    runtimeDossiers = runtimeDossiers.filter((d) => d.id !== dossierId);
+    setRuntimeDossiers(currentList.filter((d) => d.id !== dossierId));
 
     realtimeHub.broadcast({
       type: 'DOSSIER_DELETED',
@@ -361,9 +449,9 @@ export async function DELETE(req: NextRequest) {
  * Test helpers to reset or inspect in-memory dossiers across test suites
  */
 export function _setRuntimeDossiersForTesting(dossiers: ReviewDossier[]) {
-  runtimeDossiers = [...dossiers];
+  setRuntimeDossiers(dossiers);
 }
 
 export function _getRuntimeDossiersForTesting(): ReviewDossier[] {
-  return [...runtimeDossiers];
+  return [...getRuntimeDossiers()];
 }

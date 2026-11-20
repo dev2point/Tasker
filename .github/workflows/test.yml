@@ -71,11 +71,16 @@ jobs:
         id: vitest
         run: npm test
 
+      - name: 🛡️ Security Dependency Audit (SCA)
+        id: audit
+        run: npm audit --audit-level=high
+
       - name: 📊 Generate CI Summary Report
         if: always()
         run: |
           lint_status="${{ steps.lint.outcome }}"
           test_status="${{ steps.vitest.outcome }}"
+          audit_status="${{ steps.audit.outcome }}"
 
           format_badge() {
             case "$1" in
@@ -94,6 +99,7 @@ jobs:
             echo "| :--- | :---: | :--- |"
             echo "| **Linter (ESLint)** | $(format_badge "$lint_status") | Analyse statique du code |"
             echo "| **Suite de Tests (Vitest)** | $(format_badge "$test_status") | Tests unitaires & d'intégration |"
+            echo "| **Audit Sécurité (npm audit)** | $(format_badge "$audit_status") | Détection des vulnérabilités hautes/critiques |"
             echo ""
             if [ "${{ github.event_name }}" = "push" ]; then
               echo "> ℹ️ **Optimisation quota :** le build de production Next.js est réservé aux Pull Requests et aux lancements manuels."

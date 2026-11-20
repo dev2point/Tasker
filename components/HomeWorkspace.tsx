@@ -65,6 +65,7 @@ import { getDefaultDueDateTime, isDueDateTimeInPast } from '@/lib/due-date-utils
 import { normalizeTaskStatus } from '@/lib/constants';
 import { mergeNotificationsById } from '@/lib/notifications-helper';
 import { useRealtimeEvents } from '@/lib/use-realtime-events';
+import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 import {
   INITIAL_SIDEBAR_LAYOUT_STATE,
   NARROW_DESKTOP_BREAKPOINT_PX,
@@ -167,6 +168,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
   // User & Team State (RBAC)
   const [selectedFallbackUser, setSelectedFallbackUser] = useState<User | null>(null);
   const [teamUsers, setTeamUsers] = useState<User[]>([]);
+  const [taskSyncError, setTaskSyncError] = useState<string | null>(null);
 
   // Initial client session verification ONLY when SSR found no active session
   useEffect(() => {
@@ -491,9 +493,9 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     }
   }, [soundEnabled, isMounted]);
 
-  // Database persistence helpers
+  // Database persistence helpers (optimistic syncPending + server rollback on rejection)
   const persistTaskToDb = useCallback(
-    async (task: Task) => {
+    async (task: Task, previousTasksSnapshot?: Task[]) => {
       try {
         const res = await fetch('/api/tasks', {
           method: 'POST',
@@ -502,28 +504,98 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         });
         if (res.ok) {
           const data = await res.json().catch(() => null);
+          setTaskSyncError(null);
           if (data?.task?.id) {
             setTasks((prev) =>
-              prev.map((t) => (t.id === data.task.id ? (data.task as Task) : t))
+              prev.map((t) =>
+                t.id === data.task.id
+                  ? { ...(data.task as Task), syncPending: false, syncError: undefined }
+                  : t
+              )
+            );
+          } else {
+            setTasks((prev) =>
+              prev.map((t) =>
+                t.id === task.id ? { ...t, syncPending: false, syncError: undefined } : t
+              )
             );
           }
+          return true;
         }
+
+        const errData = await res.json().catch(() => ({}));
+        const errMsg =
+          errData?.error ||
+          `Échec de synchronisation serveur (HTTP ${res.status}) pour « ${task.title} ».`;
+
+        if (res.status === 400 || res.status === 403 || res.status === 409 || res.status >= 500) {
+          if (previousTasksSnapshot) {
+            setTasks(previousTasksSnapshot);
+            setTaskSyncError(`${errMsg} Modification annulée localement.`);
+          } else {
+            setTasks((prev) =>
+              prev.map((t) =>
+                t.id === task.id ? { ...t, syncPending: false, syncError: errMsg } : t
+              )
+            );
+            setTaskSyncError(errMsg);
+          }
+          return false;
+        }
+
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...t, syncPending: true, syncError: errMsg } : t))
+        );
+        setTaskSyncError(errMsg);
+        return false;
       } catch (err) {
         console.warn('Notice: Task offline persist deferred:', err);
+        const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+        const msg = isOnline
+          ? `Erreur réseau lors de l'enregistrement de « ${task.title} ». Sauvegarde locale en attente de synchronisation.`
+          : `Hors-ligne : « ${task.title} » est conservée localement en attente de synchronisation.`;
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...t, syncPending: true, syncError: msg } : t))
+        );
+        if (isOnline) {
+          setTaskSyncError(msg);
+        }
+        return false;
       }
     },
     [setTasks]
   );
 
-  const deleteTaskFromDb = useCallback(async (taskId: string) => {
-    try {
-      await fetch(`/api/tasks?id=${encodeURIComponent(taskId)}`, {
-        method: 'DELETE',
-      });
-    } catch (err) {
-      console.warn('Notice: Task deletion offline deferred:', err);
-    }
-  }, []);
+  const deleteTaskFromDb = useCallback(
+    async (taskId: string, previousTasksSnapshot?: Task[]) => {
+      try {
+        const res = await fetch(`/api/tasks?id=${encodeURIComponent(taskId)}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg =
+            errData?.error || `Échec de suppression sur le serveur (HTTP ${res.status}).`;
+          if (
+            previousTasksSnapshot &&
+            (res.status === 400 || res.status === 403 || res.status === 409 || res.status >= 500)
+          ) {
+            setTasks(previousTasksSnapshot);
+            setTaskSyncError(`${errMsg} Suppression annulée localement.`);
+          } else {
+            setTaskSyncError(errMsg);
+          }
+          return false;
+        }
+        setTaskSyncError(null);
+        return true;
+      } catch (err) {
+        console.warn('Notice: Task deletion offline deferred:', err);
+        return false;
+      }
+    },
+    [setTasks]
+  );
 
   const saveTasks = useCallback((updatedTasks: Task[]) => {
     setTasks(updatedTasks);
@@ -642,7 +714,8 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         }
       }
 
-          let updatedTaskObj: Task | null = null;
+      const previousSnapshot = tasks;
+      let updatedTaskObj: Task | null = null;
       const updated = tasks.map((t) => {
         if (t.id === taskPayload.id) {
           const mergedStatus = normalizeTaskStatus(
@@ -663,15 +736,17 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
             completed: mergedCompleted,
             completedAt: mergedCompleted ? t.completedAt || nowIso : undefined,
             updatedAt: nowIso,
+            syncPending: true,
+            syncError: undefined,
           } as Task;
           return updatedTaskObj;
         }
         return t;
       });
-      if (updatedTaskObj) {
-        persistTaskToDb(updatedTaskObj);
-      }
       saveTasks(updated);
+      if (updatedTaskObj) {
+        persistTaskToDb(updatedTaskObj, previousSnapshot);
+      }
     } else {
       const defaultDue = getDefaultDueDateTime();
       const finalDueDate = taskPayload.dueDate || defaultDue.dueDate;
@@ -685,6 +760,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         return;
       }
 
+      const previousSnapshot = tasks;
       const initialStatus = normalizeTaskStatus(taskPayload.status, Boolean(taskPayload.completed));
       const newTask: Task = {
         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
@@ -712,9 +788,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
         tags: taskPayload.tags || [],
         subtasks: taskPayload.subtasks || [],
         status: initialStatus,
+        syncPending: true,
       };
-      persistTaskToDb(newTask);
       saveTasks([newTask, ...tasks]);
+      persistTaskToDb(newTask, previousSnapshot);
     }
   };
 
@@ -764,6 +841,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       }
     }
 
+    const previousSnapshot = tasks;
     const nowIso = new Date().toISOString();
     const isCompleted = normalizedNext === 'completed';
     let newTaskToSpawn: Task | null = null;
@@ -784,6 +862,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
             createdAt: nowIso,
             updatedAt: nowIso,
             subtasks: t.subtasks ? t.subtasks.map((st) => ({ ...st, completed: false })) : [],
+            syncPending: true,
           };
         }
 
@@ -793,20 +872,21 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           completed: isCompleted,
           completedAt: isCompleted ? t.completedAt || nowIso : undefined,
           updatedAt: nowIso,
+          syncPending: true,
         };
         return targetUpdatedTask;
       }
       return t;
     });
 
-    if (targetUpdatedTask) {
-      persistTaskToDb(targetUpdatedTask);
-    }
     if (newTaskToSpawn) {
-      persistTaskToDb(newTaskToSpawn);
       saveTasks([newTaskToSpawn, ...updated]);
+      persistTaskToDb(newTaskToSpawn, previousSnapshot);
     } else {
       saveTasks(updated);
+    }
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask, previousSnapshot);
     }
   };
 
@@ -853,12 +933,14 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       }
     }
 
-    deleteTaskFromDb(taskId);
+    const previousSnapshot = tasks;
     saveTasks(tasks.filter((t) => t.id !== taskId));
+    deleteTaskFromDb(taskId, previousSnapshot);
   };
 
   // Duplicate Task
   const handleDuplicateTask = (task: Task) => {
+    const previousSnapshot = tasks;
     const dup: Task = {
       ...task,
       id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
@@ -868,9 +950,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       reminderTriggered: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      syncPending: true,
     };
-    persistTaskToDb(dup);
     saveTasks([dup, ...tasks]);
+    persistTaskToDb(dup, previousSnapshot);
     soundManager.playClickSound();
   };
 
@@ -893,6 +976,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       return;
     }
 
+    const previousSnapshot = tasks;
     const nowIso = new Date().toISOString();
     const newTask: Task = {
       id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
@@ -913,29 +997,31 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       tags: [],
       subtasks: [],
       status: 'todo',
+      syncPending: true,
     };
-    persistTaskToDb(newTask);
     saveTasks([newTask, ...tasks]);
+    persistTaskToDb(newTask, previousSnapshot);
   };
 
   // Toggle Subtask Completion
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
     soundManager.playClickSound();
+    const previousSnapshot = tasks;
     let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
         const subtasks = t.subtasks.map((st) =>
           st.id === subtaskId ? { ...st, completed: !st.completed } : st
         );
-        targetUpdatedTask = { ...t, subtasks };
+        targetUpdatedTask = { ...t, subtasks, syncPending: true };
         return targetUpdatedTask;
       }
       return t;
     });
-    if (targetUpdatedTask) {
-      persistTaskToDb(targetUpdatedTask);
-    }
     saveTasks(updated);
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask, previousSnapshot);
+    }
   };
 
   // Postpone Task
@@ -944,6 +1030,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+    const previousSnapshot = tasks;
     let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
@@ -966,20 +1053,22 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           reminderTriggered: false,
           reminderDismissed: false,
           updatedAt: new Date().toISOString(),
+          syncPending: true,
         };
         return targetUpdatedTask;
       }
       return t;
     });
-    if (targetUpdatedTask) {
-      persistTaskToDb(targetUpdatedTask);
-    }
     saveTasks(updated);
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask, previousSnapshot);
+    }
     soundManager.playClickSound();
   };
 
   // Reschedule to Today
   const handleRescheduleToToday = (taskId: string) => {
+    const previousSnapshot = tasks;
     const todayStr = new Date().toISOString().split('T')[0];
     let targetUpdatedTask: Task | null = null;
     const updated = tasks.map((t) => {
@@ -991,15 +1080,16 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           reminderTriggered: false,
           reminderDismissed: false,
           updatedAt: new Date().toISOString(),
+          syncPending: true,
         };
         return targetUpdatedTask;
       }
       return t;
     });
-    if (targetUpdatedTask) {
-      persistTaskToDb(targetUpdatedTask);
-    }
     saveTasks(updated);
+    if (targetUpdatedTask) {
+      persistTaskToDb(targetUpdatedTask, previousSnapshot);
+    }
     soundManager.playClickSound();
   };
 
@@ -1235,6 +1325,43 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
       {/* Main Content Area (Flex Flow — never overlaps or hides behind sidebar) */}
       <div className="flex flex-col flex-1 min-w-0 pt-14 md:pt-6 pb-24 md:pb-12">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 flex-1 w-full min-w-0">
+          {taskSyncError && (
+            <div
+              role="alert"
+              className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-950/60 px-4 py-3 text-xs text-amber-100 shadow-lg backdrop-blur-md"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                <span className="truncate font-medium">{taskSyncError}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {tasks.some((t) => t.syncPending) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pending = tasks.filter((t) => t.syncPending);
+                      pending.forEach((t) => {
+                        persistTaskToDb(t);
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100 hover:bg-amber-500/30 transition-colors"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Réessayer ({tasks.filter((t) => t.syncPending).length})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setTaskSyncError(null)}
+                  aria-label="Fermer l'alerte de synchronisation"
+                  className="rounded-lg p-1 text-amber-300/80 hover:bg-amber-500/20 hover:text-amber-100 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <OverdueReminderBanner
             overdueTasks={overdueTasks}
             dueTodayTasks={dueTodayTasks}

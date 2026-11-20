@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   realtimeHub,
   RealtimeEvent,
@@ -9,11 +9,29 @@ import {
 } from '@/lib/realtime-hub';
 import { GET as getPresence, POST as postPresence, DELETE as deletePresence } from '@/app/api/review/presence/route';
 import { POST as postEvents } from '@/app/api/events/route';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 import { NextRequest } from 'next/server';
+
+vi.mock('@/lib/auth-server', () => ({
+  getAuthenticatedUser: vi.fn(async () => ({
+    id: 'usr-partner',
+    name: 'Antoine Lefebvre',
+    email: 'a.lefebvre@cabinet.fr',
+    role: 'associe',
+    department: 'Fiscalité',
+  })),
+}));
 
 describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
   beforeEach(() => {
     realtimeHub.reset();
+    vi.mocked(getAuthenticatedUser).mockResolvedValue({
+      id: 'usr-partner',
+      name: 'Antoine Lefebvre',
+      email: 'a.lefebvre@cabinet.fr',
+      role: 'associe',
+      department: 'Fiscalité',
+    } as any);
   });
 
   it('broadcasts real-time events to all active subscribers', () => {
@@ -120,7 +138,33 @@ describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
     expect(deleteJson.members.some((m: any) => m.userId === 'usr-api-tester')).toBe(false);
   });
 
-  it('handles /api/events POST to broadcast custom collaborative alerts', async () => {
+  it('rejects unauthenticated /api/events POST with 401 and disallowed event types with 403 (SEC-11)', async () => {
+    vi.mocked(getAuthenticatedUser).mockResolvedValueOnce(null);
+
+    const unauthReq = new NextRequest('http://localhost:3000/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'DOSSIER_VALIDATED',
+        message: 'Tentative sans session',
+      }),
+    });
+    const unauthRes = await postEvents(unauthReq);
+    expect(unauthRes.status).toBe(401);
+
+    const forbiddenReq = new NextRequest('http://localhost:3000/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'ARBITRARY_SYSTEM_EVENT',
+        message: 'Type non autorisé',
+      }),
+    });
+    const forbiddenRes = await postEvents(forbiddenReq);
+    expect(forbiddenRes.status).toBe(403);
+  });
+
+  it('handles authenticated /api/events POST, enforces session actor, and strips inline file bytes (SEC-11 & DT-ARCH-18)', async () => {
     let receivedEvent: RealtimeEvent | null = null;
     const unsub = realtimeHub.subscribe('test-listener', (e) => {
       receivedEvent = e;
@@ -132,13 +176,28 @@ describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
       body: JSON.stringify({
         type: 'DOSSIER_VALIDATED',
         actor: {
-          id: 'usr-partner',
-          name: 'Antoine Lefebvre',
-          role: 'Associé Fiscaliste',
+          id: 'spoofed-actor',
+          name: 'Usurpateur',
         },
         targetId: 'dossier-fis-999',
         targetRef: 'DOS-2026-FIS-999',
         message: 'Dossier scellé et prêt pour transmission fiscale.',
+        payload: {
+          dossier: {
+            id: 'dossier-fis-999',
+            trackedFiles: [
+              {
+                id: 'tf-1',
+                versions: [
+                  {
+                    id: 'ver-1',
+                    contentUrl: 'data:application/pdf;base64,JVBERi0xLjQ=',
+                  },
+                ],
+              },
+            ],
+          },
+        },
       }),
     });
 
@@ -149,8 +208,14 @@ describe('Real-Time Collaboration SSE Hub & Presence Engine', () => {
     expect(json.event.type).toBe('DOSSIER_VALIDATED');
 
     expect(receivedEvent).not.toBeNull();
+    // Session actor overrides spoofed client actor
+    expect((receivedEvent as any)?.actor.id).toBe('usr-partner');
     expect((receivedEvent as any)?.actor.name).toBe('Antoine Lefebvre');
     expect((receivedEvent as any)?.targetRef).toBe('DOS-2026-FIS-999');
+    // Inline base64 bytes stripped from broadcast
+    expect((receivedEvent as any)?.payload.dossier.trackedFiles[0].versions[0].contentUrl).toBe(
+      '/api/review/file-versions/ver-1/download?dossierId=dossier-fis-999'
+    );
 
     unsub();
   });

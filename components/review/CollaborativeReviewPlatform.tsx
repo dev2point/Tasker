@@ -13,6 +13,7 @@ import {
   getStoredDossiers,
   saveStoredDossiers,
   canUserDeleteDossier,
+  mergeDossierPreservingCachedFileBytes,
 } from '@/lib/review-service';
 import {
   getActivePresence,
@@ -37,6 +38,7 @@ import {
   Trash2,
   MoreHorizontal,
   SlidersHorizontal,
+  Paperclip,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalPortal } from '@/components/ui/ModalPortal';
@@ -115,15 +117,20 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     onDossierUpdate: (remoteDossier) => {
       shouldPersistDossiersRef.current = true;
       setDossiers((prev) => {
-        const index = prev.findIndex((d) => d.id === remoteDossier.id);
-        if (index >= 0) {
-          return prev.map((d) => (d.id === remoteDossier.id ? remoteDossier : d));
+        const existing = prev.find((d) => d.id === remoteDossier.id);
+        const merged = mergeDossierPreservingCachedFileBytes(remoteDossier, existing);
+        if (existing) {
+          return prev.map((d) => (d.id === merged.id ? merged : d));
         }
-        return [remoteDossier, ...prev];
+        return [merged, ...prev];
       });
 
       // Synchronize currently opened studio modal if same dossier
-      setActiveDossier((cur) => (cur && cur.id === remoteDossier.id ? remoteDossier : cur));
+      setActiveDossier((cur) =>
+        cur && cur.id === remoteDossier.id
+          ? mergeDossierPreservingCachedFileBytes(remoteDossier, cur)
+          : cur
+      );
     },
     onDossierDelete: (deletedId) => {
       shouldPersistDossiersRef.current = true;
@@ -238,13 +245,22 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     setDossiers((prev) => [newDossier, ...prev]);
     setActiveDossier(newDossier);
 
-    // Async broadcast to server SSE endpoint
+    // Async broadcast to server SSE endpoint & sync server-computed fields (IP, SHA-256)
     try {
-      await fetch('/api/review/dossiers', {
+      const res = await fetch('/api/review/dossiers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDossier),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.dossier) {
+          const synced = mergeDossierPreservingCachedFileBytes(data.dossier, newDossier);
+          shouldPersistDossiersRef.current = true;
+          setDossiers((prev) => prev.map((d) => (d.id === synced.id ? synced : d)));
+          setActiveDossier((cur) => (cur && cur.id === synced.id ? synced : cur));
+        }
+      }
     } catch {
       // Safe offline fallback
     }
@@ -710,6 +726,18 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                       <span className="truncate">
                         {makerName} <span className="text-slate-500">→</span> {checkerName}
                       </span>
+                      {(dossier.trackedFiles?.length || 0) > 0 && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span
+                            title={`${dossier.trackedFiles?.length} pièce(s) jointe(s)`}
+                            className="inline-flex items-center gap-1 text-emerald-300 font-medium shrink-0"
+                          >
+                            <Paperclip className="w-3 h-3" />
+                            <span>{dossier.trackedFiles?.length}</span>
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -775,6 +803,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         currentUser={actor}
+        teamUsers={teamUsers}
         onCreateDossier={handleCreateDossier}
         isSidebarCollapsed={isSidebarCollapsed}
       />

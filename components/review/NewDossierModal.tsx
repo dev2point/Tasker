@@ -2,8 +2,10 @@
 
 import React, { useState, useRef } from 'react';
 import { Department, DossierPriority, ReviewDossier, WorkflowActor } from '@/types/review';
+import { User } from '@/types/user';
 import { TrackedFile } from '@/types/file-version';
-import { createTrackedFile } from '@/lib/file-version-service';
+import { createTrackedFile, generateChecksum } from '@/lib/file-version-service';
+import { resolveDepartmentSupervisor } from '@/lib/review-service';
 import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-parser';
 import { X, Plus, FileText, Upload, ChevronDown, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +16,7 @@ interface NewDossierModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: WorkflowActor;
+  teamUsers?: User[];
   onCreateDossier: (newDossier: ReviewDossier) => void;
   isSidebarCollapsed?: boolean;
 }
@@ -52,6 +55,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   isOpen,
   onClose,
   currentUser,
+  teamUsers = [],
   onCreateDossier,
 }) => {
   const [department, setDepartment] = useState<Department>(
@@ -72,6 +76,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
   const [attachedFileSize, setAttachedFileSize] = useState<number>(0);
   const [attachedBase64, setAttachedBase64] = useState<string | undefined>();
+  const [attachedChecksum, setAttachedChecksum] = useState<string | undefined>();
   const [extractedText, setExtractedText] = useState<string>('');
   const [extractedGrid, setExtractedGrid] = useState<any[] | undefined>();
   const [isExtracting, setIsExtracting] = useState(false);
@@ -94,14 +99,41 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     setIsExtracting(true);
 
     try {
+      const buffer = await file.arrayBuffer();
+      const rawBytes = new Uint8Array(buffer);
+      setAttachedChecksum(generateChecksum(rawBytes));
+
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'docx') {
-        const buffer = await file.arrayBuffer();
+      if (ext === 'pdf') {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch('/api/review/files/extract', {
+            method: 'POST',
+            body: formData,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (typeof data.textContent === 'string') {
+              setExtractedText(data.textContent);
+            }
+            if (typeof data.checksum === 'string') {
+              setAttachedChecksum(data.checksum);
+            }
+            setExtractedGrid(undefined);
+          } else {
+            setExtractedText('Document PDF attaché pour révision.');
+            setExtractedGrid(undefined);
+          }
+        } catch {
+          setExtractedText('Document PDF attaché pour révision.');
+          setExtractedGrid(undefined);
+        }
+      } else if (ext === 'docx') {
         const text = await extractDocxText(buffer);
         setExtractedText(text);
         setExtractedGrid(undefined);
       } else if (ext === 'xlsx' || ext === 'xls') {
-        const buffer = await file.arrayBuffer();
         const sheets = await extractXlsxData(buffer);
         setExtractedGrid(sheets);
         const summaryText = sheets
@@ -135,6 +167,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     setAttachedFileName(null);
     setAttachedFileSize(0);
     setAttachedBase64(undefined);
+    setAttachedChecksum(undefined);
     setExtractedText('');
     setExtractedGrid(undefined);
     setUploadError(null);
@@ -161,6 +194,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       fileName: attachedFileName,
       sizeBytes: attachedFileSize,
       contentUrl: attachedBase64,
+      checksum: attachedChecksum,
       textContent: extractedText || 'Document de travail initial.',
       gridData: extractedGrid,
       authorName: currentUser.name,
@@ -170,6 +204,8 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       summary: 'Version initiale v1.0 du livrable',
       description: 'Document de travail déposé lors de la création du dossier.',
     });
+
+    const autoSupervisor = resolveDepartmentSupervisor(teamUsers, department, currentUser.id);
 
     const newDossier: ReviewDossier = {
       id: `dossier-${Date.now()}`,
@@ -183,6 +219,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       status: 'brouillon',
       version: 1,
       maker: currentUser,
+      checker: autoSupervisor,
       lock: {
         isLocked: false,
       },
@@ -233,9 +270,9 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
           actorName: currentUser.name,
           actorDepartment: currentUser.department,
           actorRole: currentUser.role,
-          ipAddress: '192.168.1.42',
+          ipAddress: 'server-pending',
           action: 'creation',
-          details: `Création du dossier "${title.trim()}" pour ${clientName.trim()} avec dépôt du fichier "${attachedFileName}" (v1.0).`,
+          details: `Création du dossier "${title.trim()}" pour ${clientName.trim()} avec dépôt du fichier "${attachedFileName}" (v1.0)${autoSupervisor ? ` — Superviseur désigné : ${autoSupervisor.name}` : ''}.`,
         },
       ],
     };

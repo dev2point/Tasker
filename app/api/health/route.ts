@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isDatabaseConfigured, getPostgresClient, ensureDatabaseTables } from '@/lib/db/pg';
+import { GEMINI_MODEL } from '@/lib/ai-config';
+import { realtimeHub } from '@/lib/realtime-hub';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,8 +66,17 @@ export async function GET() {
         secureCookies: isProd,
       },
       ai: {
-        engine: 'Google Gemini 2.5 Flash',
+        engine: GEMINI_MODEL,
         configured: Boolean(process.env.GEMINI_API_KEY),
+      },
+      realtime: {
+        engine: 'In-process SSE Hub',
+        subscribers: realtimeHub.getSubscriberCount(),
+        activePresence: realtimeHub.getActivePresence().length,
+      },
+      reviewDossiers: {
+        storage: 'in_memory_runtime',
+        persistent: false,
       },
     },
   };

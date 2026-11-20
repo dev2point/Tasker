@@ -14,6 +14,7 @@ import {
   restoreFileVersion,
   downloadSnapshotFile,
   updateSnapshotModeration,
+  generateChecksum,
 } from '@/lib/file-version-service';
 import { computeLineDiff } from '@/lib/review-service';
 import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-parser';
@@ -97,6 +98,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [formIsMajor, setFormIsMajor] = useState(false);
   const [uploadedBase64, setUploadedBase64] = useState<string | undefined>();
+  const [uploadedChecksum, setUploadedChecksum] = useState<string | undefined>();
   const [uploadedSize, setUploadedSize] = useState<number>(0);
   const [uploadedName, setUploadedName] = useState<string>('');
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
   const selectedFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
 
-  // Handle local file picking for New Document (with automated Word/Excel extraction)
+  // Handle local file picking for New Document (with automated Word/Excel/PDF extraction + binary SHA-256)
   const handleLocalFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,14 +123,37 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setIsExtracting(true);
 
     try {
+      const buffer = await file.arrayBuffer();
+      const rawBytes = new Uint8Array(buffer);
+      setUploadedChecksum(generateChecksum(rawBytes));
+
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'docx') {
-        const buffer = await file.arrayBuffer();
+      if (ext === 'pdf') {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch('/api/review/files/extract', {
+            method: 'POST',
+            body: formData,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (typeof data.textContent === 'string') {
+              setFormTextContent(data.textContent);
+            }
+            if (typeof data.checksum === 'string') {
+              setUploadedChecksum(data.checksum);
+            }
+            setFormGridData(undefined);
+          }
+        } catch {
+          // Offline fallback keeps binary SHA-256
+        }
+      } else if (ext === 'docx') {
         const text = await extractDocxText(buffer);
         setFormTextContent(text);
         setFormGridData(undefined);
       } else if (ext === 'xlsx' || ext === 'xls') {
-        const buffer = await file.arrayBuffer();
         const sheets = await extractXlsxData(buffer);
         setFormGridData(sheets);
         const summaryText = sheets
@@ -171,6 +196,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       fileName,
       sizeBytes: size,
       contentUrl: uploadedBase64,
+      checksum: uploadedChecksum,
       textContent: formTextContent || undefined,
       gridData: formGridData,
       authorName: currentUser.name,
@@ -193,6 +219,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormTextContent('');
     setFormGridData(undefined);
     setUploadedBase64(undefined);
+    setUploadedChecksum(undefined);
     setUploadedSize(0);
     setUploadedName('');
   };
@@ -211,6 +238,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       fileName,
       sizeBytes: size,
       contentUrl: uploadedBase64 || uploadFileTarget.versions[0]?.contentUrl,
+      checksum: uploadedChecksum,
       textContent: formTextContent || uploadFileTarget.versions[0]?.textContent,
       gridData: formGridData || uploadFileTarget.versions[0]?.gridData,
       authorName: currentUser.name,
@@ -232,6 +260,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormTextContent('');
     setFormGridData(undefined);
     setUploadedBase64(undefined);
+    setUploadedChecksum(undefined);
     setUploadedSize(0);
     setUploadedName('');
     setFormIsMajor(false);

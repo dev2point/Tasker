@@ -112,12 +112,62 @@ export async function GET(req: NextRequest) {
   });
 }
 
+const CLIENT_BROADCASTABLE_EVENT_TYPES = new Set<RealtimeEventType>([
+  'DOSSIER_CREATED',
+  'DOSSIER_SUBMITTED',
+  'DOSSIER_REVIEW_STARTED',
+  'DOSSIER_AMENDED',
+  'DOSSIER_VALIDATED',
+  'DOSSIER_REJECTED',
+  'DOSSIER_ARCHIVED',
+  'DOSSIER_LOCKED',
+  'DOSSIER_UNLOCKED',
+  'PRESENCE_CHANGED',
+  'TASK_UPDATED',
+  'TASK_ASSIGNED',
+  'TASK_COMPLETED',
+]);
+
+function sanitizeEventPayload(payload: any): any {
+  if (!payload || typeof payload !== 'object') return payload;
+  const copy = { ...payload };
+  for (const key of ['dossier', 'existingDossier']) {
+    if (copy[key] && typeof copy[key] === 'object' && Array.isArray(copy[key].trackedFiles)) {
+      copy[key] = {
+        ...copy[key],
+        trackedFiles: copy[key].trackedFiles.map((file: any) => ({
+          ...file,
+          versions: Array.isArray(file.versions)
+            ? file.versions.map((ver: any) => ({
+                ...ver,
+                contentUrl:
+                  typeof ver.contentUrl === 'string' && ver.contentUrl.startsWith('data:')
+                    ? `/api/review/file-versions/${encodeURIComponent(ver.id)}/download?dossierId=${encodeURIComponent(copy[key].id || '')}`
+                    : ver.contentUrl,
+              }))
+            : [],
+        })),
+      };
+    }
+  }
+  return copy;
+}
+
 /**
  * POST /api/events
- * Broadcasts an event to all connected SSE clients.
+ * Broadcasts an authenticated, validated event to SSE clients.
  */
 export async function POST(req: NextRequest) {
   try {
+    const { getAuthenticatedUser } = await import('@/lib/auth-server');
+    const authUser = await getAuthenticatedUser(req);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Authentification requise pour diffuser un événement.' },
+        { status: 401 }
+      );
+    }
+
     let body: any;
     try {
       body = await req.json();
@@ -125,27 +175,37 @@ export async function POST(req: NextRequest) {
       const text = await req.text();
       body = text ? JSON.parse(text) : {};
     }
-    const { type, actor, targetId, targetRef, message, payload } = body;
+    const { type, targetId, targetRef, message, payload } = body;
 
-    if (!type || !message) {
+    if (!type || !message || typeof type !== 'string' || typeof message !== 'string') {
       return NextResponse.json(
         { error: 'Champs obligatoires manquants (type, message)' },
         { status: 400 }
       );
     }
 
-    const defaultActor: RealtimeActor = actor || {
-      id: 'system',
-      name: 'Système PlanIt',
+    if (!CLIENT_BROADCASTABLE_EVENT_TYPES.has(type as RealtimeEventType)) {
+      return NextResponse.json(
+        { error: `Type d'événement non autorisé : ${type}` },
+        { status: 403 }
+      );
+    }
+
+    const sessionActor: RealtimeActor = {
+      id: authUser.id,
+      name: authUser.name,
+      email: authUser.email,
+      department: authUser.department,
+      role: authUser.role,
     };
 
     const broadcasted = realtimeHub.broadcast({
       type: type as RealtimeEventType,
-      actor: defaultActor,
-      targetId,
-      targetRef,
-      message,
-      payload,
+      actor: sessionActor,
+      targetId: typeof targetId === 'string' ? targetId : undefined,
+      targetRef: typeof targetRef === 'string' ? targetRef : undefined,
+      message: message.trim().slice(0, 500),
+      payload: sanitizeEventPayload(payload),
     });
 
     return NextResponse.json({

@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { GEMINI_MODEL } from '@/lib/ai-config';
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     // Action 1: Parse natural language task into structured fields
     if (action === 'parse_task') {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: GEMINI_MODEL,
         contents: `Tu es un assistant expert en productivité et gestion de tâches.
 La date d'aujourd'hui est ${todayDate}.
 Analyse la demande suivante de l'utilisateur pour extraire les détails d'une tâche structurée en français.
@@ -106,7 +107,7 @@ Extrais et déduis logiquement:
     // Action 2: Breakdown a task into structured checklist subtasks
     if (action === 'breakdown_subtasks') {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: GEMINI_MODEL,
         contents: `Découpe cette tâche en 3 à 5 sous-tâches concrètes, actionnables et chronologiques en français.
 Titre de la tâche: "${taskTitle}"
 Description: "${taskDescription || ''}"`,
@@ -132,7 +133,7 @@ Description: "${taskDescription || ''}"`,
     // Action 3: Daily Planning & Productivity Advice
     if (action === 'daily_planner_advice') {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: GEMINI_MODEL,
         contents: `Tu es un coach de productivité bienveillant et méthodique.
 La date d'aujourd'hui est ${todayDate}.
 Voici la liste des tâches actuelles de l'utilisateur :

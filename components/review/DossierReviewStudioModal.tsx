@@ -12,7 +12,9 @@ import { User } from '@/types/user';
 import {
   executeWorkflowTransition,
   togglePreventiveLock,
+  resolveDepartmentSupervisor,
 } from '@/lib/review-service';
+import { formatBytes } from '@/lib/file-version-service';
 import { TextDiffViewer } from './TextDiffViewer';
 import { DataDiffViewer } from './DataDiffViewer';
 import { AuditTrailViewer } from './AuditTrailViewer';
@@ -109,7 +111,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
   activeViewers = [],
   isSidebarCollapsed = false,
 }) => {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'revision' | 'files' | 'data' | 'requests' | 'history'>('revision');
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [draftContent, setDraftContent] = useState<string>(() => dossier.textDocument.currentContent || '');
@@ -209,7 +211,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
     soundManager.playClickSound();
     const res = executeWorkflowTransition(dossier, nextStatus, currentUser, {
       ...options,
-      ipAddress: '192.168.1.42',
+      ipAddress: 'server-pending',
     });
 
     if (res.success) {
@@ -256,8 +258,14 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
 
   const handleOpenSubmitModal = () => {
     soundManager.playClickSound();
+    const autoSupervisor = resolveDepartmentSupervisor(
+      teamUsers,
+      dossier.department,
+      currentUser.id
+    );
     const defaultTarget =
       dossier.checker?.id ||
+      autoSupervisor?.id ||
       availableRecipients.find((u) => u.id !== currentUser.id)?.id ||
       availableRecipients[0]?.id ||
       '';
@@ -351,7 +359,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           actorName: currentUser.name,
           actorDepartment: currentUser.department,
           actorRole: currentUser.role,
-          ipAddress: '192.168.1.42',
+          ipAddress: 'server-pending',
           action: 'requete_inter_pole',
           details: `Demande envoyée au ${newReq.toDepartment} : "${newReq.title}".`,
         },
@@ -389,7 +397,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           actorName: currentUser.name,
           actorDepartment: currentUser.department,
           actorRole: currentUser.role,
-          ipAddress: '192.168.1.42',
+          ipAddress: 'server-pending',
           action: 'requete_inter_pole',
           details: `Statut de la demande #${reqId} mis à jour vers "${status}".`,
         },
@@ -412,7 +420,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
           actorName: currentUser.name,
           actorDepartment: currentUser.department,
           actorRole: currentUser.role,
-          ipAddress: '192.168.1.42',
+          ipAddress: 'server-pending',
           action: 'amendement_texte',
           details: `Mise à jour des fichiers suivis et documents de travail (${updatedFiles.length} document(s)).`,
         },
@@ -581,165 +589,203 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
             </div>
           </div>
 
+          {/* Primary Top-Level Studio Tabs (DT-ARCH-19: Files always visible at top level) */}
+          <div
+            role="tablist"
+            aria-label="Sections du dossier"
+            className="px-4 sm:px-6 bg-emerald-950/60 border-b border-emerald-500/20 flex items-center gap-1 overflow-x-auto shrink-0"
+          >
+            {[
+              { id: 'revision' as const, label: 'Révision', count: undefined, icon: GitCompare },
+              {
+                id: 'files' as const,
+                label: 'Fichiers',
+                count: dossier.trackedFiles?.length || 0,
+                icon: FileText,
+              },
+              {
+                id: 'data' as const,
+                label: 'Chiffres',
+                count: dossier.dataFields?.length || 0,
+                icon: TrendingUp,
+              },
+              {
+                id: 'requests' as const,
+                label: 'Demandes',
+                count: dossier.interDepRequests?.length || 0,
+                icon: ArrowRightLeft,
+              },
+              {
+                id: 'history' as const,
+                label: 'Historique',
+                count: dossier.auditTrail?.length || 0,
+                icon: History,
+              },
+            ].map((tab) => {
+              const TabIcon = tab.icon;
+              const isSelected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? 'border-emerald-400 text-emerald-300 bg-emerald-500/10'
+                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <TabIcon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                  {typeof tab.count === 'number' && (
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] tabular-nums ${
+                        isSelected
+                          ? 'bg-emerald-500/25 text-emerald-200'
+                          : 'bg-white/5 text-slate-400'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Scrollable middle */}
           <div className="flex-1 min-h-0 overflow-y-auto bg-[#061A13]/90">
-            {/* Primary Révision view */}
-            <div className="p-4 sm:p-6">
-              <div className="flex flex-col gap-4">
-                {isSupervisorOrAdmin && dossier.status === 'en_revision' && (
-                  <div className="p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 shadow-md">
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Edit3 className="w-4 h-4 text-emerald-400" />
-                        Modifier le texte
-                      </span>
-                      {!isEditingContent ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => setIsEditingContent(true)}
-                          className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
-                        >
+            {activeTab === 'revision' && (
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col gap-4">
+                  {isSupervisorOrAdmin && dossier.status === 'en_revision' && (
+                    <div className="p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 shadow-md">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <Edit3 className="w-4 h-4 text-emerald-400" />
                           Modifier le texte
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setDraftContent(dossier.textDocument.currentContent);
-                              setIsEditingContent(false);
-                            }}
-                            className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
-                          >
-                            Annuler
-                          </Button>
+                        </span>
+                        {!isEditingContent ? (
                           <Button
                             type="button"
                             size="sm"
-                            onClick={handleSaveDraftAmendments}
+                            onClick={() => setIsEditingContent(true)}
                             className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
                           >
-                            Enregistrer les modifications
+                            Modifier le texte
                           </Button>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setDraftContent(dossier.textDocument.currentContent);
+                                setIsEditingContent(false);
+                              }}
+                              className="h-7 text-xs border-emerald-500/30 bg-emerald-950/60 text-slate-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-400"
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleSaveDraftAmendments}
+                              className="h-7 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-300"
+                            >
+                              Enregistrer les modifications
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {isEditingContent && (
+                        <div className="flex flex-col gap-2">
+                          <label htmlFor="draft-content" className="sr-only">
+                            Texte du dossier
+                          </label>
+                          <textarea
+                            id="draft-content"
+                            value={draftContent}
+                            onChange={(e) => setDraftContent(e.target.value)}
+                            rows={8}
+                            className="w-full p-3 font-sans text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 leading-relaxed"
+                            placeholder="Rédigez vos modifications directement dans ce texte..."
+                          />
+                          <label htmlFor="amendment-note" className="sr-only">
+                            Note sur les modifications
+                          </label>
+                          <input
+                            id="amendment-note"
+                            type="text"
+                            value={amendmentNote}
+                            onChange={(e) => setAmendmentNote(e.target.value)}
+                            placeholder="Note sur les modifications (ex : Rectification de la clause 4.2)..."
+                            className="w-full px-3 py-1.5 text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                          />
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {isEditingContent && (
-                      <div className="flex flex-col gap-2">
-                        <label htmlFor="draft-content" className="sr-only">
-                          Texte du dossier
-                        </label>
-                        <textarea
-                          id="draft-content"
-                          value={draftContent}
-                          onChange={(e) => setDraftContent(e.target.value)}
-                          rows={8}
-                          className="w-full p-3 font-sans text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 leading-relaxed"
-                          placeholder="Rédigez vos modifications directement dans ce texte..."
-                        />
-                        <label htmlFor="amendment-note" className="sr-only">
-                          Note sur les modifications
-                        </label>
-                        <input
-                          id="amendment-note"
-                          type="text"
-                          value={amendmentNote}
-                          onChange={(e) => setAmendmentNote(e.target.value)}
-                          placeholder="Note sur les modifications (ex : Rectification de la clause 4.2)..."
-                          className="w-full px-3 py-1.5 text-xs border border-emerald-500/30 bg-[#061A13] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                  <TextDiffViewer
+                    previousText={dossier.textDocument.previousContent}
+                    currentText={dossier.textDocument.currentContent}
+                    title={dossier.textDocument.title}
+                    lastAmendedBy={dossier.textDocument.lastAmendedBy}
+                    lastAmendedAt={dossier.textDocument.lastAmendedAt}
+                    amendmentNotes={dossier.textDocument.amendmentNotes}
+                  />
+                </div>
+              </div>
+            )}
 
-                <TextDiffViewer
-                  previousText={dossier.textDocument.previousContent}
-                  currentText={dossier.textDocument.currentContent}
-                  title={dossier.textDocument.title}
-                  lastAmendedBy={dossier.textDocument.lastAmendedBy}
-                  lastAmendedAt={dossier.textDocument.lastAmendedAt}
-                  amendmentNotes={dossier.textDocument.amendmentNotes}
+            {activeTab === 'files' && (
+              <div className="p-4 sm:p-6">
+                <FileVersionManager
+                  files={dossier.trackedFiles || []}
+                  onChangeFiles={handleUpdateTrackedFiles}
+                  currentUser={{
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    role: currentUser.role,
+                    department: currentUser.department,
+                  }}
+                  contextTitle={`Dossier ${dossier.ref} - ${dossier.title}`}
+                  readOnly={dossier.status === 'archive' || (dossier.lock.isLocked && Boolean(isLockedByOther))}
                 />
               </div>
-            </div>
+            )}
 
-            {/* Détails disclosure */}
-            <div className="border-t border-emerald-500/20">
-              <button
-                type="button"
-                aria-expanded={isDetailsOpen}
-                aria-controls="dossier-studio-details"
-                onClick={() => setIsDetailsOpen((open) => !open)}
-                className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-3 text-left text-sm font-bold text-slate-200 hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400 cursor-pointer"
-              >
-                <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-emerald-400" />
-                  Détails
-                </span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 ${isDetailsOpen ? 'rotate-180' : ''}`} />
-              </button>
+            {activeTab === 'data' && (
+              <div className="p-4 sm:p-6">
+                <DataDiffViewer dataFields={dossier.dataFields} />
+              </div>
+            )}
 
-              {isDetailsOpen && (
-                <div id="dossier-studio-details" className="px-4 sm:px-6 pb-6 flex flex-col gap-6">
-                  <section className="flex flex-col gap-2">
-                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
-                      <TrendingUp className="w-4 h-4" />
-                      Chiffres
-                    </h4>
-                    <DataDiffViewer dataFields={dossier.dataFields} />
-                  </section>
+            {activeTab === 'requests' && (
+              <div className="p-4 sm:p-6">
+                <InterDepGatewayViewer
+                  requests={dossier.interDepRequests}
+                  dossierId={dossier.id}
+                  dossierRef={dossier.ref}
+                  currentDepartment={dossier.department}
+                  currentUser={currentUser}
+                  onAddRequest={handleAddInterDepRequest}
+                  onUpdateRequestStatus={handleUpdateInterDepStatus}
+                />
+              </div>
+            )}
 
-                  <section className="flex flex-col gap-2">
-                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
-                      <FileText className="w-4 h-4" />
-                      Fichiers
-                    </h4>
-                    <FileVersionManager
-                      files={dossier.trackedFiles || []}
-                      onChangeFiles={handleUpdateTrackedFiles}
-                      currentUser={{
-                        id: currentUser.id,
-                        name: currentUser.name,
-                        email: currentUser.email,
-                        role: currentUser.role,
-                        department: currentUser.department,
-                      }}
-                      contextTitle={`Dossier ${dossier.ref} - ${dossier.title}`}
-                      readOnly={dossier.status === 'archive' || (dossier.lock.isLocked && Boolean(isLockedByOther))}
-                    />
-                  </section>
-
-                  <section className="flex flex-col gap-2">
-                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
-                      <ArrowRightLeft className="w-4 h-4" />
-                      Demandes
-                    </h4>
-                    <InterDepGatewayViewer
-                      requests={dossier.interDepRequests}
-                      dossierId={dossier.id}
-                      dossierRef={dossier.ref}
-                      currentDepartment={dossier.department}
-                      currentUser={currentUser}
-                      onAddRequest={handleAddInterDepRequest}
-                      onUpdateRequestStatus={handleUpdateInterDepStatus}
-                    />
-                  </section>
-
-                  <section className="flex flex-col gap-2">
-                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-300">
-                      <History className="w-4 h-4" />
-                      Historique
-                    </h4>
-                    <AuditTrailViewer auditTrail={dossier.auditTrail} dossierRef={dossier.ref} />
-                  </section>
-                </div>
-              )}
-            </div>
+            {activeTab === 'history' && (
+              <div className="p-4 sm:p-6">
+                <AuditTrailViewer auditTrail={dossier.auditTrail} dossierRef={dossier.ref} />
+              </div>
+            )}
           </div>
 
           {actionError && (
@@ -857,6 +903,48 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
                   Choisissez la personne chargée de relire et valider le dossier{' '}
                   <span className="font-mono text-emerald-300">{dossier.ref}</span>.
                 </p>
+
+                {/* Deliverable Version Manifest (DT-ARCH-19) */}
+                <div className="mb-3 p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/25">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-300 mb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" />
+                      Manifeste des livrables transmis ({dossier.trackedFiles?.length || 0})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSubmitModalOpen(false);
+                        setActiveTab('files');
+                      }}
+                      className="text-[11px] underline text-slate-300 hover:text-white cursor-pointer"
+                    >
+                      Gérer les fichiers
+                    </button>
+                  </div>
+                  {(dossier.trackedFiles?.length || 0) === 0 ? (
+                    <p className="text-[11px] text-amber-300">
+                      Aucun fichier versionné joint à ce dossier.
+                    </p>
+                  ) : (
+                    <ul className="space-y-1 text-[11px] text-slate-200">
+                      {(dossier.trackedFiles || []).map((f) => {
+                        const latest = f.versions[0];
+                        return (
+                          <li key={f.id} className="flex items-center justify-between gap-2">
+                            <span className="truncate font-mono text-emerald-200">
+                              {f.name} ({f.currentVersion})
+                            </span>
+                            <span className="text-slate-400 shrink-0">
+                              {latest ? formatBytes(latest.sizeBytes) : ''}
+                              {latest?.checksum ? ` · ${latest.checksum.slice(0, 15)}…` : ''}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
 
                 <div className="relative mb-2.5">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />

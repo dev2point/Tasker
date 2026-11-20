@@ -22,11 +22,7 @@ export interface AuthenticatedUser {
  */
 export async function getAuthenticatedUser(req: NextRequest): Promise<AuthenticatedUser | null> {
   try {
-    if (!isDatabaseConfigured()) {
-      return null;
-    }
-
-    // 1. Better Auth session check via internal API
+    // 1. Better Auth session check via active adapter (PostgreSQL or JSON fallback)
     const session = await auth.api.getSession({
       headers: req.headers,
     }).catch(() => null);
@@ -46,7 +42,11 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<Authentica
       };
     }
 
-    // 2. Direct fallback check for Bearer or Cookie token
+    if (!isDatabaseConfigured()) {
+      return null;
+    }
+
+    // 2. Direct fallback check for Bearer or Cookie token in PostgreSQL
     const authHeader = req.headers.get('authorization') || req.headers.get('x-session-token');
     let token = '';
     if (authHeader?.startsWith('Bearer ')) {
