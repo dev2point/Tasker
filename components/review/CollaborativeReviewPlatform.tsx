@@ -35,6 +35,8 @@ import {
   X,
   ChevronRight,
   Trash2,
+  MoreHorizontal,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalPortal } from '@/components/ui/ModalPortal';
@@ -71,6 +73,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
   const [dossierToDelete, setDossierToDelete] = useState<ReviewDossier | null>(null);
   const [isDeletingDossier, setIsDeletingDossier] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const shouldPersistDossiersRef = useRef(false);
 
   // Persist dossiers cleanly after commit (never inside a setState updater)
@@ -331,6 +335,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
   const hasActiveFilters =
     selectedDept !== 'Tous' || selectedStatus !== 'Tous' || searchQuery.trim().length > 0;
+  const activeFilterCount =
+    (selectedDept !== 'Tous' ? 1 : 0) +
+    (selectedStatus !== 'Tous' ? 1 : 0) +
+    (searchQuery.trim().length > 0 ? 1 : 0);
 
   const getStatusMeta = (status: ReviewStatus) => {
     switch (status) {
@@ -359,8 +367,6 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
     { id: 'Recherche & Innovation', label: 'R&I', count: deptCounts['Recherche & Innovation'] },
   ];
 
-  const otherActiveMembersCount = presenceMembers.filter((m) => m.userId !== actor.id).length;
-
   return (
     <div className="flex flex-col gap-5 w-full pb-14">
       {/* 1. Essential Workspace Header */}
@@ -368,10 +374,6 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-white">Revue métier</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 tabular-nums">
-            <span>
-              {stats.total} {stats.total > 1 ? 'dossiers' : 'dossier'}
-            </span>
-            <span aria-hidden="true">·</span>
             <span>{stats.inReview} en revue</span>
             {stats.needsCorrections > 0 && (
               <>
@@ -381,40 +383,45 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                 </span>
               </>
             )}
-            <span aria-hidden="true">·</span>
-            <span className="text-emerald-400/90">
-              {stats.validated} {stats.validated > 1 ? 'validés' : 'validé'}
-            </span>
-            {stats.blockedRequests > 0 && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-amber-400 font-medium">
-                  {stats.blockedRequests} {stats.blockedRequests > 1 ? 'blocages' : 'blocage'}
-                </span>
-              </>
-            )}
-            {otherActiveMembersCount > 0 && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-slate-300">
-                  {otherActiveMembersCount} {otherActiveMembersCount > 1 ? 'collaborateurs actifs' : 'collaborateur actif'}
-                </span>
-              </>
-            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {onOpenReportModal && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenReportModal(selectedDept)}
-              className="border-emerald-500/30 bg-[#061A13]/80 text-slate-200 hover:bg-emerald-500/15 hover:text-white font-medium text-xs gap-1.5 px-3.5 py-2 rounded-lg cursor-pointer transition-colors whitespace-nowrap shrink-0"
+            <div
+              className="relative shrink-0"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setIsActionsOpen(false);
+              }}
             >
-              <Printer className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Rapport PDF</span>
-            </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsActionsOpen((open) => !open)}
+                aria-expanded={isActionsOpen}
+                aria-controls="header-actions-menu"
+                className="border-emerald-500/30 bg-transparent text-slate-300 hover:bg-emerald-500/15 hover:text-white font-medium text-xs gap-1.5 px-3 py-2 rounded-lg cursor-pointer transition-colors whitespace-nowrap"
+              >
+                <MoreHorizontal className="w-4 h-4 text-emerald-400" />
+                <span>Plus d&apos;actions</span>
+              </Button>
+              <div
+                id="header-actions-menu"
+                className={`${isActionsOpen ? 'block' : 'hidden'} absolute right-0 top-full z-30 mt-1 w-48 rounded-lg border border-emerald-500/25 bg-[#061A13] p-1 shadow-xl`}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsOpen(false);
+                    onOpenReportModal(selectedDept);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-slate-200 hover:bg-emerald-500/15 hover:text-white focus-visible:outline-none focus-visible:bg-emerald-500/15 cursor-pointer transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Rapport PDF</span>
+                </button>
+              </div>
+            </div>
           )}
 
           <Button
@@ -431,7 +438,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       {/* 2. Live Alerts (Only shown when actionable events occur) */}
       {alerts.length > 0 && (
         <div className="flex flex-col gap-2">
-          {alerts.slice(0, 2).map((alert, alertIdx) => (
+          {alerts.slice(0, 1).map((alert, alertIdx) => (
             <div
               key={alert?.id || `alert-${alertIdx}`}
               className="px-4 py-2.5 rounded-lg bg-[#061A13]/90 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs text-slate-200"
@@ -474,36 +481,10 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
         </div>
       )}
 
-      {/* 3. Unified Filter Toolbar (Department Segmented Tabs + Search + Status) */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex items-center gap-1 p-1 bg-[#061A13]/85 border border-emerald-500/20 rounded-lg overflow-x-auto scrollbar-none">
-          {departmentTabs.map((tab) => {
-            const isActive = selectedDept === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSelectedDept(tab.id)}
-                title={tab.id === 'Recherche & Innovation' ? 'Recherche & Innovation' : undefined}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 tabular-nums ${
-                  isActive
-                    ? 'bg-emerald-500/20 text-emerald-200'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className={`ml-1.5 ${isActive ? 'text-emerald-300' : 'text-slate-500'}`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-2.5 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-64">
+      {/* 3. Search + Filters disclosure */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
@@ -524,21 +505,88 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
             )}
           </div>
 
-          <select
-            aria-label="Filtrer par statut"
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as 'Tous' | ReviewStatus)}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-500/20 bg-[#061A13]/95 text-slate-200 focus:outline-none focus:border-emerald-400/60 cursor-pointer shrink-0"
+          <div
+            className="shrink-0"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setIsFiltersOpen(false);
+            }}
           >
-            <option value="Tous">Tous les statuts</option>
-            <option value="brouillon">Brouillon</option>
-            <option value="soumis">Soumis</option>
-            <option value="en_revision">En révision</option>
-            <option value="amendements">Amendements</option>
-            <option value="demande_corrections">À corriger</option>
-            <option value="valide">Validé</option>
-            <option value="archive">Archivé</option>
-          </select>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsFiltersOpen((open) => !open)}
+              aria-expanded={isFiltersOpen}
+              aria-controls="filters-panel"
+              className="border-emerald-500/30 bg-transparent text-slate-300 hover:bg-emerald-500/15 hover:text-white font-medium text-xs gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer transition-colors whitespace-nowrap"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Filtres</span>
+              {activeFilterCount > 0 && (
+                <span className="ml-0.5 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold tabular-nums">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div
+          id="filters-panel"
+          className={`${isFiltersOpen ? 'flex' : 'hidden'} flex-col gap-3 rounded-lg border border-emerald-500/20 bg-[#061A13]/85 p-3`}
+        >
+          <div className="flex flex-wrap items-center gap-1">
+            {departmentTabs.map((tab) => {
+              const isActive = selectedDept === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedDept(tab.id)}
+                  title={tab.id === 'Recherche & Innovation' ? 'Recherche & Innovation' : undefined}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap tabular-nums focus-visible:outline-none focus-visible:bg-emerald-500/15 ${
+                    isActive
+                      ? 'bg-emerald-500/20 text-emerald-200'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={`ml-1.5 ${isActive ? 'text-emerald-300' : 'text-slate-500'}`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <select
+              aria-label="Filtrer par statut"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as 'Tous' | ReviewStatus)}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-500/20 bg-[#061A13]/95 text-slate-200 focus:outline-none focus:border-emerald-400/60 cursor-pointer w-full sm:w-auto"
+            >
+              <option value="Tous">Tous les statuts</option>
+              <option value="brouillon">Brouillon</option>
+              <option value="soumis">Soumis</option>
+              <option value="en_revision">En révision</option>
+              <option value="amendements">Amendements</option>
+              <option value="demande_corrections">À corriger</option>
+              <option value="valide">Validé</option>
+              <option value="archive">Archivé</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-500/30 bg-transparent text-slate-300 hover:bg-emerald-500/15 hover:text-white focus-visible:outline-none focus-visible:bg-emerald-500/15 cursor-pointer transition-colors whitespace-nowrap"
+              >
+                Réinitialiser les filtres
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -562,15 +610,11 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3">
             <GitPullRequest className="w-5 h-5" />
           </div>
-          <h2 className="text-sm font-semibold text-white">
-            {dossiers.length === 0
-              ? 'Aucun dossier en revue'
-              : 'Aucun dossier ne correspond aux filtres'}
-          </h2>
+          <h2 className="text-sm font-semibold text-white">Aucun dossier</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
             {dossiers.length === 0
-              ? 'Créez un dossier pour démarrer la validation collaborative et le suivi des versions.'
-              : 'Modifiez vos critères ou réinitialisez les filtres pour afficher vos dossiers.'}
+              ? 'Créez un dossier pour démarrer la revue collaborative.'
+              : 'Aucun dossier ne correspond aux filtres actifs.'}
           </p>
           <div className="mt-4">
             {dossiers.length === 0 ? (
@@ -599,10 +643,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       ) : (
         <div className="rounded-xl bg-[#061A13]/85 border border-emerald-500/20 overflow-hidden">
           {/* Desktop Table Header */}
-          <div className="hidden md:grid md:grid-cols-[minmax(0,2.4fr)_140px_170px_120px_110px] gap-4 px-5 py-2.5 border-b border-emerald-500/15 text-[11px] font-medium text-slate-400">
+          <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_120px_110px] gap-4 px-5 py-2.5 border-b border-emerald-500/15 text-[11px] font-medium text-slate-400">
             <span>Dossier</span>
-            <span>Pôle</span>
-            <span>Maker / Checker</span>
             <span>Statut</span>
             <span className="text-right">Actions</span>
           </div>
@@ -631,9 +673,9 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                       handleOpenStudio(dossier);
                     }
                   }}
-                  className="group grid grid-cols-1 md:grid-cols-[minmax(0,2.4fr)_140px_170px_120px_110px] gap-2 md:gap-4 items-center px-5 py-3.5 hover:bg-emerald-500/[0.06] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:bg-emerald-500/10"
+                  className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_110px] gap-2 md:gap-4 items-center px-5 py-3.5 hover:bg-emerald-500/[0.06] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:bg-emerald-500/10"
                 >
-                  {/* Dossier Title + Clean Unboxed Metadata */}
+                  {/* Dossier Title + Metadata */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors truncate">
@@ -652,7 +694,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                         />
                       )}
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400 truncate">
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400 min-w-0">
                       <span className="font-mono text-emerald-300/90 tabular-nums shrink-0">
                         {dossier.ref}
                       </span>
@@ -660,26 +702,15 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                       <span className="text-slate-300 truncate">{dossier.clientName}</span>
                       <span aria-hidden="true" className="hidden sm:inline">·</span>
                       <span className="hidden sm:inline truncate">{dossier.typology}</span>
-                    </div>
-                  </div>
-
-                  {/* Department */}
-                  <div className="flex items-center justify-between md:block text-xs">
-                    <span className="text-slate-500 md:hidden">Pôle</span>
-                    <span className="text-slate-300 truncate block">
-                      {dossier.department === 'Recherche & Innovation' ? 'R&I' : dossier.department}
-                    </span>
-                  </div>
-
-                  {/* Maker -> Checker */}
-                  <div className="flex items-center justify-between md:block text-xs">
-                    <span className="text-slate-500 md:hidden">Revue</span>
-                    <span className="text-slate-300 truncate block">
-                      {makerName} <span className="text-slate-500">→</span>{' '}
-                      <span className={dossier.checker?.name ? 'text-slate-200' : 'text-slate-500'}>
-                        {checkerName}
+                      <span aria-hidden="true">·</span>
+                      <span className="truncate">
+                        {dossier.department === 'Recherche & Innovation' ? 'R&I' : dossier.department}
                       </span>
-                    </span>
+                      <span aria-hidden="true">·</span>
+                      <span className="truncate">
+                        {makerName} <span className="text-slate-500">→</span> {checkerName}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Status */}
@@ -701,7 +732,7 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
                           soundManager.playClickSound();
                           setDossierToDelete(dossier);
                         }}
-                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                         title="Supprimer le dossier"
                         aria-label={`Supprimer ${dossier.title}`}
                       >
