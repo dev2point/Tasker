@@ -102,14 +102,14 @@ jobs:
             echo "| **Audit Sécurité (npm audit)** | $(format_badge "$audit_status") | Détection des vulnérabilités hautes/critiques |"
             echo ""
             if [ "${{ github.event_name }}" = "push" ]; then
-              echo "> ℹ️ **Optimisation quota :** le build de production Next.js est réservé aux Pull Requests et aux lancements manuels."
+              echo "> ℹ️ **Build production :** exécuté sur les pushes, Pull Requests et lancements manuels."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   production-build:
     name: 🏗️ Build Next.js Production
     needs: quality-gate
-    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_build != false && inputs.run_build != 'false')
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_build != false && inputs.run_build != 'false')
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
