@@ -215,9 +215,13 @@ export function calculateNextVersion(currentVersion: string, isMajor: boolean = 
  * Create a new tracked file with an initial v1.0 version snapshot
  */
 export function createTrackedFile(params: {
+  id?: string;
+  versionId?: string;
   fileName: string;
   sizeBytes: number;
   fileType?: string;
+  storageProvider?: 'r2' | 'inline';
+  r2Key?: string;
   contentUrl?: string;
   rawBytes?: Uint8Array | ArrayBuffer;
   checksum?: string;
@@ -231,8 +235,8 @@ export function createTrackedFile(params: {
   description?: string;
 }): TrackedFile {
   const now = new Date().toISOString();
-  const fileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  const versionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const fileId = params.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const versionId = params.versionId || `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const type = params.fileType || inferFileType(params.fileName);
   const checksum =
     params.checksum ||
@@ -253,6 +257,8 @@ export function createTrackedFile(params: {
     sizeBytes: params.sizeBytes,
     fileName: params.fileName,
     fileType: type,
+    storageProvider: params.storageProvider || (params.r2Key ? 'r2' : 'inline'),
+    r2Key: params.r2Key,
     contentUrl: params.contentUrl,
     textContent: params.textContent,
     gridData: params.gridData,
@@ -280,8 +286,11 @@ export function createTrackedFile(params: {
 export function addNewFileVersion(
   trackedFile: TrackedFile,
   params: {
+    versionId?: string;
     fileName?: string;
     sizeBytes: number;
+    storageProvider?: 'r2' | 'inline';
+    r2Key?: string;
     contentUrl?: string;
     rawBytes?: Uint8Array | ArrayBuffer;
     checksum?: string;
@@ -297,7 +306,7 @@ export function addNewFileVersion(
 ): TrackedFile {
   const now = new Date().toISOString();
   const nextVer = calculateNextVersion(trackedFile.currentVersion, params.isMajor);
-  const versionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const versionId = params.versionId || `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const effectiveFileName = params.fileName || trackedFile.name;
   const type = inferFileType(effectiveFileName);
   const resolvedContentUrl = params.contentUrl || trackedFile.versions[0]?.contentUrl;
@@ -320,6 +329,8 @@ export function addNewFileVersion(
     sizeBytes: params.sizeBytes,
     fileName: effectiveFileName,
     fileType: type,
+    storageProvider: params.storageProvider || (params.r2Key ? 'r2' : trackedFile.versions[0]?.storageProvider || 'inline'),
+    r2Key: params.r2Key || (!params.contentUrl ? trackedFile.versions[0]?.r2Key : undefined),
     contentUrl: resolvedContentUrl,
     textContent: params.textContent,
     gridData: params.gridData,
@@ -406,6 +417,8 @@ export function restoreFileVersion(
     sizeBytes: target.sizeBytes,
     fileName: target.fileName,
     fileType: target.fileType,
+    storageProvider: target.storageProvider,
+    r2Key: target.r2Key,
     contentUrl: target.contentUrl,
     textContent: target.textContent,
     gridData: target.gridData,

@@ -249,6 +249,43 @@ export async function ensureDatabaseTables(): Promise<{ success: boolean; messag
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS notifications_recipient_idx ON notifications (recipient_id, trigger_time DESC);
+
+      CREATE TABLE IF NOT EXISTS review_files (
+        id VARCHAR(96) PRIMARY KEY,
+        dossier_id VARCHAR(96) NOT NULL,
+        name VARCHAR(500) NOT NULL,
+        original_name VARCHAR(500) NOT NULL,
+        file_type VARCHAR(32) NOT NULL,
+        current_version VARCHAR(32) NOT NULL DEFAULT 'v1.0',
+        description TEXT,
+        tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS review_files_dossier_idx ON review_files (dossier_id);
+
+      CREATE TABLE IF NOT EXISTS review_file_versions (
+        id VARCHAR(96) PRIMARY KEY,
+        file_id VARCHAR(96) NOT NULL REFERENCES review_files(id) ON DELETE CASCADE,
+        dossier_id VARCHAR(96) NOT NULL,
+        version_number VARCHAR(32) NOT NULL,
+        file_name VARCHAR(500) NOT NULL,
+        file_type VARCHAR(32) NOT NULL,
+        size_bytes INTEGER NOT NULL DEFAULT 0,
+        storage_provider VARCHAR(32) NOT NULL DEFAULT 'r2',
+        r2_object_key TEXT,
+        checksum_sha256 VARCHAR(128) NOT NULL,
+        author_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+        author_name VARCHAR(255) NOT NULL,
+        summary TEXT,
+        extracted_text TEXT,
+        grid_data JSONB,
+        is_current BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS review_file_versions_dossier_idx ON review_file_versions (dossier_id, file_id);
+      ALTER TABLE review_files ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE review_file_versions ENABLE ROW LEVEL SECURITY;
     `);
 
     // 7. Better Auth Tables: "session", "account", "verification"

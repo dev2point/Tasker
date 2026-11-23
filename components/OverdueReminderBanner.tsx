@@ -123,10 +123,10 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                     onClick={() => handlePostpone(0)}
                     className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-amber-400" />
                       <span className="font-medium">À aujourd&apos;hui</span>
-                    </div>
+                    </span>
                     <span className="text-[10px] text-slate-400">Ce jour</span>
                   </button>
 
@@ -135,10 +135,10 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                     onClick={() => handlePostpone(1)}
                     className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="font-medium">À demain (+1 jour)</span>
-                    </div>
+                    </span>
                     <span className="text-[10px] text-slate-400">+1j</span>
                   </button>
 
@@ -147,10 +147,10 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                     onClick={() => handlePostpone(3)}
                     className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                       <CalendarDays className="w-3.5 h-3.5 text-blue-400" />
                       <span className="font-medium">Dans 3 jours</span>
-                    </div>
+                    </span>
                     <span className="text-[10px] text-slate-400">+3j</span>
                   </button>
 
@@ -159,10 +159,10 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
                     onClick={() => handlePostpone(7)}
                     className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:text-white hover:bg-rose-500/25 text-left transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                       <CalendarDays className="w-3.5 h-3.5 text-purple-400" />
                       <span className="font-medium">Dans 1 semaine (+7 jours)</span>
-                    </div>
+                    </span>
                     <span className="text-[10px] text-slate-400">+7j</span>
                   </button>
 

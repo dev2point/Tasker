@@ -13,6 +13,12 @@ import { dataUrlToUint8Array } from '@/lib/file-version-service';
 import { ReviewDossier, ReviewStatus } from '@/types/review';
 import { TrackedFile } from '@/types/file-version';
 import { realtimeHub, RealtimeEventType } from '@/lib/realtime-hub';
+import {
+  buildR2ObjectKey,
+  deleteObjectFromR2,
+  isR2Configured,
+  uploadBufferToR2,
+} from '@/lib/storage/r2';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,25 +41,77 @@ function isPlaceholderIp(ip?: string): boolean {
 }
 
 /**
- * Compute real server-side SHA-256 on uploaded file bytes when available (DT-ARCH-17).
+ * Compute real server-side SHA-256 on uploaded file bytes when available (DT-ARCH-17)
+ * and offload inline base64 payloads to Cloudflare R2 when configured (DT-ARCH-15).
  */
-function normalizeTrackedFilesWithServerSha256(files: unknown): TrackedFile[] {
+async function normalizeTrackedFilesWithServerSha256(
+  files: unknown,
+  dossierId: string,
+  userId?: string
+): Promise<TrackedFile[]> {
   if (!Array.isArray(files)) return [];
-  return files
-    .filter((f): f is TrackedFile => Boolean(f && typeof f === 'object' && typeof f.id === 'string'))
-    .map((file) => ({
+  const validFiles = files.filter(
+    (f): f is TrackedFile => Boolean(f && typeof f === 'object' && typeof f.id === 'string')
+  );
+  const r2Enabled = isR2Configured();
+
+  return Promise.all(
+    validFiles.map(async (file) => ({
       ...file,
       versions: Array.isArray(file.versions)
-        ? file.versions.map((ver) => {
-            const bytes = ver.contentUrl ? dataUrlToUint8Array(ver.contentUrl) : null;
-            if (bytes && bytes.byteLength > 0) {
-              const serverSha = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
-              return { ...ver, checksum: serverSha };
-            }
-            return ver;
-          })
+        ? await Promise.all(
+            file.versions.map(async (ver) => {
+              const bytes = ver.contentUrl ? dataUrlToUint8Array(ver.contentUrl) : null;
+              let nextChecksum = ver.checksum;
+              if (bytes && bytes.byteLength > 0) {
+                nextChecksum = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+              }
+
+              if (r2Enabled && !ver.r2Key && bytes && bytes.byteLength > 0) {
+                try {
+                  const r2Key = buildR2ObjectKey({
+                    dossierId,
+                    fileId: file.id,
+                    versionId: ver.id,
+                    fileName: ver.fileName,
+                  });
+                  await uploadBufferToR2({
+                    key: r2Key,
+                    body: bytes,
+                    contentType: 'application/octet-stream',
+                    checksumSha256: nextChecksum,
+                    metadata: userId ? { uploadedBy: userId } : undefined,
+                  });
+                  return {
+                    ...ver,
+                    checksum: nextChecksum,
+                    storageProvider: 'r2' as const,
+                    r2Key,
+                    contentUrl: `/api/review/file-versions/${encodeURIComponent(ver.id)}/download?dossierId=${encodeURIComponent(dossierId)}`,
+                  };
+                } catch (err) {
+                  console.warn('[R2] Offload skipped, keeping inline fallback:', err);
+                }
+              }
+
+              if (ver.r2Key) {
+                return {
+                  ...ver,
+                  checksum: nextChecksum,
+                  storageProvider: 'r2' as const,
+                  contentUrl: `/api/review/file-versions/${encodeURIComponent(ver.id)}/download?dossierId=${encodeURIComponent(dossierId)}`,
+                };
+              }
+
+              return {
+                ...ver,
+                checksum: nextChecksum,
+              };
+            })
+          )
         : [],
-    }));
+    }))
+  );
 }
 
 export async function GET(req: NextRequest) {
@@ -94,7 +152,13 @@ export async function POST(req: NextRequest) {
     const clientIp = extractClientIp(req);
     const now = new Date().toISOString();
 
-    const normalizedTrackedFiles = normalizeTrackedFilesWithServerSha256(body.trackedFiles);
+    const resolvedDossierId =
+      typeof body.id === 'string' && body.id.trim() ? body.id : `dossier-${Date.now()}`;
+    const normalizedTrackedFiles = await normalizeTrackedFilesWithServerSha256(
+      body.trackedFiles,
+      resolvedDossierId,
+      user.id
+    );
     const incomingAudit = Array.isArray(body.auditTrail)
       ? body.auditTrail.map((entry: any) => ({
           ...entry,
@@ -103,7 +167,7 @@ export async function POST(req: NextRequest) {
       : [];
 
     const newDossier: ReviewDossier = {
-      id: typeof body.id === 'string' && body.id.trim() ? body.id : `dossier-${Date.now()}`,
+      id: resolvedDossierId,
       ref:
         body.ref ||
         `DOS-${new Date().getFullYear()}-${body.department?.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
@@ -216,7 +280,11 @@ export async function PATCH(req: NextRequest) {
       : [];
 
     const normalizedTrackedFiles = updatedDossier.trackedFiles
-      ? normalizeTrackedFilesWithServerSha256(updatedDossier.trackedFiles)
+      ? await normalizeTrackedFilesWithServerSha256(
+          updatedDossier.trackedFiles,
+          dossierId,
+          user.id
+        )
       : undefined;
 
     if (index >= 0) {
@@ -418,6 +486,15 @@ export async function DELETE(req: NextRequest) {
     }
 
     setRuntimeDossiers(currentList.filter((d) => d.id !== dossierId));
+
+    if (existing?.trackedFiles && isR2Configured()) {
+      const r2Keys = existing.trackedFiles.flatMap((f) =>
+        f.versions.map((v) => v.r2Key).filter((k): k is string => Boolean(k))
+      );
+      if (r2Keys.length > 0) {
+        void Promise.allSettled(r2Keys.map((key) => deleteObjectFromR2(key)));
+      }
+    }
 
     realtimeHub.broadcast({
       type: 'DOSSIER_DELETED',

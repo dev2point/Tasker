@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://picsum.photos https://*.googleusercontent.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.run.app wss: ws:",
+              "connect-src 'self' https://*.run.app https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com wss: ws:",
               "worker-src 'self' blob:",
               "frame-ancestors 'self' https://*.google.com https://*.aistudio.google.com https://ai.studio https://*.run.app",
               "object-src 'none'",

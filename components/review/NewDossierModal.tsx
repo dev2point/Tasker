@@ -73,6 +73,11 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   const [metricAmount, setMetricAmount] = useState<number | ''>('');
 
   // Professional file attachment state (starts empty - no mock file)
+  const [draftDossierId, setDraftDossierId] = useState<string | null>(null);
+  const [attachedFileId, setAttachedFileId] = useState<string | undefined>();
+  const [attachedVersionId, setAttachedVersionId] = useState<string | undefined>();
+  const [attachedStorageProvider, setAttachedStorageProvider] = useState<'r2' | 'inline'>('inline');
+  const [attachedR2Key, setAttachedR2Key] = useState<string | undefined>();
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
   const [attachedFileSize, setAttachedFileSize] = useState<number>(0);
   const [attachedBase64, setAttachedBase64] = useState<string | undefined>();
@@ -93,15 +98,54 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const targetDossierId = draftDossierId || `dossier-${Date.now()}`;
+    const targetFileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const targetVersionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    setDraftDossierId(targetDossierId);
+    setAttachedFileId(targetFileId);
+    setAttachedVersionId(targetVersionId);
+
     setUploadError(null);
     setAttachedFileName(file.name);
     setAttachedFileSize(file.size);
+    setAttachedR2Key(undefined);
+    setAttachedStorageProvider('inline');
+    setAttachedBase64(undefined);
     setIsExtracting(true);
+
+    let storedInR2 = false;
 
     try {
       const buffer = await file.arrayBuffer();
       const rawBytes = new Uint8Array(buffer);
       setAttachedChecksum(generateChecksum(rawBytes));
+
+      // Upload to Cloudflare R2 (when configured) or compute server SHA-256
+      try {
+        const uploadForm = new FormData();
+        uploadForm.append('file', file);
+        uploadForm.append('dossierId', targetDossierId);
+        uploadForm.append('fileId', targetFileId);
+        uploadForm.append('versionId', targetVersionId);
+        const uploadRes = await fetch('/api/review/files/upload', {
+          method: 'POST',
+          body: uploadForm,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (typeof uploadData.checksum === 'string') {
+            setAttachedChecksum(uploadData.checksum);
+          }
+          if (uploadData.storageProvider === 'r2' && uploadData.r2Key) {
+            storedInR2 = true;
+            setAttachedStorageProvider('r2');
+            setAttachedR2Key(uploadData.r2Key);
+            setAttachedBase64(uploadData.downloadUrl);
+          }
+        }
+      } catch {
+        // Offline/dev fallback will inline data URL below
+      }
 
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (ext === 'pdf') {
@@ -156,14 +200,21 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       setIsExtracting(false);
     }
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setAttachedBase64(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (!storedInR2) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setAttachedBase64(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleRemoveFile = () => {
+    setDraftDossierId(null);
+    setAttachedFileId(undefined);
+    setAttachedVersionId(undefined);
+    setAttachedStorageProvider('inline');
+    setAttachedR2Key(undefined);
     setAttachedFileName(null);
     setAttachedFileSize(0);
     setAttachedBase64(undefined);
@@ -191,8 +242,12 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
 
     // Create professional initial tracked file (v1.0)
     const initialTrackedFile: TrackedFile = createTrackedFile({
+      id: attachedFileId,
+      versionId: attachedVersionId,
       fileName: attachedFileName,
       sizeBytes: attachedFileSize,
+      storageProvider: attachedStorageProvider,
+      r2Key: attachedR2Key,
       contentUrl: attachedBase64,
       checksum: attachedChecksum,
       textContent: extractedText || 'Document de travail initial.',
@@ -206,9 +261,10 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     });
 
     const autoSupervisor = resolveDepartmentSupervisor(teamUsers, department, currentUser.id);
+    const resolvedDossierId = draftDossierId || `dossier-${Date.now()}`;
 
     const newDossier: ReviewDossier = {
-      id: `dossier-${Date.now()}`,
+      id: resolvedDossierId,
       ref,
       title: title.trim(),
       clientName: clientName.trim(),

@@ -64,7 +64,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
   return (
     <div className="md:hidden">
       {/* 1. Light Translucent Backdrop Overlay */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -80,7 +80,7 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
 
       {/* 2. Frosted Glass Menu Items Stack (Amanga Store & Supabase inspired) */}
       <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end pointer-events-none">
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {isOpen && (
             <motion.div
               initial={{ opacity: 0, y: 12, scale: 0.95 }}
@@ -109,21 +109,21 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                   }}
                   className="flex items-center gap-2.5 pl-2 pr-2 py-2 active:scale-95 transition-transform"
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                     currentView === 'list'
                       ? 'bg-slate-950 text-emerald-400'
                       : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                   }`}>
                     <CheckSquare className="w-4 h-4 stroke-[2.3]" />
-                  </div>
-                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  </span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
                     <span className="font-semibold">Tâches</span>
                     {pendingTasksCount > 0 && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 font-bold">
                         {pendingTasksCount}
                       </span>
                     )}
-                  </div>
+                  </span>
                 </button>
 
                 {/* Inline Quick Add button */}
@@ -151,13 +151,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'review'
                     ? 'bg-slate-950 text-emerald-400'
                     : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <GitPullRequest className="w-4 h-4 stroke-[2.3]" />
-                </div>
+                </span>
                 <span className="whitespace-nowrap font-semibold">Revue Métier</span>
               </motion.button>
 
@@ -172,13 +172,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'calendar'
                     ? 'bg-slate-950 text-emerald-400'
                     : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <CalendarIcon className="w-4 h-4 stroke-[2.3]" />
-                </div>
+                </span>
                 <span className="whitespace-nowrap font-semibold">Calendrier</span>
               </motion.button>
 
@@ -193,13 +193,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'kanban'
                     ? 'bg-slate-950 text-emerald-400'
                     : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <LayoutGrid className="w-4 h-4 stroke-[2.3]" />
-                </div>
+                </span>
                 <span className="whitespace-nowrap font-semibold">Tableau</span>
               </motion.button>
 
@@ -214,13 +214,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                     : 'bg-[#061A13]/90 text-slate-100 border-emerald-500/30 hover:bg-[#0A291E]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                   currentView === 'stats'
                     ? 'bg-slate-950 text-emerald-400'
                     : 'bg-emerald-500/20 text-emerald-300 shadow-xs'
                 }`}>
                   <BarChart3 className="w-4 h-4 stroke-[2.3]" />
-                </div>
+                </span>
                 <span className="whitespace-nowrap font-semibold">Stats</span>
               </motion.button>
 
@@ -236,13 +236,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                       : 'bg-[#061A13]/90 text-purple-200 border-purple-500/30 hover:bg-[#0A291E]'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
                     currentView === 'admin'
                       ? 'bg-slate-950 text-purple-400'
                       : 'bg-purple-500/20 text-purple-300 shadow-xs'
                   }`}>
                     <Shield className="w-4 h-4 stroke-[2.3]" />
-                  </div>
+                  </span>
                   <span className="whitespace-nowrap font-bold">Admin</span>
                 </motion.button>
               )}
@@ -260,12 +260,12 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
           className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto shadow-2xl shadow-emerald-950/60 backdrop-blur-2xl border border-emerald-500/40 bg-[#061A13]/90 text-emerald-300 hover:text-white hover:bg-[#0A291E]"
         >
           {/* Glass Inner Reflection Highlight */}
-          <div className="absolute inset-0 rounded-full bg-emerald-400/10 pointer-events-none" />
+          <span className="block absolute inset-0 rounded-full bg-emerald-400/10 pointer-events-none" />
 
           {/* Animated Icon (4-dots Matrix <-> Close Cross) */}
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {isOpen ? (
-              <motion.div
+              <motion.span
                 key="close"
                 initial={{ rotate: -90, opacity: 0, scale: 0.75 }}
                 animate={{ rotate: 0, opacity: 1, scale: 1 }}
@@ -274,9 +274,9 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 className="flex items-center justify-center"
               >
                 <X className="w-6 h-6 stroke-[2.6] text-emerald-300" />
-              </motion.div>
+              </motion.span>
             ) : (
-              <motion.div
+              <motion.span
                 key="open"
                 initial={{ rotate: 90, opacity: 0, scale: 0.75 }}
                 animate={{ rotate: 0, opacity: 1, scale: 1 }}
@@ -285,13 +285,13 @@ export const MobileFloatingGlassMenu: React.FC<MobileFloatingGlassMenuProps> = (
                 className="flex items-center justify-center"
               >
                 {/* 4-dot Grid Matrix Icon in dark slate */}
-                <div className="grid grid-cols-2 gap-1.5 p-1">
+                <span className="grid grid-cols-2 gap-1.5 p-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                </div>
-              </motion.div>
+                </span>
+              </motion.span>
             )}
           </AnimatePresence>
         </motion.button>

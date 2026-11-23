@@ -66,8 +66,6 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
         role: 'manager',
         department: 'Fiscalité',
         status: 'active',
-        avatar: 'SB',
-        color: '#10b981',
         createdAt: '2026-01-01T00:00:00.000Z',
       },
       {
@@ -77,8 +75,6 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
         role: 'manager',
         department: 'Fiscalité',
         status: 'active',
-        avatar: 'JM',
-        color: '#6366f1',
         createdAt: '2026-01-01T00:00:00.000Z',
       },
       {
@@ -88,8 +84,6 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
         role: 'admin',
         department: 'Direction',
         status: 'active',
-        avatar: 'CD',
-        color: '#f59e0b',
         createdAt: '2026-01-01T00:00:00.000Z',
       },
     ];
@@ -100,11 +94,11 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
     expect(resolved?.role).toBe('manager');
 
     // Si aucun manager dans le département cible, repli sur un manager actif, sinon admin actif (hors créateur)
-    const fallbackManager = resolveDepartmentSupervisor(team, 'Social & Paie', 'usr-maker-1');
+    const fallbackManager = resolveDepartmentSupervisor(team, 'Juridique', 'usr-maker-1');
     expect(fallbackManager?.id).toBe('usr-mgr-fis');
 
     const adminOnlyTeam = team.filter((u) => u.id !== 'usr-mgr-fis');
-    const fallbackAdmin = resolveDepartmentSupervisor(adminOnlyTeam, 'Social & Paie', 'usr-maker-1');
+    const fallbackAdmin = resolveDepartmentSupervisor(adminOnlyTeam, 'Juridique', 'usr-maker-1');
     expect(fallbackAdmin?.id).toBe('usr-admin');
   });
 
@@ -219,31 +213,35 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
           role: 'collaborateur',
         },
         lock: { isLocked: false },
+        estimatedDeliverableDate: '2026-12-01',
         dataFields: [],
         textDocument: {
           documentId: 'doc-1',
           title: 'Note',
-          type: 'note',
+          type: 'note_synthese',
           previousContent: '',
           currentContent: '',
         },
         trackedFiles: [
           {
             id: 'tf-dl-1',
-            fileName: 'attestation.pdf',
-            extension: 'pdf',
-            currentVersionNumber: 1,
+            name: 'attestation.pdf',
+            originalName: 'attestation.pdf',
+            fileType: 'pdf',
+            currentVersion: 'v1.0',
             createdAt: '2026-11-20T09:00:00.000Z',
             updatedAt: '2026-11-20T09:00:00.000Z',
             versions: [
               {
                 id: 'ver-dl-1',
-                fileId: 'tf-dl-1',
-                versionNumber: 1,
+                versionNumber: 'v1.0',
                 fileName: 'attestation.pdf',
-                fileSize: raw.byteLength,
-                uploadedAt: '2026-11-20T09:00:00.000Z',
-                uploadedBy: { id: 'usr-maker-1', name: 'Sarah Benali', role: 'collaborateur' },
+                fileType: 'pdf',
+                sizeBytes: raw.byteLength,
+                createdAt: '2026-11-20T09:00:00.000Z',
+                authorName: 'Sarah Benali',
+                summary: 'Initial',
+                isCurrent: true,
                 textContent: 'Attestation',
                 contentUrl: dataUrl,
                 checksum: 'sha256:test',
@@ -350,33 +348,43 @@ describe('Résolution des dettes techniques — Intégrité, Sécurité & Workfl
       priority: 'low',
       status: 'brouillon',
       version: 1,
-      maker: { id: 'u1', name: 'M', department: 'Fiscalité', role: 'collaborateur' },
+      maker: {
+        id: 'u1',
+        name: 'M',
+        email: 'm@cabinet.fr',
+        department: 'Fiscalité',
+        role: 'collaborateur',
+      },
       lock: { isLocked: false },
+      estimatedDeliverableDate: '2026-12-01',
       dataFields: [],
       textDocument: {
         documentId: 'd1',
         title: 't',
-        type: 'note',
+        type: 'note_synthese',
         previousContent: '',
         currentContent: '',
       },
       trackedFiles: [
         {
           id: 'f1',
-          fileName: 'memo.docx',
-          extension: 'docx',
-          currentVersionNumber: 1,
+          name: 'memo.docx',
+          originalName: 'memo.docx',
+          fileType: 'docx',
+          currentVersion: 'v1.0',
           createdAt: '',
           updatedAt: '',
           versions: [
             {
               id: 'v1',
-              fileId: 'f1',
-              versionNumber: 1,
+              versionNumber: 'v1.0',
               fileName: 'memo.docx',
-              fileSize: 120,
-              uploadedAt: '',
-              uploadedBy: { id: 'u1', name: 'M', role: 'collaborateur' },
+              fileType: 'docx',
+              sizeBytes: 120,
+              createdAt: '',
+              authorName: 'M',
+              summary: 'Initial',
+              isCurrent: true,
               textContent: 'Mémo fiscal',
               contentUrl: 'data:application/octet-stream;base64,AAAA',
               checksum: 'sha256:abc',

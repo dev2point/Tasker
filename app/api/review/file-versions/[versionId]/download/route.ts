@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { findFileVersionInRuntimeDossiers } from '@/lib/review-runtime-store';
 import { dataUrlToUint8Array } from '@/lib/file-version-service';
+import {
+  getObjectBytesFromR2,
+  getSignedDownloadUrlFromR2,
+  isR2Configured,
+} from '@/lib/storage/r2';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -51,6 +56,7 @@ export async function GET(
   const { versionId } = await context.params;
   const { searchParams } = new URL(req.url);
   const dossierId = searchParams.get('dossierId');
+  const mode = searchParams.get('mode');
 
   const found = findFileVersionInRuntimeDossiers(versionId, dossierId);
   if (!found) {
@@ -74,9 +80,37 @@ export async function GET(
 
   if (!isAdminOrManager && !isMaker && !isChecker && !isSameDepartment) {
     return NextResponse.json(
-      { error: "Accès refusé à cette pièce jointe." },
+      { error: 'Accès refusé à cette pièce jointe.' },
       { status: 403 }
     );
+  }
+
+  const safeFileName = snapshot.fileName.replace(/["\r\n]/g, '_');
+
+  // If stored in Cloudflare R2, serve presigned URL or stream object bytes
+  if (snapshot.r2Key && isR2Configured()) {
+    if (mode === 'signed') {
+      const signedUrl = await getSignedDownloadUrlFromR2(snapshot.r2Key, 300, safeFileName);
+      return NextResponse.json(
+        { signedUrl, expiresIn: 300, storageProvider: 'r2' },
+        { headers: { 'Cache-Control': 'private, no-store' } }
+      );
+    }
+
+    const r2Object = await getObjectBytesFromR2(snapshot.r2Key);
+    if (r2Object) {
+      const mimeType = r2Object.contentType || getMimeTypeForExtension(safeFileName);
+      return new Response(Buffer.from(r2Object.bytes), {
+        status: 200,
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Disposition': `attachment; filename="${safeFileName}"`,
+          'X-Content-Type-Options': 'nosniff',
+          'X-Storage-Provider': 'cloudflare-r2',
+          'Cache-Control': 'private, no-store',
+        },
+      });
+    }
   }
 
   const bytes =
@@ -90,7 +124,6 @@ export async function GET(
     );
   }
 
-  const safeFileName = snapshot.fileName.replace(/["\r\n]/g, '_');
   const mimeType = getMimeTypeForExtension(safeFileName, snapshot.contentUrl);
 
   return new Response(Buffer.from(bytes), {

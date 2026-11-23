@@ -343,8 +343,8 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                       >
-                        <div className="flex items-center gap-2">
-                          <div
+                        <span className="flex items-center gap-2">
+                          <span
                             className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                               soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-950 text-slate-500'
                             }`}
@@ -354,9 +354,9 @@ export const Header: React.FC<HeaderProps> = ({
                             ) : (
                               <VolumeX className="w-3.5 h-3.5" />
                             )}
-                          </div>
-                          <span>Sons & Alertes</span>
-                        </div>
+                          </span>
+                          <span>Sons &amp; Alertes</span>
+                        </span>
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
                             soundEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
@@ -377,10 +377,10 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                         >
-                          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+                          <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
                             <FolderPlus className="w-3.5 h-3.5" />
-                          </div>
-                          <span>Catégories & Tags</span>
+                          </span>
+                          <span>Catégories &amp; Tags</span>
                         </button>
                       )}
 
@@ -394,9 +394,9 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
                       >
-                        <div className="w-6 h-6 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
                           <Download className="w-3.5 h-3.5" />
-                        </div>
+                        </span>
                         <span>Exporter l&apos;agenda (.ics)</span>
                       </button>
 
@@ -411,12 +411,12 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-emerald-200 hover:text-white cursor-pointer"
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                          <span className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
                               <Printer className="w-3.5 h-3.5" />
-                            </div>
+                            </span>
                             <span>Rapport &amp; Synthèse Comité</span>
-                          </div>
+                          </span>
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                             PDF
                           </span>
@@ -434,12 +434,12 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 transition-colors font-semibold text-blue-200 hover:text-white cursor-pointer"
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                          <span className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
                               <Building className="w-3.5 h-3.5" />
-                            </div>
+                            </span>
                             <span>Microsoft 365 (Office, Outlook)</span>
-                          </div>
+                          </span>
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
                             M365
                           </span>
@@ -456,9 +456,9 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors font-semibold text-slate-700"
                         >
-                          <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
                             <Database className="w-3.5 h-3.5" />
-                          </div>
+                          </span>
                           <span>Diagnostic Base SQL</span>
                         </button>
                       )}
@@ -474,12 +474,12 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 transition-colors font-semibold text-purple-200 border-t border-emerald-500/20 mt-1"
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+                          <span className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
                               <Shield className="w-3.5 h-3.5" />
-                            </div>
+                            </span>
                             <span>Espace Admin</span>
-                          </div>
+                          </span>
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
                             Admin
                           </span>
@@ -505,9 +505,9 @@ export const Header: React.FC<HeaderProps> = ({
                           : 'border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 text-slate-100'
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-lg bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/40">
+                      <span className="w-6 h-6 rounded-lg bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/40">
                         {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
-                      </div>
+                      </span>
                       <span className="truncate font-bold text-xs text-slate-100">
                         {currentUser.name.split(' ')[0]}
                       </span>
@@ -574,10 +574,10 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 font-semibold transition-colors cursor-pointer"
                           >
-                            <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-2">
                               <Shield className="w-3.5 h-3.5 text-purple-400" />
                               <span>Espace Administration</span>
-                            </div>
+                            </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40">
                               Ouvrir
                             </span>
@@ -680,8 +680,8 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
                         >
-                          <div className="flex items-center gap-2.5">
-                            <div
+                          <span className="flex items-center gap-2.5">
+                            <span
                               className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                                 soundEnabled
                                   ? 'bg-emerald-500/20 text-emerald-400'
@@ -693,9 +693,9 @@ export const Header: React.FC<HeaderProps> = ({
                               ) : (
                                 <VolumeX className="w-3.5 h-3.5" />
                               )}
-                            </div>
+                            </span>
                             <span>Alertes sonores</span>
-                          </div>
+                          </span>
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               soundEnabled
@@ -717,12 +717,12 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+                            <span className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
                                 <FolderPlus className="w-3.5 h-3.5" />
-                              </div>
-                              <span>Catégories & Tags</span>
-                            </div>
+                              </span>
+                              <span>Catégories &amp; Tags</span>
+                            </span>
                             <span className="text-[10px] text-slate-500 font-bold">Gérer</span>
                           </button>
                         )}
@@ -736,12 +736,12 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200"
                         >
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
+                          <span className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
                               <Download className="w-3.5 h-3.5" />
-                            </div>
+                            </span>
                             <span>Export iCal (.ics)</span>
-                          </div>
+                          </span>
                           <Badge variant="outline" className="text-[9px] border-emerald-500/30 text-emerald-300">
                             Agenda
                           </Badge>
@@ -757,12 +757,12 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-emerald-200"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                            <span className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
                                 <Printer className="w-3.5 h-3.5" />
-                              </div>
+                              </span>
                               <span>Rapport &amp; Synthèse Comité</span>
-                            </div>
+                            </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                               PDF
                             </span>
@@ -779,12 +779,12 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 text-blue-200 transition-colors text-xs font-semibold"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                            <span className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
                                 <Building className="w-3.5 h-3.5" />
-                              </div>
+                              </span>
                               <span>Microsoft 365 (Office, Outlook)</span>
-                            </div>
+                            </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
                               M365
                             </span>
@@ -802,12 +802,12 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 transition-colors text-xs font-semibold border-t border-emerald-500/20 mt-1"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+                            <span className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
                                 <Shield className="w-3.5 h-3.5" />
-                              </div>
+                              </span>
                               <span>Administration</span>
-                            </div>
+                            </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
                               Admin
                             </span>

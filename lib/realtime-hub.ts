@@ -1,3 +1,5 @@
+import { publishToSupabaseRealtime } from '@/lib/supabase/realtime-publisher';
+
 export type RealtimeEventType =
   | 'CONNECTED'
   | 'HEARTBEAT'
@@ -185,7 +187,7 @@ class RealtimeEventHub {
       this.recentEvents.shift();
     }
 
-    // Dispatch to all subscribers
+    // Dispatch to all local SSE subscribers
     this.subscribers.forEach((callback) => {
       try {
         callback(event);
@@ -193,6 +195,9 @@ class RealtimeEventHub {
         console.warn('Error notifying SSE subscriber:', err);
       }
     });
+
+    // Forward across containers via Supabase Realtime when configured
+    void publishToSupabaseRealtime(event);
 
     return event;
   }

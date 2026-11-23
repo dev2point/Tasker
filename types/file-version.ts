@@ -25,13 +25,15 @@ export interface FileVersionSnapshot {
   sizeBytes: number;
   fileName: string;
   fileType: string; // MIME type or extension like "pdf", "docx", "xlsx", "txt", "md"
-  // Content storage: raw text or base64 data URL
-  contentUrl?: string; // Data URL for download/preview
+  // Content storage: R2 object key + authenticated/signed URL, or inline fallback
+  storageProvider?: 'r2' | 'inline';
+  r2Key?: string;
+  contentUrl?: string; // Authenticated download route, signed URL, or data URL fallback
   textContent?: string; // Text content for Word/Markdown/Text for word-by-word diff
   gridData?: SpreadsheetSheet[]; // Extracted multi-sheet grid data for Excel/CSV
   isCurrent?: boolean;
   restoredFromVersion?: string; // if this snapshot was born from a restore action
-  checksum?: string; // SHA-like or simple hash for tamper-check
+  checksum?: string; // SHA-256 checksum (`sha256:<hex>`) for tamper-check
   // Moderation & Review metadata
   moderationStatus?: 'pending' | 'approved' | 'rejected';
   moderationNote?: string;

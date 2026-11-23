@@ -274,25 +274,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               : 'w-64 shadow-2xl shadow-emerald-950/40'
         }`}
       >
-      {/* 1. Header: Brand Logo & Collapse Toggle */}
+      {/* 1. Header: Brand Logo & Discreet Collapse Toggle */}
       <div className="h-16 px-3.5 flex items-center justify-between border-b border-emerald-500/20 shrink-0">
         {isVisuallyCollapsed ? (
-          <div className="w-full flex items-center justify-between">
-            <div
-              className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg font-bold cursor-pointer shrink-0 transition-transform active:scale-95"
+          <div className="w-full flex items-center justify-center">
+            <button
+              type="button"
+              className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg font-bold cursor-pointer shrink-0 transition-transform hover:border-emerald-400/70 active:scale-95"
               onClick={toggleCollapse}
               title="Agrandir la barre latérale"
+              aria-label="Agrandir la barre latérale"
             >
               <CalendarIcon className="w-4.5 h-4.5 stroke-[2.3]" />
-            </div>
-            <button
-              id="expand-sidebar-btn"
-              type="button"
-              onClick={toggleCollapse}
-              title="Déplier la barre latérale"
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-emerald-300 hover:text-white hover:bg-emerald-500/20 active:scale-95 transition-all shrink-0 border border-emerald-500/30 hover:border-emerald-400"
-            >
-              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         ) : (
@@ -311,16 +304,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
 
-            {/* Collapse / Pin Toggle Button */}
+            {/* Discreet Collapse / Pin Toggle Button */}
             {isCollapsed ? (
               <button
                 id="pin-sidebar-btn"
                 type="button"
                 onClick={toggleCollapse}
-                title="Verrouiller la barre latérale dépliée"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 transition-all active:scale-95 shrink-0 cursor-pointer"
+                title="Maintenir la barre latérale ouverte"
+                aria-label="Maintenir la barre latérale ouverte"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-emerald-300/60 hover:text-emerald-100 hover:bg-emerald-500/15 transition-colors active:scale-95 shrink-0 cursor-pointer"
               >
-                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                <ChevronRight className="w-3.5 h-3.5" />
                 <span className="whitespace-nowrap">Fixer</span>
               </button>
             ) : (
@@ -329,9 +323,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={toggleCollapse}
                 title="Réduire la barre latérale"
-                className="p-1.5 rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors shrink-0 cursor-pointer"
+                aria-label="Réduire la barre latérale"
+                className="p-1 rounded-lg text-emerald-400/35 hover:text-emerald-200 hover:bg-emerald-500/10 transition-colors shrink-0 cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -404,7 +399,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         : 'text-slate-300 hover:text-white hover:bg-emerald-500/15 border border-transparent hover:border-emerald-500/25'
                   } ${isVisuallyCollapsed ? 'justify-center px-2' : ''}`}
                 >
-                  <div
+                  <span
                     className={`transition-colors shrink-0 ${
                       active
                         ? 'text-amber-400'
@@ -414,7 +409,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                   >
                     {item.icon}
-                  </div>
+                  </span>
 
                   {!isVisuallyCollapsed && (
                     <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">{item.label}</span>
@@ -706,14 +701,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isVisuallyCollapsed ? 'justify-center px-2' : ''
           }`}
         >
-          <div className="relative shrink-0">
+          <span className="relative inline-flex shrink-0">
             <Bell className="w-4 h-4 text-slate-300" />
             {unreadNotificationsCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 z-10 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-1 ring-slate-900 animate-pulse">
                 {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               </span>
             )}
-          </div>
+          </span>
 
           {!isVisuallyCollapsed && (
             <>
@@ -825,10 +820,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                       className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-900/40 text-purple-200 font-semibold transition-colors cursor-pointer"
                     >
-                      <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-2">
                         <Shield className="w-3.5 h-3.5 text-purple-400" />
                         <span>Espace Administration</span>
-                      </div>
+                      </span>
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/30">
                         Ouvrir
                       </span>
@@ -870,16 +865,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Expand toggle at the very bottom when collapsed and not hovered */}
+        {/* Discreet expand toggle at the very bottom when collapsed and not hovered */}
         {isVisuallyCollapsed && (
           <button
             id="bottom-expand-sidebar-btn"
             type="button"
             onClick={toggleCollapse}
             title="Déplier la barre latérale"
-            className="w-full py-1.5 flex items-center justify-center rounded-lg text-emerald-300/70 hover:text-white hover:bg-emerald-500/20 transition-colors"
+            aria-label="Déplier la barre latérale"
+            className="w-7 h-7 mx-auto flex items-center justify-center rounded-lg text-emerald-400/35 hover:text-emerald-200 hover:bg-emerald-500/10 transition-colors cursor-pointer"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
       </div>

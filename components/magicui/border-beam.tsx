@@ -21,9 +21,10 @@ export const BorderBeam = ({
   delay = 0,
 }: BorderBeamProps) => {
   return (
-    <div
+    <span
+      aria-hidden="true"
       className={cn(
-        "absolute inset-0 rounded-[inherit] pointer-events-none overflow-hidden z-10",
+        "block absolute inset-0 rounded-[inherit] pointer-events-none overflow-hidden z-10",
         className
       )}
       style={{
@@ -33,14 +34,14 @@ export const BorderBeam = ({
         maskComposite: "exclude",
       } as React.CSSProperties}
     >
-      <div
-        className="absolute -inset-[150%] animate-border-beam-spin"
+      <span
+        className="block absolute -inset-[150%] animate-border-beam-spin"
         style={{
           animationDuration: `${duration}s`,
           animationDelay: `${delay}s`,
           background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, ${colorFrom} 40deg, ${colorTo} 90deg, transparent 140deg, transparent 360deg)`,
         }}
       />
-    </div>
+    </span>
   );
 };

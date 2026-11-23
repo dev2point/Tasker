@@ -14,7 +14,7 @@ Ce document consigne l'ensemble des vulnérabilités de sécurité applicative, 
 L'application repose sur une pile Next.js 16 (App Router), React 19, Better Auth 1.7, Drizzle ORM avec PostgreSQL/Supabase et l'API Google Gemini. 
 Une vague de remédiation applicative (v3.5) a permis de **résoudre l'intégralité des dettes solvables dans le code source sans dépendance d'infrastructure externe** (`SEC-03`, `SEC-07`, `SEC-08` sur auth, `SEC-10`, `SEC-11`, `DT-ARCH-05`, `DT-ARCH-08`, `DT-ARCH-10`, `DT-ARCH-11`, `DT-ARCH-13`, `DT-ARCH-16`, `DT-ARCH-17`, `DT-ARCH-18`, `DT-ARCH-19`).
 
-Les pièces jointes bénéficient désormais de la conservation à la création (`POST /api/review/dossiers`), d'une extraction PDF serveur (`unpdf`), d'un véritable SHA-256 (FIPS 180-4 + `node:crypto`), d'une route de téléchargement authentifiée RBAC et d'une purge des octets base64 dans les diffusions SSE. En revanche, la persistance PostgreSQL des dossiers/fichiers (`DT-ARCH-01`, `DT-ARCH-15`), Redis Pub/Sub (`DT-ARCH-03`), les politiques RLS en base (`DT-ARCH-04`), la suppression de `ensureDatabaseTables` (`DT-ARCH-06`), l'unification SQL des rôles (`DT-ARCH-07`), l'OCC SQL des tâches (`DT-ARCH-09`) et la chaîne complète de notification durable/cron/email/push/fuseaux (`DT-ARCH-02`, `DT-ARCH-14`, `DT-ARCH-20` à `DT-ARCH-24`) demeurent en attente d'infrastructure PostgreSQL/Redis/S3/Cron/Email/VAPID et d'approbation produit.
+Les pièces jointes bénéficient désormais de la conservation à la création (`POST /api/review/dossiers`), d'une extraction PDF serveur (`unpdf`), d'un véritable SHA-256 (FIPS 180-4 + `node:crypto`), d'une route de téléchargement authentifiée RBAC, d'une purge des octets base64 dans les diffusions SSE, ainsi que d'une **intégration Cloudflare R2 complète** (`/lib/storage/r2.ts`, `/api/review/files/upload`, streaming & URLs signées, tables Drizzle `review_files` et `review_file_versions`) et d'un **pont Supabase Realtime multi-instances** (`/lib/supabase/*`, HTTP Broadcast + WebSocket + Postgres Changes + Presence) avec repli local gracieux hors clés d'infrastructure. En revanche, l'activation effective de R2 et Supabase en production reste subordonnée au renseignement des variables d'environnement correspondantes, tandis que la migration complète des dossiers vers PostgreSQL (`DT-ARCH-01`), les politiques RLS par session (`DT-ARCH-04`), la suppression de `ensureDatabaseTables` (`DT-ARCH-06`), l'unification SQL des rôles (`DT-ARCH-07`), l'OCC SQL des tâches (`DT-ARCH-09`) et la chaîne complète de notification durable/cron/email/push/fuseaux (`DT-ARCH-02`, `DT-ARCH-14`, `DT-ARCH-20` à `DT-ARCH-24`) demeurent en attente d'infrastructure et d'approbation produit.
 
 ---
 
@@ -75,12 +75,11 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Si l'utilisateur ferme l'onglet ou sa machine, les rappels ne se déclenchent pas. Risque direct de manquer une échéance fiscale ou de liasse comptable. Les notifications locales ne sont pas visibles sur un autre appareil.
 * **Remédiation :** Conserver la base de données comme source de vérité unique. Implémenter une route cron sécurisée `/api/cron/reminders` ou un worker serveur qui évalue les rappels dus et crée des notifications atomiquement, puis distribue les alertes par e-mail (Resend/SendGrid/Graph API) et Web Push via service worker. Le `setInterval` client ne doit rester qu'un affichage optimiste, jamais le mécanisme de livraison.
 
-#### DT-ARCH-03 — Hub SSE in-process incompatible avec les déploiements multi-instances
-* **Sévérité :** 🔴 **CRITIQUE (Scalabilité & Concurrence)**
-* **Localisation :** `lib/realtime-hub.ts` · `/app/api/events/route.ts`
-* **Constat :** Le `RealtimeEventHub` est un singleton en mémoire vive Node.js. En cas de déploiement multi-conteneurs (ex. 2 instances ou plus sur Render, Railway ou Kubernetes), les événements SSE et la présence ne sont pas partagés entre conteneurs.
-* **Impact :** Alertes silencieuses pour les collaborateurs connectés sur une autre instance ; désynchronisation du verrouillage préventif des dossiers.
-* **Remédiation :** Remplacer le bus mémoire par un adaptateur Pub/Sub externe (ex. Upstash Redis ou Redis standard via `ioredis`). Le centre de notifications doit en outre se reconstruire depuis PostgreSQL après reconnexion SSE ; le flux temps réel reste un accélérateur d'UI, pas une source de vérité.
+#### DT-ARCH-03 — Hub SSE in-process incompatible avec les déploiements multi-instances — ⚠️ **IMPLÉMENTÉ VIA SUPABASE REALTIME (En attente clés prod)**
+* **Sévérité :** 🔴 **CRITIQUE (Scalabilité & Concurrence)** -> **Code implémenté (attente clés Supabase)**
+* **Localisation :** `lib/realtime-hub.ts` · `lib/supabase/config.ts` · `lib/supabase/client.ts` · `lib/supabase/realtime-publisher.ts` · `lib/use-realtime-events.ts`
+* **Constat :** Le `RealtimeEventHub` dispose désormais d'un pont serveur stateless via l'API HTTP Broadcast de Supabase Realtime (`publishToSupabaseRealtime`) et d'une souscription double-transport côté client (`SSE` + `Supabase Realtime Broadcast / Postgres Changes / Presence`) avec déduplication par `event.id`.
+* **Travaux restants :** Renseigner `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`) et `SUPABASE_SECRET_KEY` (`sb_secret_...`) dans l'environnement de déploiement pour activer le canal `mfisca-cabinet-realtime`.
 
 ---
 
@@ -157,12 +156,11 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Double déclenchement possible en multi-clients, perte silencieuse d'une notification si l'insertion SQL échoue, absence de preuve d'envoi et récupération imparfaite après panne.
 * **Remédiation :** Établir une file d'envoi durable avec verrouillage atomique, journal de livraison et exécuteur serveur idempotent (voir `DT-ARCH-21`). Ne jamais poursuivre la diffusion d'une notification métier après un échec de persistance sans compensation explicite.
 
-#### DT-ARCH-15 — Fichiers de revue conservés en base64 dans le navigateur, sans stockage serveur
-* **Sévérité :** 🔴 **CRITIQUE**
-* **Localisation :** `components/review/NewDossierModal.tsx:127-131,159-172` · `components/FileVersionManager.tsx` (`FileReader` / `uploadedBase64`) · `lib/file-version-service.ts:64-180` · `lib/review-service.ts:11,51-59` · `types/file-version.ts:29`
-* **Constat :** L'upload est converti par `FileReader.readAsDataURL()` puis stocké dans `trackedFiles[].versions[].contentUrl`. Le dossier complet est sérialisé dans `localStorage` sous `planit_review_dossiers_v1` ; un dépassement de quota n'entraîne qu'un `console.warn`. Il n'existe aucune route d'upload/téléchargement, aucun stockage d'objets et aucune table SQL pour les fichiers.
-* **Impact :** Perte des livrables lors d'un nettoyage du navigateur ou d'un dépassement de quota, impossibilité pour un supérieur sur un autre poste de récupérer le fichier, absence de versionnage partagé et inflation des payloads JSON.
-* **Remédiation :** Déplacer les octets vers un stockage d'objets (S3/R2/MinIO ou répertoire serveur hors `public/`), créer les tables `review_files` et `review_file_versions`, calculer un SHA-256 serveur, exposer des routes `POST /api/review/dossiers/[id]/files`, `POST /api/review/files/[fileId]/versions` et `GET /api/review/file-versions/[versionId]/download`, puis migrer une fois les dossiers `localStorage` existants. Le client ne conserve que des métadonnées et des URL signées.
+#### DT-ARCH-15 — Fichiers de revue conservés en base64 dans le navigateur, sans stockage serveur — ⚠️ **IMPLÉMENTÉ VIA CLOUDFLARE R2 (En attente clés prod)**
+* **Sévérité :** 🔴 **CRITIQUE** -> **Code & Schéma SQL implémentés (attente clés R2)**
+* **Localisation :** `lib/storage/r2.ts` · `app/api/review/files/upload/route.ts` · `app/api/review/file-versions/[versionId]/download/route.ts` · `app/api/review/dossiers/route.ts` · `src/db/schema.ts` (`review_files`, `review_file_versions`) · `components/review/NewDossierModal.tsx` · `components/FileVersionManager.tsx`
+* **Constat :** L'upload direct vers Cloudflare R2 (`POST /api/review/files/upload`), le délestage automatique des payloads inline vers R2 lors de la sauvegarde dossier, le téléchargement authentifié RBAC (streaming et URLs signées `?mode=signed`), le nettoyage R2 lors de la suppression et les tables Drizzle `review_files` / `review_file_versions` sont en place, avec repli local transparent lorsque les clés R2 sont absentes.
+* **Travaux restants :** Configurer `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` et `R2_BUCKET_NAME` dans l'environnement cible, et finaliser le basculement complet des dossiers depuis `runtimeDossiers` vers PostgreSQL (`DT-ARCH-01`).
 
 #### DT-ARCH-16 — Conservation des pièces jointes lors de la création serveur — ✅ **RÉSOLU**
 * **Sévérité :** 🟠 **ÉLEVÉ** -> **RÉSOLU**
