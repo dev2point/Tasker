@@ -19,7 +19,7 @@ export function getR2Config() {
   const accountId = cleanEnv(process.env.R2_ACCOUNT_ID);
   const accessKeyId = cleanEnv(process.env.R2_ACCESS_KEY_ID);
   const secretAccessKey = cleanEnv(process.env.R2_SECRET_ACCESS_KEY);
-  const bucketName = cleanEnv(process.env.R2_BUCKET_NAME) || 'mfisca-review-files';
+  const bucketName = cleanEnv(process.env.R2_BUCKET_NAME) || 'mfisca-task-private';
   const explicitEndpoint = cleanEnv(process.env.R2_ENDPOINT);
   const endpoint =
     explicitEndpoint || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : '');
@@ -33,9 +33,20 @@ export function getR2Config() {
   };
 }
 
-export function isR2Configured(): boolean {
+export function getR2MissingConfigKeys(): string[] {
   const cfg = getR2Config();
-  return Boolean(cfg.endpoint && cfg.accessKeyId && cfg.secretAccessKey && cfg.bucketName);
+  const missing: string[] = [];
+
+  if (!cfg.endpoint) missing.push('R2_ENDPOINT');
+  if (!cfg.accessKeyId) missing.push('R2_ACCESS_KEY_ID');
+  if (!cfg.secretAccessKey) missing.push('R2_SECRET_ACCESS_KEY');
+  if (!cfg.bucketName) missing.push('R2_BUCKET_NAME');
+
+  return missing;
+}
+
+export function isR2Configured(): boolean {
+  return getR2MissingConfigKeys().length === 0;
 }
 
 export function getR2Client(): S3Client | null {

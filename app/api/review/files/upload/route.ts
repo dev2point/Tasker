@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import {
   buildR2ObjectKey,
+  getR2MissingConfigKeys,
   isR2Configured,
   uploadBufferToR2,
 } from '@/lib/storage/r2';
@@ -18,6 +19,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: 'Authentification requise pour téléverser une pièce jointe.' },
       { status: 401 }
+    );
+  }
+
+  if (!isR2Configured()) {
+    const missingR2ConfigKeys = getR2MissingConfigKeys();
+    return NextResponse.json(
+      {
+        error: `Stockage Cloudflare R2 non configuré (${missingR2ConfigKeys.join(', ')}) : téléversement indisponible.`,
+        missingR2ConfigKeys,
+      },
+      { status: 503 }
     );
   }
 
@@ -55,44 +67,28 @@ export async function POST(req: NextRequest) {
     const checksum = `sha256:${createHash('sha256').update(buffer).digest('hex')}`;
     const downloadUrl = `/api/review/file-versions/${encodeURIComponent(versionId)}/download?dossierId=${encodeURIComponent(dossierId)}`;
 
-    if (isR2Configured()) {
-      const r2Key = buildR2ObjectKey({
-        dossierId,
-        fileId,
-        versionId,
-        fileName: file.name,
-      });
+    const r2Key = buildR2ObjectKey({
+      dossierId,
+      fileId,
+      versionId,
+      fileName: file.name,
+    });
 
-      await uploadBufferToR2({
-        key: r2Key,
-        body: buffer,
-        contentType: file.type || 'application/octet-stream',
-        checksumSha256: checksum,
-        metadata: {
-          uploadedBy: user.id,
-          originalName: file.name.slice(0, 120),
-        },
-      });
+    await uploadBufferToR2({
+      key: r2Key,
+      body: buffer,
+      contentType: file.type || 'application/octet-stream',
+      checksumSha256: checksum,
+      metadata: {
+        uploadedBy: user.id,
+        originalName: file.name.slice(0, 120),
+      },
+    });
 
-      return NextResponse.json({
-        success: true,
-        storageProvider: 'r2',
-        r2Key,
-        fileId,
-        versionId,
-        dossierId,
-        fileName: file.name,
-        sizeBytes: buffer.byteLength,
-        checksum,
-        downloadUrl,
-      });
-    }
-
-    // Graceful fallback when R2 credentials are not configured in local/dev environment
     return NextResponse.json({
       success: true,
-      storageProvider: 'inline',
-      r2Key: null,
+      storageProvider: 'r2',
+      r2Key,
       fileId,
       versionId,
       dossierId,

@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { setRuntimeDossiers } from '@/lib/review-runtime-store';
@@ -94,6 +93,24 @@ describe('Cloudflare R2 & Supabase Realtime Integration', () => {
     expect(r2Storage.getR2Config().endpoint).toBe('https://acc123.r2.cloudflarestorage.com');
   });
 
+  it('R2 : utilise le bucket privé mfisca-task-private par défaut', () => {
+    expect(r2Storage.getR2Config().bucketName).toBe('mfisca-task-private');
+  });
+
+  it('R2 : isole R2_SECRET_ACCESS_KEY quand les autres variables sont présentes', () => {
+    process.env.R2_ENDPOINT = 'https://example.r2.cloudflarestorage.com';
+    process.env.R2_ACCESS_KEY_ID = 'key123';
+    process.env.R2_BUCKET_NAME = 'mfisca-bucket';
+
+    expect(r2Storage.getR2MissingConfigKeys()).toEqual(['R2_SECRET_ACCESS_KEY']);
+    expect(r2Storage.isR2Configured()).toBe(false);
+
+    process.env.R2_SECRET_ACCESS_KEY = 'secret123';
+
+    expect(r2Storage.getR2MissingConfigKeys()).toEqual([]);
+    expect(r2Storage.isR2Configured()).toBe(true);
+  });
+
   it('R2 Upload Route : rejette les requêtes non authentifiées (401)', async () => {
     vi.mocked(getAuthenticatedUser).mockResolvedValueOnce(null);
 
@@ -108,12 +125,9 @@ describe('Cloudflare R2 & Supabase Realtime Integration', () => {
     expect(res.status).toBe(401);
   });
 
-  it('R2 Upload Route : bascule en mode inline avec SHA-256 serveur si R2 est absent', async () => {
-    const content = 'Note fiscale sans R2';
-    const expectedHash = `sha256:${createHash('sha256').update(Buffer.from(content, 'utf8')).digest('hex')}`;
-
+  it('R2 Upload Route : refuse l’upload quand R2 n’est pas configuré (503)', async () => {
     const formData = new FormData();
-    formData.append('file', new File([content], 'note.txt', { type: 'text/plain' }));
+    formData.append('file', new File(['Note fiscale sans R2'], 'note.txt', { type: 'text/plain' }));
     formData.append('dossierId', 'dos-local-1');
     formData.append('fileId', 'file-local-1');
     formData.append('versionId', 'ver-local-1');
@@ -124,12 +138,16 @@ describe('Cloudflare R2 & Supabase Realtime Integration', () => {
     });
 
     const res = await uploadReviewFile(req);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
     const data = await res.json();
-    expect(data.storageProvider).toBe('inline');
-    expect(data.r2Key).toBeNull();
-    expect(data.checksum).toBe(expectedHash);
-    expect(data.downloadUrl).toContain('/api/review/file-versions/ver-local-1/download');
+    expect(data.error).toContain('R2');
+    expect(data.missingR2ConfigKeys).toEqual([
+      'R2_ENDPOINT',
+      'R2_ACCESS_KEY_ID',
+      'R2_SECRET_ACCESS_KEY',
+    ]);
+    expect(data.storageProvider).toBeUndefined();
+    expect(data.r2Key).toBeUndefined();
   });
 
   it('R2 Upload Route : téléverse vers R2 lorsque les variables R2 sont configurées', async () => {
