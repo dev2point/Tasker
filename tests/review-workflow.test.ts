@@ -7,8 +7,11 @@ import {
   togglePreventiveLock,
   computeLineDiff,
   canUserDeleteDossier,
+  canUserStartReview,
+  mergeServerDossiersIntoLocal,
 } from '@/lib/review-service';
 import { ReviewDossier, WorkflowActor } from '@/types/review';
+import { TrackedFile } from '@/types/file-version';
 
 describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
   const mockMaker: WorkflowActor = {
@@ -87,6 +90,71 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
     });
   });
 
+  describe('Server hydration', () => {
+    it('keeps server dossiers visible when the browser cache is empty', () => {
+      expect(mergeServerDossiersIntoLocal([], [testDossier])).toEqual([testDossier]);
+    });
+
+    it('preserves cached file bytes and keeps local-only dossiers', () => {
+      const cachedFile: TrackedFile = {
+        id: 'file-cache',
+        name: 'liasse.pdf',
+        originalName: 'liasse.pdf',
+        fileType: 'pdf',
+        createdAt: '2026-09-15T08:00:00.000Z',
+        updatedAt: '2026-09-15T08:00:00.000Z',
+        currentVersion: 'v1.0',
+        versions: [
+          {
+            id: 'ver-cache',
+            versionNumber: 'v1.0',
+            createdAt: '2026-09-15T08:00:00.000Z',
+            authorName: 'Sarah Benali',
+            summary: 'Création initiale',
+            sizeBytes: 4,
+            fileName: 'liasse.pdf',
+            fileType: 'pdf',
+            contentUrl: 'data:application/pdf;base64,YWJjZA==',
+          },
+        ],
+      };
+      const serverFile: TrackedFile = {
+        ...cachedFile,
+        versions: [
+          {
+            ...cachedFile.versions[0],
+            contentUrl: '/api/review/file-versions/ver-cache/download',
+          },
+        ],
+      };
+      const localDossier = { ...testDossier, trackedFiles: [cachedFile] };
+      const serverDossier = {
+        ...testDossier,
+        status: 'soumis' as const,
+        version: 2,
+        trackedFiles: [serverFile],
+      };
+      const localOnly = {
+        ...testDossier,
+        id: 'dossier-local-only',
+        ref: 'DOS-2026-TST-LOCAL',
+      };
+
+      const merged = mergeServerDossiersIntoLocal(
+        [localDossier, localOnly],
+        [serverDossier]
+      );
+
+      expect(merged).toHaveLength(2);
+      expect(merged[0].version).toBe(2);
+      expect(merged[0].status).toBe('soumis');
+      expect(merged[0].trackedFiles?.[0].versions[0].contentUrl).toBe(
+        'data:application/pdf;base64,YWJjZA=='
+      );
+      expect(merged[1].id).toBe('dossier-local-only');
+    });
+  });
+
   describe('State Machine & Workflow Transitions', () => {
     it('Maker submits draft: brouillon -> soumis', () => {
       const res = executeWorkflowTransition(testDossier, 'soumis', mockMaker);
@@ -134,6 +202,31 @@ describe('Collaborative Review Platform & Maker-Checker State Machine', () => {
       expect(res.dossier.status).toBe('en_revision');
       expect(res.dossier.checker?.id).toBe(mockChecker.id);
       expect(res.dossier.auditTrail[0].action).toBe('prise_en_charge');
+    });
+
+    it('canUserStartReview n autorise que le checker assigné', () => {
+      const submitted = executeWorkflowTransition(testDossier, 'soumis', mockMaker).dossier;
+      const adminNonChecker: WorkflowActor = {
+        ...mockMaker,
+        id: 'usr-admin-1',
+        email: 'admin@cabinet.fr',
+        role: 'admin',
+      };
+
+      expect(canUserStartReview(submitted, mockMaker)).toBe(false);
+      expect(canUserStartReview(submitted, adminNonChecker)).toBe(false);
+      expect(canUserStartReview(submitted, mockChecker)).toBe(true);
+      expect(canUserStartReview({ ...submitted, status: 'en_revision' }, mockChecker)).toBe(false);
+    });
+
+    it('refuse la prise en charge par un acteur qui n’est pas le checker assigné', () => {
+      const submitted = executeWorkflowTransition(testDossier, 'soumis', mockMaker).dossier;
+      const res = executeWorkflowTransition(submitted, 'en_revision', mockMaker);
+
+      expect(res.success).toBe(false);
+      expect(res.error).toBeDefined();
+      expect(res.dossier.status).toBe('soumis');
+      expect(res.dossier.auditTrail).toHaveLength(submitted.auditTrail.length);
     });
 
     it('Consigning amendments: en_revision -> amendements', () => {

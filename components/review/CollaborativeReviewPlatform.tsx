@@ -14,6 +14,7 @@ import {
   saveStoredDossiers,
   canUserDeleteDossier,
   mergeDossierPreservingCachedFileBytes,
+  mergeServerDossiersIntoLocal,
 } from '@/lib/review-service';
 import {
   getActivePresence,
@@ -114,6 +115,8 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
 
   // Real-time Server-Sent Events (SSE) hook
   const { alerts, dismissAlert } = useRealtimeEvents({
+    currentUserId: currentUser?.id,
+    currentUserRole: currentUser?.role,
     onDossierUpdate: (remoteDossier) => {
       shouldPersistDossiersRef.current = true;
       setDossiers((prev) => {
@@ -142,6 +145,34 @@ export const CollaborativeReviewPlatform: React.FC<CollaborativeReviewPlatformPr
       updatePresenceFromRemote(remoteMembers);
     },
   });
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    let isCancelled = false;
+    const hydrateServerDossiers = async () => {
+      try {
+        const res = await fetch('/api/review/dossiers', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const serverDossiers = Array.isArray(data?.dossiers)
+          ? (data.dossiers as ReviewDossier[])
+          : [];
+        if (isCancelled || serverDossiers.length === 0) return;
+
+        shouldPersistDossiersRef.current = true;
+        setDossiers((prev) => mergeServerDossiersIntoLocal(prev, serverDossiers));
+      } catch (err) {
+        console.warn('Failed to hydrate review dossiers:', err);
+      }
+    };
+
+    void hydrateServerDossiers();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUser?.id]);
 
   // Load dossiers from persistence
   useEffect(() => {

@@ -94,6 +94,23 @@ export function canUserDeleteDossier(
 }
 
 /**
+ * Only the assigned checker may start the review of a submitted dossier.
+ */
+export function canUserStartReview(
+  dossier: Pick<ReviewDossier, 'status' | 'checker'>,
+  user: { id?: string; email?: string } | null | undefined
+): boolean {
+  if (!user || dossier.status !== 'soumis' || !dossier.checker) return false;
+
+  return Boolean(
+    (user.id && dossier.checker.id && user.id === dossier.checker.id) ||
+      (user.email &&
+        dossier.checker.email &&
+        user.email.toLowerCase() === dossier.checker.email.toLowerCase())
+  );
+}
+
+/**
  * Executes a strict state machine transition compliant with the Mermaid diagram:
  * [*] -> Brouillon -> Soumis -> En_Revision -> Amendements -> (Demande_Corrections -> Brouillon) OR (Valide -> Archive)
  */
@@ -132,6 +149,13 @@ export function executeWorkflowTransition(
       : '';
     logDetails = `Dossier soumis pour revue${recipientText} par ${actor.name}.${noteText}`;
   } else if (current === 'soumis' && targetStatus === 'en_revision') {
+    if (!canUserStartReview(dossier, actor)) {
+      return {
+        success: false,
+        dossier,
+        error: 'Seul le superviseur assigné peut commencer la revue.',
+      };
+    }
     actionName = 'prise_en_charge';
     logDetails = `Prise en charge de la révision par ${actor.name} (${actor.department} - ${actor.role}).`;
   } else if (
@@ -421,5 +445,19 @@ export function mergeDossierPreservingCachedFileBytes(
       }),
     })),
   };
+}
+
+export function mergeServerDossiersIntoLocal(
+  localDossiers: ReviewDossier[],
+  serverDossiers: ReviewDossier[]
+): ReviewDossier[] {
+  const localById = new Map(localDossiers.map((dossier) => [dossier.id, dossier]));
+  const mergedServerDossiers = serverDossiers.map((serverDossier) =>
+    mergeDossierPreservingCachedFileBytes(serverDossier, localById.get(serverDossier.id))
+  );
+  const serverIds = new Set(serverDossiers.map((dossier) => dossier.id));
+  const localOnlyDossiers = localDossiers.filter((dossier) => !serverIds.has(dossier.id));
+
+  return [...mergedServerDossiers, ...localOnlyDossiers];
 }
 
