@@ -10,6 +10,7 @@ import {
 } from '@/types/review';
 import { User } from '@/types/user';
 import {
+  canUserStartReview,
   executeWorkflowTransition,
   togglePreventiveLock,
   resolveDepartmentSupervisor,
@@ -830,7 +831,7 @@ const DossierReviewStudioModalInner: React.FC<DossierReviewStudioModalInnerProps
                   </Button>
                 )}
 
-                {dossier.status === 'soumis' && (
+                {canUserStartReview(dossier, currentUser) && (
                   <Button
                     type="button"
                     onClick={() => handleTransition('en_revision')}
