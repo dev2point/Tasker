@@ -156,6 +156,93 @@ describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution
     expect(targeted?.payload?.notification?.targetUserId).toBe(mockChecker.id);
   });
 
+  it('persists and broadcasts a targeted notification when corrections are requested from the maker', async () => {
+    const reviewedDossier: ReviewDossier = {
+      ...initialDossier,
+      status: 'en_revision',
+      version: 4,
+    };
+    _setRuntimeDossiersForTesting([JSON.parse(JSON.stringify(reviewedDossier))]);
+    realtimeHub.reset();
+    notificationInsert.values.mockClear();
+
+    const events: RealtimeEvent[] = [];
+    const unsub = realtimeHub.subscribe('test-correction-notification', (event) =>
+      events.push(event)
+    );
+
+    const req = new NextRequest('http://localhost:3000/api/review/dossiers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dossierId: reviewedDossier.id,
+        expectedVersion: reviewedDossier.version,
+        updatedDossier: {
+          ...reviewedDossier,
+          status: 'demande_corrections',
+          correctionNotes: 'Veuillez recalculer la quote-part de frais et charges.',
+        },
+      }),
+    });
+
+    const res = await patchDossier(req);
+    unsub();
+
+    expect(res.status).toBe(200);
+    expect(notificationInsert.values).toHaveBeenCalledTimes(1);
+    expect(notificationInsert.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientId: mockMaker.id,
+        actorId: mockChecker.id,
+        taskId: reviewedDossier.id,
+        type: 'assigned',
+        read: false,
+      })
+    );
+
+    const targeted = events.find((event) => event.type === 'TASK_ASSIGNED');
+    expect(targeted?.targetUserId).toBe(mockMaker.id);
+    expect(targeted?.payload?.notification?.targetUserId).toBe(mockMaker.id);
+  });
+
+  it('does not notify when the maker requesting corrections is the actor', async () => {
+    const selfMadeDossier: ReviewDossier = {
+      ...initialDossier,
+      status: 'en_revision',
+      version: 4,
+      maker: mockChecker,
+    };
+    _setRuntimeDossiersForTesting([JSON.parse(JSON.stringify(selfMadeDossier))]);
+    realtimeHub.reset();
+    notificationInsert.values.mockClear();
+
+    const events: RealtimeEvent[] = [];
+    const unsub = realtimeHub.subscribe('test-correction-self-notification', (event) =>
+      events.push(event)
+    );
+
+    const req = new NextRequest('http://localhost:3000/api/review/dossiers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dossierId: selfMadeDossier.id,
+        expectedVersion: selfMadeDossier.version,
+        updatedDossier: {
+          ...selfMadeDossier,
+          status: 'demande_corrections',
+          correctionNotes: 'Consignes internes du superviseur.',
+        },
+      }),
+    });
+
+    const res = await patchDossier(req);
+    unsub();
+
+    expect(res.status).toBe(200);
+    expect(notificationInsert.values).not.toHaveBeenCalled();
+    expect(events.some((event) => event.type === 'TASK_ASSIGNED')).toBe(false);
+  });
+
   it('increments version monotonically on successful PATCH updates', async () => {
     const updated = {
       ...initialDossier,

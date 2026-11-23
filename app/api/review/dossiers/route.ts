@@ -26,6 +26,7 @@ import {
 } from '@/lib/db/pg';
 import { notifications as notificationsTable } from '@/src/db/schema';
 import {
+  buildDossierCorrectionNotification,
   buildDossierSubmissionNotification,
   toTaskNotification,
 } from '@/lib/notifications-helper';
@@ -433,16 +434,23 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    let submissionNotification: TaskNotification | null = null;
-    if (eventType === 'DOSSIER_SUBMITTED') {
-      const draft = buildDossierSubmissionNotification({
-        dossier: finalizedDossier,
-        previousStatus,
-        actor: { id: user.id, name: user.name },
-      });
+    let workflowNotification: TaskNotification | null = null;
+    if (eventType === 'DOSSIER_SUBMITTED' || eventType === 'DOSSIER_REJECTED') {
+      const draft =
+        eventType === 'DOSSIER_SUBMITTED'
+          ? buildDossierSubmissionNotification({
+              dossier: finalizedDossier,
+              previousStatus,
+              actor: { id: user.id, name: user.name },
+            })
+          : buildDossierCorrectionNotification({
+              dossier: finalizedDossier,
+              previousStatus,
+              actor: { id: user.id, name: user.name },
+            });
 
       if (draft) {
-        submissionNotification = toTaskNotification(draft);
+        workflowNotification = toTaskNotification(draft);
         const db = getDrizzleDb();
 
         if (db && isDatabaseConfigured()) {
@@ -469,7 +477,7 @@ export async function PATCH(req: NextRequest) {
                 .onConflictDoNothing();
             }
           } catch (notifErr) {
-            console.warn('Dossier submission notification insert skipped:', notifErr);
+            console.warn('Dossier notification insert skipped:', notifErr);
           }
         }
       }
@@ -497,7 +505,7 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
-    if (submissionNotification) {
+    if (workflowNotification) {
       realtimeHub.broadcast({
         type: 'TASK_ASSIGNED',
         actor: {
@@ -509,10 +517,10 @@ export async function PATCH(req: NextRequest) {
         },
         targetId: finalizedDossier.id,
         targetRef: finalizedDossier.ref,
-        targetUserId: submissionNotification.targetUserId,
-        message: submissionNotification.message || alertMessage,
+        targetUserId: workflowNotification.targetUserId,
+        message: workflowNotification.message || alertMessage,
         payload: {
-          notification: submissionNotification,
+          notification: workflowNotification,
         },
       });
     }
