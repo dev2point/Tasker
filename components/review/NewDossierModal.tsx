@@ -5,7 +5,7 @@ import { Department, DossierPriority, ReviewDossier, WorkflowActor } from '@/typ
 import { User } from '@/types/user';
 import { TrackedFile } from '@/types/file-version';
 import { createTrackedFile, generateChecksum } from '@/lib/file-version-service';
-import { resolveDepartmentSupervisor } from '@/lib/review-service';
+import { buildNewDossier } from '@/lib/review-dossier-factory';
 import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-parser';
 import { X, Plus, FileText, Upload, ChevronDown, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,6 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   isOpen,
   onClose,
   currentUser,
-  teamUsers = [],
   onCreateDossier,
 }) => {
   const [department, setDepartment] = useState<Department>(
@@ -76,7 +75,7 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
   const [draftDossierId, setDraftDossierId] = useState<string | null>(null);
   const [attachedFileId, setAttachedFileId] = useState<string | undefined>();
   const [attachedVersionId, setAttachedVersionId] = useState<string | undefined>();
-  const [attachedStorageProvider, setAttachedStorageProvider] = useState<'r2' | 'inline'>('inline');
+  const [attachedStorageProvider, setAttachedStorageProvider] = useState<'r2' | 'inline'>('r2');
   const [attachedR2Key, setAttachedR2Key] = useState<string | undefined>();
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
   const [attachedFileSize, setAttachedFileSize] = useState<number>(0);
@@ -94,126 +93,11 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     setTypology(TYPOLOGIES_PER_DEPT[newDept][0]);
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const targetDossierId = draftDossierId || `dossier-${Date.now()}`;
-    const targetFileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    const targetVersionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    setDraftDossierId(targetDossierId);
-    setAttachedFileId(targetFileId);
-    setAttachedVersionId(targetVersionId);
-
-    setUploadError(null);
-    setAttachedFileName(file.name);
-    setAttachedFileSize(file.size);
-    setAttachedR2Key(undefined);
-    setAttachedStorageProvider('inline');
-    setAttachedBase64(undefined);
-    setIsExtracting(true);
-
-    let storedInR2 = false;
-
-    try {
-      const buffer = await file.arrayBuffer();
-      const rawBytes = new Uint8Array(buffer);
-      setAttachedChecksum(generateChecksum(rawBytes));
-
-      // Upload to Cloudflare R2 (when configured) or compute server SHA-256
-      try {
-        const uploadForm = new FormData();
-        uploadForm.append('file', file);
-        uploadForm.append('dossierId', targetDossierId);
-        uploadForm.append('fileId', targetFileId);
-        uploadForm.append('versionId', targetVersionId);
-        const uploadRes = await fetch('/api/review/files/upload', {
-          method: 'POST',
-          body: uploadForm,
-        });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (typeof uploadData.checksum === 'string') {
-            setAttachedChecksum(uploadData.checksum);
-          }
-          if (uploadData.storageProvider === 'r2' && uploadData.r2Key) {
-            storedInR2 = true;
-            setAttachedStorageProvider('r2');
-            setAttachedR2Key(uploadData.r2Key);
-            setAttachedBase64(uploadData.downloadUrl);
-          }
-        }
-      } catch {
-        // Offline/dev fallback will inline data URL below
-      }
-
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'pdf') {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          const res = await fetch('/api/review/files/extract', {
-            method: 'POST',
-            body: formData,
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (typeof data.textContent === 'string') {
-              setExtractedText(data.textContent);
-            }
-            if (typeof data.checksum === 'string') {
-              setAttachedChecksum(data.checksum);
-            }
-            setExtractedGrid(undefined);
-          } else {
-            setExtractedText('Document PDF attaché pour révision.');
-            setExtractedGrid(undefined);
-          }
-        } catch {
-          setExtractedText('Document PDF attaché pour révision.');
-          setExtractedGrid(undefined);
-        }
-      } else if (ext === 'docx') {
-        const text = await extractDocxText(buffer);
-        setExtractedText(text);
-        setExtractedGrid(undefined);
-      } else if (ext === 'xlsx' || ext === 'xls') {
-        const sheets = await extractXlsxData(buffer);
-        setExtractedGrid(sheets);
-        const summaryText = sheets
-          .map((s) => `--- Feuille : ${s.name} ---` + s.rows.map((r) => r.join(' | ')).join('\n'))
-          .join('\n\n');
-        setExtractedText(summaryText);
-      } else if (ext === 'csv') {
-        const text = await file.text();
-        const sheet = extractCsvData(text, file.name);
-        setExtractedGrid([sheet]);
-        setExtractedText(text);
-      } else {
-        const text = await file.text();
-        setExtractedText(text || 'Document de travail initial.');
-        setExtractedGrid(undefined);
-      }
-    } catch {
-      setExtractedText('Document attaché pour révision.');
-    } finally {
-      setIsExtracting(false);
-    }
-
-    if (!storedInR2) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setAttachedBase64(ev.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveFile = () => {
+  const resetAttachedFile = () => {
     setDraftDossierId(null);
     setAttachedFileId(undefined);
     setAttachedVersionId(undefined);
-    setAttachedStorageProvider('inline');
+    setAttachedStorageProvider('r2');
     setAttachedR2Key(undefined);
     setAttachedFileName(null);
     setAttachedFileSize(0);
@@ -221,8 +105,138 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     setAttachedChecksum(undefined);
     setExtractedText('');
     setExtractedGrid(undefined);
-    setUploadError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const targetDossierId = draftDossierId || `dossier-${Date.now()}`;
+    const targetFileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const targetVersionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    setUploadError(null);
+    setAttachedFileName(file.name);
+    setAttachedFileSize(file.size);
+    setAttachedR2Key(undefined);
+    setAttachedStorageProvider('r2');
+    setAttachedBase64(undefined);
+    setIsExtracting(true);
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const rawBytes = new Uint8Array(buffer);
+      setAttachedChecksum(generateChecksum(rawBytes));
+
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('dossierId', targetDossierId);
+      uploadForm.append('fileId', targetFileId);
+      uploadForm.append('versionId', targetVersionId);
+
+      let uploadData: {
+        checksum?: string;
+        storageProvider?: string;
+        r2Key?: string;
+        downloadUrl?: string;
+      };
+      try {
+        const uploadRes = await fetch('/api/review/files/upload', {
+          method: 'POST',
+          body: uploadForm,
+        });
+        if (!uploadRes.ok) {
+          const errorPayload = (await uploadRes.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(errorPayload.error || 'Téléversement R2 indisponible.');
+        }
+        uploadData = await uploadRes.json();
+      } catch (err) {
+        resetAttachedFile();
+        setUploadError(
+          err instanceof Error ? err.message : 'Téléversement R2 indisponible.'
+        );
+        return;
+      }
+
+      if (
+        uploadData.storageProvider !== 'r2' ||
+        typeof uploadData.r2Key !== 'string' ||
+        !uploadData.r2Key
+      ) {
+        resetAttachedFile();
+        setUploadError('Le fichier n’a pas été stocké dans Cloudflare R2.');
+        return;
+      }
+
+      setDraftDossierId(targetDossierId);
+      setAttachedFileId(targetFileId);
+      setAttachedVersionId(targetVersionId);
+      setAttachedChecksum(uploadData.checksum || generateChecksum(rawBytes));
+      setAttachedR2Key(uploadData.r2Key);
+      setAttachedBase64(uploadData.downloadUrl);
+
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (ext === 'pdf') {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/review/files/extract', {
+              method: 'POST',
+              body: formData,
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (typeof data.textContent === 'string') {
+                setExtractedText(data.textContent);
+              }
+              if (typeof data.checksum === 'string') {
+                setAttachedChecksum(data.checksum);
+              }
+              setExtractedGrid(undefined);
+            } else {
+              setExtractedText('Document PDF attaché pour révision.');
+              setExtractedGrid(undefined);
+            }
+          } catch {
+            setExtractedText('Document PDF attaché pour révision.');
+            setExtractedGrid(undefined);
+          }
+        } else if (ext === 'docx') {
+          const text = await extractDocxText(buffer);
+          setExtractedText(text);
+          setExtractedGrid(undefined);
+        } else if (ext === 'xlsx' || ext === 'xls') {
+          const sheets = await extractXlsxData(buffer);
+          setExtractedGrid(sheets);
+          const summaryText = sheets
+            .map((s) => `--- Feuille : ${s.name} ---` + s.rows.map((r) => r.join(' | ')).join('\n'))
+            .join('\n\n');
+          setExtractedText(summaryText);
+        } else if (ext === 'csv') {
+          const text = await file.text();
+          const sheet = extractCsvData(text, file.name);
+          setExtractedGrid([sheet]);
+          setExtractedText(text);
+        } else {
+          const text = await file.text();
+          setExtractedText(text || 'Document de travail initial.');
+          setExtractedGrid(undefined);
+        }
+      } catch {
+        setExtractedText('Document attaché pour révision.');
+      }
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    resetAttachedFile();
+    setUploadError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -230,6 +244,10 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     if (!title.trim() || !clientName.trim()) return;
     if (!attachedFileName) {
       setUploadError('Veuillez attacher un document de travail (Word, Excel, PDF) pour initialiser le dossier.');
+      return;
+    }
+    if (!attachedR2Key || attachedStorageProvider !== 'r2') {
+      setUploadError('Le document doit être téléversé dans Cloudflare R2 avant la création du dossier.');
       return;
     }
     soundManager.playClickSound();
@@ -240,7 +258,6 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
     const randomNum = Math.floor(100 + Math.random() * 900);
     const ref = `DOS-${new Date().getFullYear()}-${deptPrefix}-${randomNum}`;
 
-    // Create professional initial tracked file (v1.0)
     const initialTrackedFile: TrackedFile = createTrackedFile({
       id: attachedFileId,
       versionId: attachedVersionId,
@@ -260,10 +277,9 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       description: 'Document de travail déposé lors de la création du dossier.',
     });
 
-    const autoSupervisor = resolveDepartmentSupervisor(teamUsers, department, currentUser.id);
-    const resolvedDossierId = draftDossierId || `dossier-${Date.now()}`;
+    const resolvedDossierId = draftDossierId || `dossier-${Date.parse(now)}`;
 
-    const newDossier: ReviewDossier = {
+    const newDossier = buildNewDossier({
       id: resolvedDossierId,
       ref,
       title: title.trim(),
@@ -272,66 +288,15 @@ export const NewDossierModal: React.FC<NewDossierModalProps> = ({
       department,
       typology,
       priority,
-      status: 'brouillon',
-      version: 1,
-      maker: currentUser,
-      checker: autoSupervisor,
-      lock: {
-        isLocked: false,
-      },
-      estimatedDeliverableDate: estimatedDate,
+      estimatedDate,
       createdAt: now,
-      updatedAt: now,
-      dataFields:
-        metricLabel.trim() && metricAmount !== ''
-          ? [
-              {
-                id: `df-${Date.now()}-1`,
-                label: metricLabel.trim(),
-                category:
-                  department === 'Fiscalité'
-                    ? 'fiscal'
-                    : department === 'Comptabilité'
-                      ? 'finance'
-                      : 'juridique',
-                previousValue: Number(metricAmount),
-                currentValue: Number(metricAmount),
-                unit: '€',
-                notes: 'Valeur déclarée au stade brouillon',
-              },
-            ]
-          : [],
-      textDocument: {
-        documentId: `doc-${Date.now()}`,
-        title: `Synthèse - ${attachedFileName}`,
-        type:
-          department === 'Fiscalité'
-            ? 'conclusions_fiscales'
-            : department === 'Comptabilité'
-              ? 'rapport_cloture'
-              : 'acte_juridique',
-        previousContent: extractedText || 'Document initial.',
-        currentContent: extractedText || 'Document initial.',
-        lastAmendedBy: currentUser.name,
-        lastAmendedAt: now,
-        amendmentNotes: `Dépôt initial du fichier ${attachedFileName}`,
-      },
-      trackedFiles: [initialTrackedFile],
-      interDepRequests: [],
-      auditTrail: [
-        {
-          id: `aud-${Date.now()}`,
-          timestamp: now,
-          actorId: currentUser.id,
-          actorName: currentUser.name,
-          actorDepartment: currentUser.department,
-          actorRole: currentUser.role,
-          ipAddress: 'server-pending',
-          action: 'creation',
-          details: `Création du dossier "${title.trim()}" pour ${clientName.trim()} avec dépôt du fichier "${attachedFileName}" (v1.0)${autoSupervisor ? ` — Superviseur désigné : ${autoSupervisor.name}` : ''}.`,
-        },
-      ],
-    };
+      maker: currentUser,
+      initialTrackedFile,
+      metricLabel,
+      metricAmount,
+      extractedText,
+      attachedFileName,
+    });
 
     onCreateDossier(newDossier);
     onClose();
