@@ -139,7 +139,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
         id="pwa-floating-container"
         className="fixed bottom-22 left-4 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6 md:left-auto md:right-8 md:bottom-8 z-40 pointer-events-none flex flex-col items-start md:items-end"
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {isMinimized ? (
             /* ============================================================ */
             /* MINIMIZED FLOATING PILL BUTTON (Glassmorphism Dark)          */
@@ -157,9 +157,9 @@ export const PWAFloatingInstallCard: React.FC = () => {
               title="Installer l'application PlanIt"
               className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/30 shadow-xl shadow-black/50 text-slate-200 hover:text-white hover:border-emerald-400 hover:bg-emerald-950/80 transition-all group cursor-pointer"
             >
-              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
                 <Download className="w-3 h-3 stroke-[2.5]" />
-              </div>
+              </span>
               <span className="text-xs font-semibold whitespace-nowrap text-emerald-200">
                 Installer l&apos;App
               </span>

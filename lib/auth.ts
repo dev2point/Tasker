@@ -5,6 +5,7 @@ import { getDrizzleDb, isDatabaseConfigured } from '@/lib/db/pg';
 import * as schema from '@/src/db/schema';
 import fs from 'fs';
 import path from 'path';
+import { randomBytes } from 'node:crypto';
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
@@ -196,15 +197,22 @@ export const auth = betterAuth({
     },
   },
   secret: (() => {
-    if (process.env.BETTER_AUTH_SECRET) {
+    if (process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_SECRET.trim().length >= 16) {
       return process.env.BETTER_AUTH_SECRET;
     }
-    if (process.env.NODE_ENV === 'production') {
-      console.warn(
-        '⚠️ SÉCURITÉ: BETTER_AUTH_SECRET non défini en production. Veuillez définir la variable d’environnement.'
+    const isProductionRuntime =
+      process.env.NODE_ENV === 'production' &&
+      process.env.NEXT_PHASE !== 'phase-production-build';
+    if (isProductionRuntime) {
+      throw new Error(
+        'SÉCURITÉ CRITIQUE (SEC-03) : BETTER_AUTH_SECRET doit être défini en production (minimum 16 caractères).'
       );
     }
-    return 'mfisca_cabinet_secure_auth_secret_2026_salt_89fa2194';
+    const g = globalThis as typeof globalThis & { __ephemeralAuthSecret?: string };
+    if (!g.__ephemeralAuthSecret) {
+      g.__ephemeralAuthSecret = randomBytes(32).toString('hex');
+    }
+    return g.__ephemeralAuthSecret;
   })(),
   baseURL: safeBaseURL,
   trustedOrigins: [

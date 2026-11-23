@@ -7,6 +7,7 @@ import {
   InterDepRequest,
   DataFieldDiff,
 } from '@/types/review';
+import { User } from '@/types/user';
 
 const LOCAL_STORAGE_KEY = 'planit_review_dossiers_v1';
 
@@ -111,7 +112,7 @@ export function executeWorkflowTransition(
   }
 ): { success: boolean; dossier: ReviewDossier; error?: string } {
   const current = dossier.status;
-  const ip = options?.ipAddress || '192.168.1.88';
+  const ip = options?.ipAddress || 'server-pending';
   const now = new Date().toISOString();
 
   // Validate allowed transitions
@@ -238,7 +239,7 @@ export function togglePreventiveLock(
   actor: WorkflowActor,
   lock: boolean,
   reason?: string,
-  ipAddress = '192.168.1.88'
+  ipAddress = 'server-pending'
 ): ReviewDossier {
   const now = new Date().toISOString();
   const logEntry: AuditLogEntry = {
@@ -311,3 +312,114 @@ export function computeLineDiff(oldText: string, newText: string): DiffLine[] {
 
   return result;
 }
+
+/**
+ * Automatically resolve an active department supervisor/manager (or fallback admin/manager)
+ * when a dossier is created or submitted without a manual reviewer (DT-ARCH-10).
+ */
+export function resolveDepartmentSupervisor(
+  teamUsers: User[],
+  department: Department,
+  excludeUserId?: string
+): WorkflowActor | undefined {
+  if (!Array.isArray(teamUsers) || teamUsers.length === 0) return undefined;
+
+  const normalizedDept = department.trim().toLowerCase();
+  const eligible = teamUsers.filter(
+    (u) =>
+      u.id !== excludeUserId &&
+      (u.status === undefined || u.status === 'active') &&
+      (u.role === 'manager' || u.role === 'admin')
+  );
+  if (eligible.length === 0) return undefined;
+
+  const sameDeptManager = eligible.find(
+    (u) =>
+      u.role === 'manager' &&
+      (u.department || '').trim().toLowerCase() === normalizedDept
+  );
+  const sameDeptAdmin = eligible.find(
+    (u) =>
+      u.role === 'admin' &&
+      (u.department || '').trim().toLowerCase() === normalizedDept
+  );
+  const anyManager = eligible.find((u) => u.role === 'manager');
+  const chosen = sameDeptManager || sameDeptAdmin || anyManager || eligible[0];
+
+  if (!chosen) return undefined;
+  return {
+    id: chosen.id,
+    name: chosen.name,
+    email: chosen.email,
+    department: (chosen.department as Department) || department,
+    role: chosen.role === 'admin' ? 'admin' : 'manager',
+    avatarUrl: chosen.avatarUrl,
+  };
+}
+
+/**
+ * Strip inline base64 data URLs from trackedFiles before SSE broadcasting (DT-ARCH-18).
+ * Replaces inline file bytes with an authenticated download route reference.
+ */
+export function stripDossierFileBytesForBroadcast(dossier: ReviewDossier): ReviewDossier {
+  if (!dossier.trackedFiles || dossier.trackedFiles.length === 0) {
+    return dossier;
+  }
+
+  return {
+    ...dossier,
+    trackedFiles: dossier.trackedFiles.map((file) => ({
+      ...file,
+      versions: file.versions.map((ver) => ({
+        ...ver,
+        contentUrl:
+          ver.contentUrl && ver.contentUrl.startsWith('data:')
+            ? `/api/review/file-versions/${encodeURIComponent(ver.id)}/download?dossierId=${encodeURIComponent(dossier.id)}`
+            : ver.contentUrl,
+      })),
+    })),
+  };
+}
+
+/**
+ * Preserve locally cached base64 contentUrl when an incoming SSE dossier snapshot
+ * replaces inline bytes with a download URL for the exact same version ID.
+ */
+export function mergeDossierPreservingCachedFileBytes(
+  incoming: ReviewDossier,
+  existing?: ReviewDossier | null
+): ReviewDossier {
+  if (!existing?.trackedFiles?.length || !incoming.trackedFiles?.length) {
+    return incoming;
+  }
+
+  const cachedDataUrlByVersionId = new Map<string, string>();
+  for (const f of existing.trackedFiles) {
+    for (const v of f.versions) {
+      if (v.contentUrl && v.contentUrl.startsWith('data:')) {
+        cachedDataUrlByVersionId.set(v.id, v.contentUrl);
+      }
+    }
+  }
+
+  if (cachedDataUrlByVersionId.size === 0) {
+    return incoming;
+  }
+
+  return {
+    ...incoming,
+    trackedFiles: incoming.trackedFiles.map((file) => ({
+      ...file,
+      versions: file.versions.map((ver) => {
+        if (ver.contentUrl && !ver.contentUrl.startsWith('data:')) {
+          const cached = cachedDataUrlByVersionId.get(ver.id);
+          if (cached) {
+            return { ...ver, contentUrl: cached };
+          }
+        }
+        return ver;
+      }),
+    })),
+  };
+}
+

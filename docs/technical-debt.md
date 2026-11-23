@@ -3,7 +3,7 @@
 **Projet :** `mfisca-tasks` (Plateforme de Gestion de Tâches & Revue Métier)  
 **Date de révision :** 20 Novembre 2026
 **Auteur :** Audit Sécurité Applicative (AppSec Senior) & Équipe Ingénierie  
-**Version du document :** 3.4 (Audit de fiabilité des notifications de tâches)
+**Version du document :** 3.5 (Résolution des dettes solvables applicativement & sécurisation SSE/PDF/Sync)
 
 ---
 
@@ -12,11 +12,9 @@
 Ce document consigne l'ensemble des vulnérabilités de sécurité applicative, des écarts d'architecture, des compromis d'implémentation et des dettes techniques du projet **mfisca-tasks**, ainsi que l'état d'avancement des résolutions.
 
 L'application repose sur une pile Next.js 16 (App Router), React 19, Better Auth 1.7, Drizzle ORM avec PostgreSQL/Supabase et l'API Google Gemini. 
-Une analyse approfondie du code source a permis de réaligner le registre avec la réalité opérationnelle : **distinguer clairement ce qui est sécurisé de ce qui n'est pas encore persisté ou automatisé**, et lever les ambiguïtés entre les spécifications fonctionnelles (PRD/README) et l'implémentation réelle.
+Une vague de remédiation applicative (v3.5) a permis de **résoudre l'intégralité des dettes solvables dans le code source sans dépendance d'infrastructure externe** (`SEC-03`, `SEC-07`, `SEC-08` sur auth, `SEC-10`, `SEC-11`, `DT-ARCH-05`, `DT-ARCH-08`, `DT-ARCH-10`, `DT-ARCH-11`, `DT-ARCH-13`, `DT-ARCH-16`, `DT-ARCH-17`, `DT-ARCH-18`, `DT-ARCH-19`).
 
-La revue du circuit des pièces jointes confirme que le livrable n'est pas une ressource serveur : ses octets restent encodés en base64 dans le `ReviewDossier` conservé dans le `localStorage` du navigateur, puis diffusés dans le payload SSE. Le versionnage repose donc sur des snapshots JSON locaux et un checksum non cryptographique, sans stockage d'objets ni table dédiée (voir `DT-ARCH-15` à `DT-ARCH-19`).
-
-L'audit de fiabilité des notifications confirme une séparation nette entre deux circuits : les notifications d'assignation, de réassignation et de complétion sont déjà générées par `POST /api/tasks`, persistées dans la table `notifications` et diffusées par SSE ; les rappels d'échéance et les notifications d'action admin restent générés dans le navigateur, puis stockés uniquement dans `localStorage`/IndexedDB. La base de données est donc partiellement source de vérité, mais la livraison n'est ni ordonnancée, ni idempotente, ni journalisée, ni distribuée hors onglet actif (voir `DT-ARCH-02`, `DT-ARCH-14` et `DT-ARCH-20` à `DT-ARCH-24`).
+Les pièces jointes bénéficient désormais de la conservation à la création (`POST /api/review/dossiers`), d'une extraction PDF serveur (`unpdf`), d'un véritable SHA-256 (FIPS 180-4 + `node:crypto`), d'une route de téléchargement authentifiée RBAC, d'une purge des octets base64 dans les diffusions SSE, ainsi que d'une **intégration Cloudflare R2 complète** (`/lib/storage/r2.ts`, `/api/review/files/upload`, streaming & URLs signées, tables Drizzle `review_files` et `review_file_versions`) et d'un **pont Supabase Realtime multi-instances** (`/lib/supabase/*`, HTTP Broadcast + WebSocket + Postgres Changes + Presence) avec repli local gracieux hors clés d'infrastructure. En revanche, l'activation effective de R2 et Supabase en production reste subordonnée au renseignement des variables d'environnement correspondantes, tandis que la migration complète des dossiers vers PostgreSQL (`DT-ARCH-01`), les politiques RLS par session (`DT-ARCH-04`), la suppression de `ensureDatabaseTables` (`DT-ARCH-06`), l'unification SQL des rôles (`DT-ARCH-07`), l'OCC SQL des tâches (`DT-ARCH-09`) et la chaîne complète de notification durable/cron/email/push/fuseaux (`DT-ARCH-02`, `DT-ARCH-14`, `DT-ARCH-20` à `DT-ARCH-24`) demeurent en attente d'infrastructure et d'approbation produit.
 
 ---
 
@@ -26,15 +24,15 @@ L'audit de fiabilité des notifications confirme une séparation nette entre deu
 | :--- | :--- | :---: | :---: | :---: | :--- | :---: | :--- |
 | **SEC-01** | **BOLA & Fuite globale de données via l'API Sync**<br>L'endpoint `POST /api/sync` renvoyait toutes les tâches de la base sans RBAC. | **CRITIQUE** | **9.1** | CWE-284 / CWE-639<br>OWASP API1:2023 | `/app/api/sync/route.ts` | **RÉSOLU** | Filtrage strict par utilisateur `where(or(eq(creatorId, user.id), eq(assigneeId, user.id)))` pour les non-admins, et protection contre l'écrasement de tâches d'autrui. |
 | **SEC-02** | **Contournement d'authentification IA via `x-user-id`**<br>La route `/api/ai/assistant` acceptait un header arbitraire sans vérifier la session. | **CRITIQUE** | **9.1** | CWE-287 / CWE-306<br>OWASP A07:2021 | `/app/api/ai/assistant/route.ts`<br>`/components/AIAssistantModal.tsx` | **RÉSOLU** | Suppression du header `x-user-id` ; vérification obligatoire de la session cryptographique via `getAuthenticatedUser(req)`. |
-| **SEC-03** | **Clé secrète de chiffrement des sessions en dur (Fallback)**<br>`BETTER_AUTH_SECRET` dispose encore d'une valeur de secours hardcodée dans le code. | **ÉLEVÉ** | **8.1** | CWE-798 / CWE-321<br>OWASP A02:2021 | `/lib/auth.ts` | ⚠️ **PARTIELLEMENT RÉSOLU** | Alerte explicite en production lorsqu'elle est absente, mais la constante `mfisca_cabinet_secure_auth_secret_2026_salt_89fa2194` reste utilisée hors variable d'environnement. Le fallback doit être supprimé et remplacé par un arrêt sécurisé de l'authentification si le secret n'est pas configuré. |
+| **SEC-03** | **Clé secrète de chiffrement des sessions en dur (Fallback)**<br>`BETTER_AUTH_SECRET` disposait d'une valeur de secours hardcodée dans le code. | **ÉLEVÉ** | **8.1** | CWE-798 / CWE-321<br>OWASP A02:2021 | `/lib/auth.ts` | **RÉSOLU** | Suppression totale du secret hardcodé : levée d'erreur bloquante au runtime en production si `BETTER_AUTH_SECRET` (< 16 car.) est absent, et génération éphémère CSPRNG (`randomBytes(32)`) par processus uniquement en dev/test. |
 | **SEC-04** | **Cookies de session insécurisés & CSRF**<br>Configuration avec `useSecureCookies: false`. | **ÉLEVÉ** | **7.5** | CWE-614 / CWE-352<br>OWASP A05:2021 | `/lib/auth.ts` | **RÉSOLU** | `useSecureCookies` conditionné dynamiquement à la présence d'HTTPS/production/Render avec partitionnement des cookies (`Partitioned; Secure; HttpOnly`). |
 | **SEC-05** | **Manipulation non autorisée des dossiers de revue (BOLA)**<br>`PATCH /api/review/dossiers` modifiait n'importe quel dossier sans vérification. | **ÉLEVÉ** | **7.7** | CWE-862 / CWE-639<br>OWASP API1:2023 | `/app/api/review/dossiers/route.ts` | **RÉSOLU** | Vérification RBAC stricte : seuls les admins, managers, le maker du dossier, le checker ou les collègues du même département peuvent modifier un dossier. |
 | **SEC-06** | **Origines autorisées CORS trop permissives**<br>Présence de tunnels Cloudflare temporaires dans les configurations dev. | **MOYEN** | **6.5** | CWE-942<br>OWASP A05:2021 | `next.config.ts`<br>`/lib/auth.ts` | **RÉSOLU** | Suppression des tunnels expirés des origines autorisées. |
-| **SEC-07** | **Absence d'en-têtes HTTP de sécurité critiques (CSP & HSTS)**<br>Manque de politique de sécurité de contenu et de forçage HTTPS strict. | **MOYEN** | **5.4** | CWE-693 / CWE-1021<br>OWASP A05:2021 | `next.config.ts` | ⚠️ **PARTIELLEMENT RÉSOLU** | Les en-têtes `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy` et `Permissions-Policy` sont en place. **Sont toujours manquants :** `Content-Security-Policy` (CSP) et `Strict-Transport-Security` (HSTS). |
-| **SEC-08** | **Couverture limitée du Rate Limiting**<br>Le quota existe seulement sur IA et synchronisation, dans une mémoire locale par instance. | **MOYEN** | **5.3** | CWE-307 / CWE-770<br>OWASP API4:2023 | `/lib/rate-limit.ts`<br>`/app/api/ai/assistant/route.ts`<br>`/app/api/sync/route.ts` | ⚠️ **PARTIELLEMENT RÉSOLU** | Limites sliding-window présentes (20 req/min IA, 60 req/min sync), mais le registre in-process n'est pas partagé entre instances. Aucun `checkRateLimit` n'est appliqué aux routes d'authentification. |
+| **SEC-07** | **Absence d'en-têtes HTTP de sécurité critiques (CSP & HSTS)**<br>Manque de politique de sécurité de contenu et de forçage HTTPS strict. | **MOYEN** | **5.4** | CWE-693 / CWE-1021<br>OWASP A05:2021 | `next.config.ts` | **RÉSOLU** | En-têtes `Content-Security-Policy` et `Strict-Transport-Security` (`max-age=63072000; includeSubDomains`) ajoutés en complément de `nosniff`, `Referrer-Policy` et `Permissions-Policy`. |
+| **SEC-08** | **Couverture limitée du Rate Limiting**<br>Le quota existe sur IA, sync et auth, dans une mémoire locale par instance. | **MOYEN** | **5.3** | CWE-307 / CWE-770<br>OWASP API4:2023 | `/lib/rate-limit.ts`<br>`/app/api/auth/[...all]/route.ts`<br>`/app/api/ai/assistant/route.ts`<br>`/app/api/sync/route.ts` | ⚠️ **PARTIELLEMENT RÉSOLU** | `checkRateLimit` appliqué aux routes d'authentification Better Auth (15 POST/min/IP+route, 120 GET/min/IP) en plus d'IA et Sync. Le backend distribué Redis reste requis pour les déploiements multi-instances. |
 | **SEC-09** | **Exigence faible sur la longueur des mots de passe**<br>Longueur minimale configurée initialement à 6 caractères. | **MOYEN** | **5.3** | CWE-521<br>OWASP A07:2021 | `/lib/auth.ts`<br>`/components/AuthModal.tsx` | **RÉSOLU** | Longueur minimale rehaussée à 12 caractères côté serveur (Better Auth) et validation dynamique côté client. |
-| **SEC-10** | **Dépendances NPM présentant des avis de sécurité**<br>Alertes secondaires amonts. | **FAIBLE** | **4.8** | CWE-1395 / CWE-1321<br>OWASP A06:2021 | `package.json`<br>`.github/workflows/test.yml` | ⚠️ **PARTIELLEMENT SUIVI** | La CI exécute lint, tests et build. Elle n'exécute toutefois pas `npm audit` ni outil SAST/SCA dédié ; l'affirmation de suivi intégré à la CI n'est donc pas entièrement exacte. |
-| **SEC-11** | **Diffusion SSE arbitraire sans authentification**<br>`POST /api/events` accepte un type, un acteur et un payload fournis par le client puis les diffuse à tous les abonnés. | **ÉLEVÉ** | **8.2** | CWE-306 / CWE-862<br>OWASP API1:2023 | `/app/api/events/route.ts` | **OUVERT** | Ajouter une authentification obligatoire, restreindre les types autorisés aux événements internes et supprimer ou verrouiller cette route publique. |
+| **SEC-10** | **Dépendances NPM présentant des avis de sécurité**<br>Alertes secondaires amonts. | **FAIBLE** | **4.8** | CWE-1395 / CWE-1321<br>OWASP A06:2021 | `package.json`<br>`.github/workflows/test.yml` | **RÉSOLU** | Étape `npm audit --audit-level=high` intégrée dans le workflow CI GitHub Actions et consignée dans le résumé de pipeline. |
+| **SEC-11** | **Diffusion SSE arbitraire sans authentification**<br>`POST /api/events` acceptait n'importe quel type/acteur client sans session. | **ÉLEVÉ** | **8.2** | CWE-306 / CWE-862<br>OWASP API1:2023 | `/app/api/events/route.ts` | **RÉSOLU** | Vérification obligatoire de session via `getAuthenticatedUser`, acteur imposé depuis la session, whitelist stricte `CLIENT_BROADCASTABLE_EVENT_TYPES` et purge des data URLs base64. |
 | **SEC-12** | **Authentification sur stockage JSON hors PostgreSQL**<br>Si `DATABASE_URL` n'est pas configuré, Better Auth utilise un adaptateur JSON local en plus des données en mémoire. | **ÉLEVÉ** | **7.5** | CWE-312 / CWE-538<br>OWASP A02:2021 | `/lib/auth.ts` | ⚠️ **MODE DE SECOURS** | Ce fallback permet le fonctionnement hors base, mais persiste sessions/comptes/utilisateurs dans `data/auth_fallback.json`. Il manque sauvegarde, rotation des secrets, restrictions de déploiement multi-instances et protection opérationnelle explicite. |
 
 ---
@@ -77,12 +75,11 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Si l'utilisateur ferme l'onglet ou sa machine, les rappels ne se déclenchent pas. Risque direct de manquer une échéance fiscale ou de liasse comptable. Les notifications locales ne sont pas visibles sur un autre appareil.
 * **Remédiation :** Conserver la base de données comme source de vérité unique. Implémenter une route cron sécurisée `/api/cron/reminders` ou un worker serveur qui évalue les rappels dus et crée des notifications atomiquement, puis distribue les alertes par e-mail (Resend/SendGrid/Graph API) et Web Push via service worker. Le `setInterval` client ne doit rester qu'un affichage optimiste, jamais le mécanisme de livraison.
 
-#### DT-ARCH-03 — Hub SSE in-process incompatible avec les déploiements multi-instances
-* **Sévérité :** 🔴 **CRITIQUE (Scalabilité & Concurrence)**
-* **Localisation :** `lib/realtime-hub.ts` · `/app/api/events/route.ts`
-* **Constat :** Le `RealtimeEventHub` est un singleton en mémoire vive Node.js. En cas de déploiement multi-conteneurs (ex. 2 instances ou plus sur Render, Railway ou Kubernetes), les événements SSE et la présence ne sont pas partagés entre conteneurs.
-* **Impact :** Alertes silencieuses pour les collaborateurs connectés sur une autre instance ; désynchronisation du verrouillage préventif des dossiers.
-* **Remédiation :** Remplacer le bus mémoire par un adaptateur Pub/Sub externe (ex. Upstash Redis ou Redis standard via `ioredis`). Le centre de notifications doit en outre se reconstruire depuis PostgreSQL après reconnexion SSE ; le flux temps réel reste un accélérateur d'UI, pas une source de vérité.
+#### DT-ARCH-03 — Hub SSE in-process incompatible avec les déploiements multi-instances — ⚠️ **IMPLÉMENTÉ VIA SUPABASE REALTIME (En attente clés prod)**
+* **Sévérité :** 🔴 **CRITIQUE (Scalabilité & Concurrence)** -> **Code implémenté (attente clés Supabase)**
+* **Localisation :** `lib/realtime-hub.ts` · `lib/supabase/config.ts` · `lib/supabase/client.ts` · `lib/supabase/realtime-publisher.ts` · `lib/use-realtime-events.ts`
+* **Constat :** Le `RealtimeEventHub` dispose désormais d'un pont serveur stateless via l'API HTTP Broadcast de Supabase Realtime (`publishToSupabaseRealtime`) et d'une souscription double-transport côté client (`SSE` + `Supabase Realtime Broadcast / Postgres Changes / Presence`) avec déduplication par `event.id`.
+* **Travaux restants :** Renseigner `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`) et `SUPABASE_SECRET_KEY` (`sb_secret_...`) dans l'environnement de déploiement pour activer le canal `mfisca-cabinet-realtime`.
 
 ---
 
@@ -95,12 +92,10 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Pas de défense en profondeur au niveau du moteur PostgreSQL.
 * **Remédiation :** Définir de réelles expressions RLS basées sur le contexte utilisateur de session (`current_setting('app.current_user_id', true)`).
 
-#### DT-ARCH-05 — Adresse IP factice dans le journal d'audit légal
-* **Sévérité :** 🟠 **ÉLEVÉ**
-* **Localisation :** `lib/review-service.ts` L.114 : `const ip = options?.ipAddress || '192.168.1.88';`
-* **Constat :** Si `executeWorkflowTransition` est appelé sans renseigner `ipAddress` (notamment lors de manipulations côté client), une adresse IP locale arbitraire (`192.168.1.88`) est inscrite dans la piste d'audit.
-* **Impact :** Décrédibilisation de la valeur probante du journal d'audit face à un tiers ou une autorité de contrôle.
-* **Remédiation :** Exécuter toutes les transitions d'état exclusivement côté serveur via l'API, en extrayant obligatoirement l'IP réelle des en-têtes `x-forwarded-for` / `x-real-ip`.
+#### DT-ARCH-05 — Adresse IP factice dans le journal d'audit légal — ✅ **RÉSOLU**
+* **Sévérité :** 🟠 **ÉLEVÉ** -> **RÉSOLU**
+* **Localisation :** `lib/review-service.ts` · `/app/api/review/dossiers/route.ts` (`extractClientIp`) · `components/review/NewDossierModal.tsx` · `components/review/DossierReviewStudioModal.tsx`
+* **Résolution :** Remplacement des IP factices (`192.168.1.88`, `192.168.1.42`) par le marqueur transitoire `server-pending`, puis injection systématique côté serveur de l'IP réelle extraite de `x-forwarded-for` / `x-real-ip` lors de `POST` et `PATCH /api/review/dossiers`.
 
 #### DT-ARCH-06 — Double source de vérité pour le schéma PostgreSQL
 * **Sévérité :** 🟠 **ÉLEVÉ**
@@ -120,12 +115,10 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 
 ### 3.3 Dettes Modérées à Élevées (Ergonomie, Exploitation & Robustesse)
 
-#### DT-ARCH-08 — Écriture optimiste sans rollback sur la création/mise à jour de tâches
-* **Sévérité :** 🟡 **MODÉRÉE**
-* **Localisation :** `components/HomeWorkspace.tsx` (`handleSaveTask`) · `docs/guides/flux-creation-assignation-tache.md` L.164
-* **Constat :** `saveTasks` persiste immédiatement la nouvelle tâche dans le localStorage et l'IndexedDB du créateur avant la réponse de l'API `POST /api/tasks`. Si le serveur échoue (code HTTP 500, erreur réseau ou contrainte SQL rompue), l'interface client ne procède à aucun rollback et ne présente aucune alerte persistante de désynchronisation.
-* **Impact :** Faux sentiment de sécurité pour le collaborateur qui croit sa tâche enregistrée et assignée alors qu'elle n'existe pas sur le serveur.
-* **Remédiation :** Marquer temporairement la tâche comme `syncPending: true`, attendre l'acquittement HTTP du serveur, et annuler ou alerter visuellement l'utilisateur en cas d'échec persistant.
+#### DT-ARCH-08 — Écriture optimiste sans rollback sur la création/mise à jour de tâches — ✅ **RÉSOLU**
+* **Sévérité :** 🟡 **MODÉRÉE** -> **RÉSOLU**
+* **Localisation :** `types/task.ts` (`syncPending`, `syncError`) · `components/HomeWorkspace.tsx` (`persistTaskToDb`, `deleteTaskFromDb`)
+* **Résolution :** Les mutations locales marquent les tâches avec `syncPending: true` et capturent un snapshot avant écriture optimiste. En cas d'acquittement HTTP OK, `syncPending` est effacé ; en cas de rejet serveur (`400/403/409/5xx`), l'état client est restauré par rollback et une bannière d'alerte visible avec action « Réessayer » est affichée.
 
 #### DT-ARCH-09 — Absence de résolution de conflits offline/online (Synchronisation)
 * **Sévérité :** 🟡 **MODÉRÉE**
@@ -134,33 +127,27 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Écrasement silencieux d'amendements ou de statuts de tâches.
 * **Remédiation :** Généraliser le contrôle de concurrence optimiste (OCC) avec `version` ou horodatage `updatedAt` sur la table `tasks`.
 
-#### DT-ARCH-10 — Fonctionnalité PRD manquante : Attribution automatique du superviseur par département
-* **Sévérité :** 🟡 **MODÉRÉE (Dette Fonctionnelle)**
-* **Localisation :** `components/review/NewDossierModal.tsx` · `lib/review-service.ts` · `PRD.md`
-* **Constat :** Bien que le PRD et le README mettent en avant l'« *Attribution dynamique : Assignation automatique ou manuelle d'un superviseur / manager selon le département et la typologie* », le code instancie les dossiers avec un champ `checker: undefined`. Aucun algorithme de round-robin ni de détection du manager de département n'est exécuté lors de la soumission.
-* **Impact :** Dépendance exclusive envers une saisie ou une réclamation manuelle de dossier par les superviseurs.
-* **Remédiation :** Développer un résolveur d'affectation automatique interrogeant les utilisateurs au rôle `manager` du département concerné lors de la création ou du passage au statut `soumis`.
+#### DT-ARCH-10 — Attribution automatique du superviseur par département — ✅ **RÉSOLU**
+* **Sévérité :** 🟡 **MODÉRÉE** -> **RÉSOLU**
+* **Localisation :** `lib/review-service.ts` (`resolveDepartmentSupervisor`) · `components/review/NewDossierModal.tsx` · `components/review/DossierReviewStudioModal.tsx`
+* **Résolution :** Implémentation du résolveur hiérarchique `resolveDepartmentSupervisor` priorisant un manager actif du département cible (hors créateur), avec repli sur admin/manager actif. Affecté automatiquement à la création et pré-sélectionné lors de la soumission N+1.
 
-#### DT-ARCH-11 — Rapports PDF limités à l'impression client (`window.print`)
-* **Sévérité :** 🟡 **MODÉRÉE**
-* **Localisation :** `components/ExecutiveReportModal.tsx` · `lib/report-generator.ts`
-* **Constat :** Le moteur de synthèse s'appuie uniquement sur les styles d'impression CSS du navigateur.
-* **Impact :** Incapacité d'exporter ou d'envoyer des bilans PDF la nuit ou automatiquement aux associés.
-* **Remédiation :** Mettre en place un service de rendu PDF headless (Chromium ou `@react-pdf/renderer`).
+#### DT-ARCH-11 — Génération de rapports PDF serveur — ✅ **RÉSOLU**
+* **Sévérité :** 🟡 **MODÉRÉE** -> **RÉSOLU**
+* **Localisation :** `/app/api/reports/pdf/route.ts` · `components/ExecutiveReportModal.tsx`
+* **Résolution :** Route serveur authentifiée `POST /api/reports/pdf` générant un véritable PDF A4 multi-pages côté Node.js via `pdf-lib`, déclenchable directement depuis le bouton « PDF Serveur » dans `ExecutiveReportModal.tsx`.
 
 #### DT-ARCH-12 — Absence de tests de bout en bout (E2E)
 * **Sévérité :** 🟡 **MODÉRÉE**
-* **Localisation :** Répertoire `/tests` (20 fichiers de tests unitaires/intégration Vitest, 0 test Playwright)
+* **Localisation :** Répertoire `/tests` (21 fichiers de tests unitaires/intégration Vitest, 0 test Playwright)
 * **Constat :** Les flux interactifs complets (authentification multi-rôles, cycle de vie complet Maker-Checker) ne sont pas testés dans un navigateur réel automatisé.
 * **Impact :** Risque de régression de navigation ou de rendu.
 * **Remédiation :** Mettre en place Playwright pour les 5 scénarios critiques du cabinet.
 
-#### DT-ARCH-13 — Observabilité de santé partielle pour les services déclarés
-* **Sévérité :** 🟡 **MODÉRÉE**
-* **Localisation :** `/app/api/health/route.ts`
-* **Constat :** Le health check vérifie réellement PostgreSQL, tandis que Better Auth et Gemini sont uniquement annoncés via leur mode/configuration sans sonde opérationnelle. Il ne vérifie ni les dossiers de revue (hors base), ni le worker/cron de rappels, ni Redis/SSE externe. Le champ IA indique également `Gemini 2.5 Flash` alors que la route utilise `gemini-3.7-flash`.
-* **Impact :** Une application peut être considérée saine alors qu'un flux cœur métier est indisponible ou que l'identification de la version IA est erronée.
-* **Remédiation :** Ajouter des sondes ciblées pour chaque dépendance métier critique et faire dériver les métadonnées IA du modèle réellement configuré.
+#### DT-ARCH-13 — Observabilité de santé & alignement modèle IA (`/api/health`) — ✅ **RÉSOLU**
+* **Sévérité :** 🟡 **MODÉRÉE** -> **RÉSOLU**
+* **Localisation :** `lib/ai-config.ts` (`GEMINI_MODEL`) · `/app/api/health/route.ts` · `/app/api/ai/assistant/route.ts`
+* **Résolution :** Extraction de la constante partagée `GEMINI_MODEL = 'gemini-3.7-flash'` utilisée par l'assistant IA et `/api/health`, et ajout de blocs diagnostiques `realtime` (abonnés SSE / présence active) et `reviewDossiers` dans la réponse de `/api/health`.
 
 #### DT-ARCH-14 — Moteur de rappels sans persistance atomique ni journal d'exécution
 * **Sévérité :** 🟠 **ÉLEVÉ**
@@ -169,40 +156,31 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Double déclenchement possible en multi-clients, perte silencieuse d'une notification si l'insertion SQL échoue, absence de preuve d'envoi et récupération imparfaite après panne.
 * **Remédiation :** Établir une file d'envoi durable avec verrouillage atomique, journal de livraison et exécuteur serveur idempotent (voir `DT-ARCH-21`). Ne jamais poursuivre la diffusion d'une notification métier après un échec de persistance sans compensation explicite.
 
-#### DT-ARCH-15 — Fichiers de revue conservés en base64 dans le navigateur, sans stockage serveur
-* **Sévérité :** 🔴 **CRITIQUE**
-* **Localisation :** `components/review/NewDossierModal.tsx:127-131,159-172` · `components/FileVersionManager.tsx` (`FileReader` / `uploadedBase64`) · `lib/file-version-service.ts:64-180` · `lib/review-service.ts:11,51-59` · `types/file-version.ts:29`
-* **Constat :** L'upload est converti par `FileReader.readAsDataURL()` puis stocké dans `trackedFiles[].versions[].contentUrl`. Le dossier complet est sérialisé dans `localStorage` sous `planit_review_dossiers_v1` ; un dépassement de quota n'entraîne qu'un `console.warn`. Il n'existe aucune route d'upload/téléchargement, aucun stockage d'objets et aucune table SQL pour les fichiers.
-* **Impact :** Perte des livrables lors d'un nettoyage du navigateur ou d'un dépassement de quota, impossibilité pour un supérieur sur un autre poste de récupérer le fichier, absence de versionnage partagé et inflation des payloads JSON.
-* **Remédiation :** Déplacer les octets vers un stockage d'objets (S3/R2/MinIO ou répertoire serveur hors `public/`), créer les tables `review_files` et `review_file_versions`, calculer un SHA-256 serveur, exposer des routes `POST /api/review/dossiers/[id]/files`, `POST /api/review/files/[fileId]/versions` et `GET /api/review/file-versions/[versionId]/download`, puis migrer une fois les dossiers `localStorage` existants. Le client ne conserve que des métadonnées et des URL signées.
+#### DT-ARCH-15 — Fichiers de revue conservés en base64 dans le navigateur, sans stockage serveur — ⚠️ **IMPLÉMENTÉ VIA CLOUDFLARE R2 (En attente clés prod)**
+* **Sévérité :** 🔴 **CRITIQUE** -> **Code & Schéma SQL implémentés (attente clés R2)**
+* **Localisation :** `lib/storage/r2.ts` · `app/api/review/files/upload/route.ts` · `app/api/review/file-versions/[versionId]/download/route.ts` · `app/api/review/dossiers/route.ts` · `src/db/schema.ts` (`review_files`, `review_file_versions`) · `components/review/NewDossierModal.tsx` · `components/FileVersionManager.tsx`
+* **Constat :** L'upload direct vers Cloudflare R2 (`POST /api/review/files/upload`), le délestage automatique des payloads inline vers R2 lors de la sauvegarde dossier, le téléchargement authentifié RBAC (streaming et URLs signées `?mode=signed`), le nettoyage R2 lors de la suppression et les tables Drizzle `review_files` / `review_file_versions` sont en place, avec repli local transparent lorsque les clés R2 sont absentes.
+* **Travaux restants :** Configurer `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` et `R2_BUCKET_NAME` dans l'environnement cible, et finaliser le basculement complet des dossiers depuis `runtimeDossiers` vers PostgreSQL (`DT-ARCH-01`).
 
-#### DT-ARCH-16 — Création côté serveur qui supprime les pièces jointes
-* **Sévérité :** 🟠 **ÉLEVÉ**
-* **Localisation :** `/app/api/review/dossiers/route.ts:53-99` · `components/review/NewDossierModal.tsx:226,243`
-* **Constat :** Le client construit le dossier avec `trackedFiles: [initialTrackedFile]`, mais `POST /api/review/dossiers` reconstruit `newDossier` sans recopier `body.trackedFiles`. Le cache `runtimeDossiers` et l'événement SSE `DOSSIER_CREATED` ne contiennent donc aucun fichier jusqu'au premier `PATCH`.
-* **Impact :** Divergence entre la source client et la source serveur ; un superviseur connecté peut voir un dossier sans son livrable, et la première sauvegarde réelle dépend d'une modification ultérieure.
-* **Remédiation :** Créer d'abord le fichier via la route dédiée et enregistrer ses versions en base, ou valider et intégrer explicitement `body.trackedFiles` dans le dossier créé. La base doit devenir l'unique source de vérité.
+#### DT-ARCH-16 — Conservation des pièces jointes lors de la création serveur — ✅ **RÉSOLU**
+* **Sévérité :** 🟠 **ÉLEVÉ** -> **RÉSOLU**
+* **Localisation :** `/app/api/review/dossiers/route.ts` · `components/review/CollaborativeReviewPlatform.tsx`
+* **Résolution :** `POST /api/review/dossiers` valide et intègre désormais `trackedFiles` et `checker`, et le client synchronise l'état local avec le dossier retourné par le serveur.
 
-#### DT-ARCH-17 — Absence d'extraction PDF et checksum non cryptographique
-* **Sévérité :** 🟠 **ÉLEVÉ**
-* **Localisation :** `components/review/NewDossierModal.tsx:116-120` · `components/FileVersionManager.tsx:113-147` · `lib/file-version-service.ts:6-15,82-84,143-145`
-* **Constat :** Dans `NewDossierModal`, un PDF passe dans la branche `else` qui appelle `file.text()` puis retombe sur `Document de travail initial.` : le contenu binaire n'est pas extrait. Dans `FileVersionManager`, seuls DOCX, XLSX/XLS, CSV et fichiers texte sont gérés : le PDF ne produit aucun texte. Par ailleurs, `generateChecksum()` est un hash 32 bits étiqueté `sha256`, calculé à partir du texte, de la data URL ou du nom plus la taille, et non des octets stockés.
-* **Impact :** Aucune relecture réelle du PDF dans le diff, et revendication d'intégrité trompeuse : le checksum ne permet pas de détecter une altération du fichier.
-* **Remédiation :** Extraire le texte côté serveur avec `pdf-parse` ou `pdfjs-dist`, réutiliser `lib/office-parser.ts` pour DOCX/XLSX/CSV, remplacer `generateChecksum()` par `crypto.createHash('sha256')` sur les octets, et persister `extracted_text`, `extracted_grid_json` et le SHA-256 dans chaque version.
+#### DT-ARCH-17 — Extraction PDF serveur & Checksum SHA-256 cryptographique — ✅ **RÉSOLU**
+* **Sévérité :** 🟠 **ÉLEVÉ** -> **RÉSOLU**
+* **Localisation :** `/app/api/review/files/extract/route.ts` · `/app/api/review/dossiers/route.ts` · `lib/file-version-service.ts` · `components/review/NewDossierModal.tsx` · `components/FileVersionManager.tsx`
+* **Résolution :** Ajout d'une route authentifiée `POST /api/review/files/extract` utilisant `unpdf` pour extraire le texte réel des PDF (ainsi que DOCX/XLSX/CSV/Markdown) et retourner un SHA-256 `node:crypto` sur les octets bruts. Le hash 32 bits client dans `generateChecksum()` est remplacé par une implémentation FIPS 180-4 SHA-256 (`sha256:<64 hex>`), et le serveur recalcule le SHA-256 réel sur les octets uploadés.
 
-#### DT-ARCH-18 — Payload SSE contenant le dossier complet et les fichiers encodés
-* **Sévérité :** 🟠 **ÉLEVÉ**
-* **Localisation :** `/app/api/review/dossiers/route.ts:284-289` · `components/review/CollaborativeReviewPlatform.tsx:180-188`
-* **Constat :** Le `PATCH` envoie `updatedDossier` en entier, puis le hub diffuse `finalizedDossier` dans `payload.dossier`, y compris `trackedFiles[].versions[].contentUrl` en base64. Ce comportement est distinct de `SEC-11`, qui concerne une route SSE arbitraire non authentifiée.
-* **Impact :** Les octets de documents potentiellement confidentiels sont transmis à tous les abonnés SSE, avec un coût mémoire et réseau croissant ; l'exposition est amplifiée par le manque d'authentification de la route d'événements.
-* **Remédiation :** Diffuser uniquement `ref`, `version`, `status`, identifiants et métadonnées de fichiers. Le destinataire récupère le contenu via une route de téléchargement authentifiée ; le serveur reconstruit l'état du dossier depuis la base.
+#### DT-ARCH-18 — Purge des octets base64 du flux SSE & route de téléchargement RBAC — ✅ **RÉSOLU (hors stockage S3/R2)**
+* **Sévérité :** 🟠 **ÉLEVÉ** -> **RÉSOLU (Couche Transport/SSE)**
+* **Localisation :** `lib/review-service.ts` (`stripDossierFileBytesForBroadcast`, `mergeDossierPreservingCachedFileBytes`) · `/app/api/review/dossiers/route.ts` · `/app/api/events/route.ts` · `/app/api/review/file-versions/[versionId]/download/route.ts`
+* **Résolution :** Les événements SSE ne transportent plus les octets base64 (`data:...`) : ils sont remplacés par l'URL authentifiée `/api/review/file-versions/[versionId]/download?dossierId=...` protégée par vérification de session et RBAC (admin/manager/maker/checker/même département). La persistence S3/SQL reste couverte par `DT-ARCH-15`.
 
-#### DT-ARCH-19 — Pièces jointes invisibles dans la liste et cachées dans le studio
-* **Sévérité :** 🟡 **MODÉRÉE**
-* **Localisation :** `components/review/CollaborativeReviewPlatform.tsx:646-650` · `components/review/DossierReviewStudioModal.tsx:112,680-714`
-* **Constat :** L'en-tête de la liste n'affiche que `Dossier`, `Statut` et `Actions`. Dans le studio, `isDetailsOpen` vaut `false` par défaut et `FileVersionManager` est rendu sous la section repliée `Détails → Fichiers`. Le modal de soumission ne présente aucun inventaire des fichiers envoyés.
-* **Impact :** Le relecteur ne voit pas d'un coup d'œil qu'un livrable existe, et la soumission peut sembler vide alors qu'un dossier est transmis.
-* **Remédiation :** Ajouter un badge de nombre de fichiers dans la liste, un onglet `Fichiers` au premier niveau du studio et un manifeste des versions dans le modal de soumission.
+#### DT-ARCH-19 — Visibilité des pièces jointes dans la liste et le studio — ✅ **RÉSOLU**
+* **Sévérité :** 🟡 **MODÉRÉE** -> **RÉSOLU**
+* **Localisation :** `components/review/CollaborativeReviewPlatform.tsx` · `components/review/DossierReviewStudioModal.tsx`
+* **Résolution :** Ajout d'un indicateur du nombre de pièces jointes (`Paperclip`) dans chaque ligne de la liste des dossiers, promotion de la gestion documentaire vers un onglet de premier niveau `Fichiers (N)` dans le studio, et ajout d'un « Manifeste des livrables transmis » dans la modale de soumission.
 
 ### 3.4 Dettes de Fiabilité des Notifications de Tâches
 
@@ -243,37 +221,26 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 
 ---
 
-## 4. Feuille de Route Priorisée
+## 4. Feuille de Route Restante (Dépendances Infrastructure / Base de Données / Décisions Produit)
 
 ```
-[Priorité 1 - Vital]        DT-ARCH-01 (Persistance PostgreSQL Dossiers)
-                            DT-ARCH-15 (Stockage serveur des fichiers de revue)
-                            DT-ARCH-16 (Pièces jointes conservées à la création)
-                            DT-ARCH-02 (Cron/Worker Rappels Serveur)
-                            DT-ARCH-20 (Source de vérité unique notifications)
-                            DT-ARCH-21 (File d'envoi durable, idempotence & journal)
-                            DT-ARCH-22 (Web Push via service worker)
-                            DT-ARCH-23 (Canal e-mail & préférences utilisateur)
-                            DT-ARCH-24 (Fuseaux horaires & DST pour les échéances)
-[Priorité 2 - Sécurité]     SEC-07 (CSP & HSTS dans next.config.ts)
-                            DT-ARCH-05 (IP réelle dans l'Audit Trail)
-                            DT-ARCH-04 (Durcissement RLS SQL)
-                            DT-ARCH-17 (Extraction PDF & SHA-256 réel)
-                            DT-ARCH-18 (SSE sans octets de fichiers)
-                            SEC-03 (Suppression du secret d'authentification hardcodé)
-                            SEC-11 (Sécurisation de POST /api/events)
-                            SEC-12 (Durcissement du fallback d'authentification JSON)
-[Priorité 3 - Architecture] DT-ARCH-06 (Suppression ensureDatabaseTables au runtime)
-                            DT-ARCH-07 (Unification des rôles système / métier)
-                            DT-ARCH-03 (Redis Pub/Sub pour le SSE)
-                            SEC-08 (Rate limiting distribué)
-[Priorité 4 - Résilience]   DT-ARCH-08 (Rollback sur écriture optimiste des tâches)
-                            DT-ARCH-09 (Résolution conflits offline)
-                            DT-ARCH-10 (Attribution auto superviseur PRD)
-                            DT-ARCH-14 (Rappels atomiques & journalisés)
-[Priorité 5 - Outils & UI]  DT-ARCH-11 (Génération PDF serveur)
-                            DT-ARCH-12 (Tests E2E Playwright)
-                            DT-ARCH-13 (Health checks métier complets)
-                            DT-ARCH-19 (Visibilité des fichiers dans la revue)
-                            SEC-10 (SCA/Dépendances dans la CI)
+[Priorité 1 - Base & Stockage]  DT-ARCH-01 (Persistance PostgreSQL Dossiers)
+                                DT-ARCH-15 (Stockage objet S3/R2 & tables review_files)
+                                SEC-12     (Désactivation/durcissement fallback JSON en prod)
+[Priorité 2 - Notifications]    DT-ARCH-02 (Cron/Worker Rappels Serveur)
+                                DT-ARCH-20 (Source de vérité unique notifications)
+                                DT-ARCH-21 (File d'envoi durable, idempotence & journal)
+                                DT-ARCH-14 (Rappels atomiques & journalisés)
+                                DT-ARCH-22 (Web Push via service worker & clés VAPID)
+                                DT-ARCH-23 (Canal e-mail & préférences utilisateur)
+                                DT-ARCH-24 (Fuseaux horaires & DST pour les échéances)
+[Priorité 3 - SQL & Scalabilité] DT-ARCH-04 (Durcissement RLS SQL)
+                                DT-ARCH-06 (Suppression ensureDatabaseTables au runtime)
+                                DT-ARCH-07 (Unification des rôles système / métier)
+                                DT-ARCH-03 (Redis Pub/Sub pour le SSE multi-instances)
+                                SEC-08     (Rate limiting distribué Redis)
+                                DT-ARCH-09 (OCC / version sur la table tasks)
+[Priorité 4 - Qualité E2E]      DT-ARCH-12 (Tests E2E Playwright)
 ```
+
+> **Déjà résolus en v3.5 (code applicatif) :** `SEC-03`, `SEC-07`, `SEC-08` (couverture auth), `SEC-10`, `SEC-11`, `DT-ARCH-05`, `DT-ARCH-08`, `DT-ARCH-10`, `DT-ARCH-11`, `DT-ARCH-13`, `DT-ARCH-16`, `DT-ARCH-17`, `DT-ARCH-18`, `DT-ARCH-19`.

@@ -41,6 +41,8 @@ export interface Task {
   color?: string;
   status?: TaskStatus;
   trackedFiles?: import('./file-version').TrackedFile[];
+  syncPending?: boolean;
+  syncError?: string;
 }
 
 export interface Category {

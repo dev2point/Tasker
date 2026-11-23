@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import { isDatabaseConfigured, getPostgresClient, ensureDatabaseTables } from '@/lib/db/pg';
+import { GEMINI_MODEL } from '@/lib/ai-config';
+import { realtimeHub } from '@/lib/realtime-hub';
+import { isR2Configured, getR2Config } from '@/lib/storage/r2';
+import {
+  getSupabaseKeyFormat,
+  isSupabaseServerConfigured,
+  SUPABASE_REALTIME_CHANNEL,
+} from '@/lib/supabase/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,8 +72,27 @@ export async function GET() {
         secureCookies: isProd,
       },
       ai: {
-        engine: 'Google Gemini 2.5 Flash',
+        engine: GEMINI_MODEL,
         configured: Boolean(process.env.GEMINI_API_KEY),
+      },
+      realtime: {
+        engine: isSupabaseServerConfigured()
+          ? 'Supabase Realtime + In-process SSE Hub'
+          : 'In-process SSE Hub',
+        supabaseConfigured: isSupabaseServerConfigured(),
+        keyFormat: getSupabaseKeyFormat(),
+        channel: SUPABASE_REALTIME_CHANNEL,
+        subscribers: realtimeHub.getSubscriberCount(),
+        activePresence: realtimeHub.getActivePresence().length,
+      },
+      storage: {
+        provider: isR2Configured() ? 'Cloudflare R2' : 'inline_fallback',
+        configured: isR2Configured(),
+        bucket: isR2Configured() ? getR2Config().bucketName : null,
+      },
+      reviewDossiers: {
+        storage: isR2Configured() ? 'runtime_with_r2_objects' : 'in_memory_runtime',
+        persistent: false,
       },
     },
   };

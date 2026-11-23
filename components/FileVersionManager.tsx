@@ -14,6 +14,7 @@ import {
   restoreFileVersion,
   downloadSnapshotFile,
   updateSnapshotModeration,
+  generateChecksum,
 } from '@/lib/file-version-service';
 import { computeLineDiff } from '@/lib/review-service';
 import { extractDocxText, extractXlsxData, extractCsvData } from '@/lib/office-parser';
@@ -97,8 +98,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [formIsMajor, setFormIsMajor] = useState(false);
   const [uploadedBase64, setUploadedBase64] = useState<string | undefined>();
+  const [uploadedChecksum, setUploadedChecksum] = useState<string | undefined>();
   const [uploadedSize, setUploadedSize] = useState<number>(0);
   const [uploadedName, setUploadedName] = useState<string>('');
+  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>();
+  const [uploadedVersionId, setUploadedVersionId] = useState<string | undefined>();
+  const [uploadedStorageProvider, setUploadedStorageProvider] = useState<'r2' | 'inline'>('inline');
+  const [uploadedR2Key, setUploadedR2Key] = useState<string | undefined>();
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{
     file: TrackedFile;
@@ -110,25 +116,85 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
   const selectedFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
 
-  // Handle local file picking for New Document (with automated Word/Excel extraction)
+  // Handle local file picking for New Document or New Version (with R2 upload + Word/Excel/PDF extraction + SHA-256)
   const handleLocalFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const targetFileId =
+      uploadFileTarget?.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const targetVersionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    setUploadedFileId(targetFileId);
+    setUploadedVersionId(targetVersionId);
+    setUploadedR2Key(undefined);
+    setUploadedStorageProvider('inline');
+    setUploadedBase64(undefined);
     setUploadedName(file.name);
     setUploadedSize(file.size);
     setFormFileName(file.name);
     setIsExtracting(true);
 
+    let storedInR2 = false;
+
     try {
+      const buffer = await file.arrayBuffer();
+      const rawBytes = new Uint8Array(buffer);
+      setUploadedChecksum(generateChecksum(rawBytes));
+
+      // Upload binary payload to Cloudflare R2 when configured
+      try {
+        const uploadForm = new FormData();
+        uploadForm.append('file', file);
+        uploadForm.append('fileId', targetFileId);
+        uploadForm.append('versionId', targetVersionId);
+        const uploadRes = await fetch('/api/review/files/upload', {
+          method: 'POST',
+          body: uploadForm,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (typeof uploadData.checksum === 'string') {
+            setUploadedChecksum(uploadData.checksum);
+          }
+          if (uploadData.storageProvider === 'r2' && uploadData.r2Key) {
+            storedInR2 = true;
+            setUploadedStorageProvider('r2');
+            setUploadedR2Key(uploadData.r2Key);
+            setUploadedBase64(uploadData.downloadUrl);
+          }
+        }
+      } catch {
+        // Offline fallback keeps inline data URL
+      }
+
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'docx') {
-        const buffer = await file.arrayBuffer();
+      if (ext === 'pdf') {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch('/api/review/files/extract', {
+            method: 'POST',
+            body: formData,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (typeof data.textContent === 'string') {
+              setFormTextContent(data.textContent);
+            }
+            if (typeof data.checksum === 'string') {
+              setUploadedChecksum(data.checksum);
+            }
+            setFormGridData(undefined);
+          }
+        } catch {
+          // Offline fallback keeps binary SHA-256
+        }
+      } else if (ext === 'docx') {
         const text = await extractDocxText(buffer);
         setFormTextContent(text);
         setFormGridData(undefined);
       } else if (ext === 'xlsx' || ext === 'xls') {
-        const buffer = await file.arrayBuffer();
         const sheets = await extractXlsxData(buffer);
         setFormGridData(sheets);
         const summaryText = sheets
@@ -151,11 +217,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       setIsExtracting(false);
     }
 
-    const readerData = new FileReader();
-    readerData.onload = (event) => {
-      setUploadedBase64(event.target?.result as string);
-    };
-    readerData.readAsDataURL(file);
+    if (!storedInR2) {
+      const readerData = new FileReader();
+      readerData.onload = (event) => {
+        setUploadedBase64(event.target?.result as string);
+      };
+      readerData.readAsDataURL(file);
+    }
   };
 
   // Create new Tracked File
@@ -168,9 +236,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
     const size = uploadedSize || (formTextContent ? new Blob([formTextContent]).size : 1024);
     const newTracked = createTrackedFile({
+      id: uploadedFileId,
+      versionId: uploadedVersionId,
       fileName,
       sizeBytes: size,
+      storageProvider: uploadedStorageProvider,
+      r2Key: uploadedR2Key,
       contentUrl: uploadedBase64,
+      checksum: uploadedChecksum,
       textContent: formTextContent || undefined,
       gridData: formGridData,
       authorName: currentUser.name,
@@ -193,8 +266,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormTextContent('');
     setFormGridData(undefined);
     setUploadedBase64(undefined);
+    setUploadedChecksum(undefined);
     setUploadedSize(0);
     setUploadedName('');
+    setUploadedFileId(undefined);
+    setUploadedVersionId(undefined);
+    setUploadedStorageProvider('inline');
+    setUploadedR2Key(undefined);
   };
 
   // Add new revision version to existing tracked file
@@ -208,9 +286,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     const size = uploadedSize || (formTextContent ? new Blob([formTextContent]).size : (uploadFileTarget.versions[0]?.sizeBytes || 1024));
 
     const updated = addNewFileVersion(uploadFileTarget, {
+      versionId: uploadedVersionId,
       fileName,
       sizeBytes: size,
+      storageProvider: uploadedR2Key ? 'r2' : undefined,
+      r2Key: uploadedR2Key,
       contentUrl: uploadedBase64 || uploadFileTarget.versions[0]?.contentUrl,
+      checksum: uploadedChecksum,
       textContent: formTextContent || uploadFileTarget.versions[0]?.textContent,
       gridData: formGridData || uploadFileTarget.versions[0]?.gridData,
       authorName: currentUser.name,
@@ -232,8 +314,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setFormTextContent('');
     setFormGridData(undefined);
     setUploadedBase64(undefined);
+    setUploadedChecksum(undefined);
     setUploadedSize(0);
     setUploadedName('');
+    setUploadedFileId(undefined);
+    setUploadedVersionId(undefined);
+    setUploadedStorageProvider('inline');
+    setUploadedR2Key(undefined);
     setFormIsMajor(false);
   };
 
@@ -343,13 +430,19 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               type="button"
               size="sm"
               onClick={() => {
+                setUploadFileTarget(null);
                 setFormFileName('');
                 setFormSummary('');
                 setFormDescription('');
                 setFormTextContent('');
                 setUploadedBase64(undefined);
+                setUploadedChecksum(undefined);
                 setUploadedSize(0);
                 setUploadedName('');
+                setUploadedFileId(undefined);
+                setUploadedVersionId(undefined);
+                setUploadedStorageProvider('inline');
+                setUploadedR2Key(undefined);
                 setIsNewFileModalOpen(true);
               }}
               className="h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer gap-1.5"
@@ -485,8 +578,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                       setFormSummary('');
                       setFormTextContent(selectedFile.versions[0]?.textContent || '');
                       setUploadedBase64(undefined);
+                      setUploadedChecksum(undefined);
                       setUploadedSize(0);
                       setUploadedName('');
+                      setUploadedFileId(undefined);
+                      setUploadedVersionId(undefined);
+                      setUploadedStorageProvider('inline');
+                      setUploadedR2Key(undefined);
                       setFormIsMajor(false);
                       setIsNewVersionModalOpen(true);
                     }}

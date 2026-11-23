@@ -80,6 +80,8 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
   const [previewMode, setPreviewMode] = useState<'paper' | 'dark'>('paper');
   const [copied, setCopied] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [isExportingServerPdf, setIsExportingServerPdf] = useState(false);
+  const [pdfExportError, setPdfExportError] = useState<string | null>(null);
 
   const printableRef = useRef<HTMLDivElement>(null);
 
@@ -142,6 +144,37 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
       setTimeout(() => setCopied(false), 2500);
     } catch (err) {
       console.error('Erreur copie Markdown:', err);
+    }
+  };
+
+  const handleDownloadServerPdf = async () => {
+    setPdfExportError(null);
+    setIsExportingServerPdf(true);
+    soundManager.playClickSound();
+    try {
+      const res = await fetch('/api/reports/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metrics, config }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setPdfExportError(err?.error || 'Impossible de générer le PDF serveur.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport-${reportType}-${period}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setPdfExportError('Erreur réseau lors de la génération du PDF serveur.');
+    } finally {
+      setIsExportingServerPdf(false);
     }
   };
 
@@ -260,6 +293,18 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
             <Button
               type="button"
+              variant="outline"
+              size="xs"
+              disabled={isExportingServerPdf}
+              onClick={handleDownloadServerPdf}
+              className="border-emerald-500/40 bg-emerald-950/80 text-emerald-200 hover:bg-emerald-500/20 text-xs rounded-xl gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isExportingServerPdf ? 'Génération...' : 'PDF Serveur'}</span>
+            </Button>
+
+            <Button
+              type="button"
               size="xs"
               onClick={handlePrint}
               className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl gap-1.5 shadow-md cursor-pointer"
@@ -268,6 +313,11 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               <span>Imprimer / PDF</span>
             </Button>
           </div>
+          {pdfExportError && (
+            <div className="w-full text-[11px] text-rose-300 bg-rose-500/15 border border-rose-500/30 rounded-lg px-3 py-1.5">
+              {pdfExportError}
+            </div>
+          )}
         </div>
 
         {/* =================================================================== */}

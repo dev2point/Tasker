@@ -287,6 +287,57 @@ export const notifications = pgTable('notifications', {
   }),
 ]).enableRLS();
 
+// 8. Review Files Metadata Table (Backed by Cloudflare R2 Object Storage)
+export const reviewFiles = pgTable('review_files', {
+  id: varchar('id', { length: 96 }).primaryKey(),
+  dossierId: varchar('dossier_id', { length: 96 }).notNull(),
+  name: varchar('name', { length: 500 }).notNull(),
+  originalName: varchar('original_name', { length: 500 }).notNull(),
+  fileType: varchar('file_type', { length: 32 }).notNull(),
+  currentVersion: varchar('current_version', { length: 32 }).notNull().default('v1.0'),
+  description: text('description'),
+  tags: jsonb('tags').$type<string[]>().default([]).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, () => [
+  pgPolicy('review_files_all_policy', {
+    for: 'all',
+    to: 'public',
+    using: sql`true`,
+    withCheck: sql`true`,
+  }),
+]).enableRLS();
+
+// 9. Review File Versions Table (Cloudflare R2 Object Keys & Server SHA-256)
+export const reviewFileVersions = pgTable('review_file_versions', {
+  id: varchar('id', { length: 96 }).primaryKey(),
+  fileId: varchar('file_id', { length: 96 })
+    .notNull()
+    .references(() => reviewFiles.id, { onDelete: 'cascade' }),
+  dossierId: varchar('dossier_id', { length: 96 }).notNull(),
+  versionNumber: varchar('version_number', { length: 32 }).notNull(),
+  fileName: varchar('file_name', { length: 500 }).notNull(),
+  fileType: varchar('file_type', { length: 32 }).notNull(),
+  sizeBytes: integer('size_bytes').notNull().default(0),
+  storageProvider: varchar('storage_provider', { length: 32 }).notNull().default('r2'),
+  r2ObjectKey: text('r2_object_key'),
+  checksumSha256: varchar('checksum_sha256', { length: 128 }).notNull(),
+  authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
+  authorName: varchar('author_name', { length: 255 }).notNull(),
+  summary: text('summary'),
+  extractedText: text('extracted_text'),
+  gridData: jsonb('grid_data'),
+  isCurrent: boolean('is_current').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, () => [
+  pgPolicy('review_file_versions_all_policy', {
+    for: 'all',
+    to: 'public',
+    using: sql`true`,
+    withCheck: sql`true`,
+  }),
+]).enableRLS();
+
 // Relational Definitions
 export const usersRelations = relations(users, ({ many }) => ({
   createdTasks: many(tasks, { relationName: 'creator' }),
