@@ -9,6 +9,7 @@ import {
   detectTaskNotificationTransitions,
   toTaskNotification,
   mergeNotificationsById,
+  buildDossierSubmissionNotification,
 } from '@/lib/notifications-helper';
 import {
   canReceiveRealtimeEvent,
@@ -212,6 +213,55 @@ describe('Task Lifecycle Statuses & Assignment/Completion Notifications', () => 
     });
 
     expect(selfCompleted).toHaveLength(0);
+  });
+
+  it('notifies the assigned checker when a dossier is submitted, without notifying the maker', () => {
+    const maker = { id: 'usr-maker-1', name: 'Test io' };
+    const checker = { id: 'usr-checker-bam', name: 'Bam Stage' };
+    const dossier = {
+      id: 'dossier-submit-1',
+      ref: 'DOS-2026-FIS-481',
+      title: 'Liasse fiscale 2026',
+      status: 'soumis' as const,
+      checker,
+      estimatedDeliverableDate: '2026-11-30',
+      submittedAt: '2026-11-23T10:00:00.000Z',
+      version: 2,
+    };
+
+    const draft = buildDossierSubmissionNotification({
+      dossier,
+      previousStatus: 'brouillon',
+      actor: maker,
+      nowIso: '2026-11-23T10:00:00.000Z',
+    });
+
+    expect(draft).not.toBeNull();
+    if (!draft) return;
+    expect(draft.recipientId).toBe(checker.id);
+    expect(draft.actorId).toBe(maker.id);
+    expect(draft.taskId).toBe(dossier.id);
+    expect(draft.type).toBe('assigned');
+    expect(draft.dueDate).toBe('2026-11-30');
+    expect(draft.triggerTime).toBe('2026-11-23T10:00:00.000Z');
+    expect(draft.read).toBe(false);
+    expect(toTaskNotification(draft).targetUserId).toBe(checker.id);
+
+    expect(
+      buildDossierSubmissionNotification({
+        dossier,
+        previousStatus: 'soumis',
+        actor: maker,
+      })
+    ).toBeNull();
+
+    expect(
+      buildDossierSubmissionNotification({
+        dossier: { ...dossier, checker: { id: maker.id, name: maker.name } },
+        previousStatus: 'brouillon',
+        actor: maker,
+      })
+    ).toBeNull();
   });
 
   it('merges notifications cleanly without duplicates and respects SSE recipient scoping', () => {

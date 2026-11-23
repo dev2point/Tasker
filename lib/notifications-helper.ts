@@ -118,6 +118,47 @@ export function toTaskNotification(draft: NotificationDraft): TaskNotification {
   };
 }
 
+export interface DossierSnapshotForNotification {
+  id: string;
+  ref: string;
+  title: string;
+  status: string | null;
+  checker?: { id?: string; name?: string } | null;
+  estimatedDeliverableDate?: string;
+  submittedAt?: string;
+  version?: number;
+}
+
+export function buildDossierSubmissionNotification(params: {
+  dossier: DossierSnapshotForNotification;
+  previousStatus?: string | null;
+  actor: NotificationActor;
+  nowIso?: string;
+}): NotificationDraft | null {
+  const { dossier, previousStatus, actor, nowIso = new Date().toISOString() } = params;
+  const checkerId = dossier.checker?.id;
+
+  if (dossier.status !== 'soumis' || previousStatus === 'soumis') return null;
+  if (!checkerId || checkerId === actor.id) return null;
+
+  const triggerTime = dossier.submittedAt || nowIso;
+  const taskTitle = `${dossier.ref} — ${dossier.title}`.slice(0, 500);
+
+  return {
+    id: `notif-review-${dossier.id}-v${dossier.version || 1}-${checkerId}`.slice(0, 96),
+    recipientId: checkerId,
+    actorId: actor.id,
+    actorName: actor.name,
+    taskId: dossier.id,
+    taskTitle,
+    dueDate: dossier.estimatedDeliverableDate || nowIso.slice(0, 10),
+    type: 'assigned',
+    message: `${actor.name} vous a soumis le dossier « ${dossier.ref} » (${dossier.title}) pour revue.`,
+    triggerTime,
+    read: false,
+  };
+}
+
 /**
  * Merges incoming notifications (server/SSE/local) without duplicates, preserving newest triggerTime.
  */
