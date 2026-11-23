@@ -16,3 +16,6 @@ next-env.d.ts
 
 #AI artifacts
 .omo/
+
+# Local upload fixtures
+/test-uploads/
