@@ -56,6 +56,8 @@ describe('Health & Database Schema Architecture', () => {
     expect(data.services).toHaveProperty('database');
     expect(data.services).toHaveProperty('auth');
     expect(data.services).toHaveProperty('ai');
+    expect(data.services).toHaveProperty('storage');
+    expect(Array.isArray(data.services.storage.missingConfigKeys)).toBe(true);
     expect(data.services.auth.engine).toContain('Better Auth');
     expect(data.services.database.driver).toContain('PostgreSQL');
   });

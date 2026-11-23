@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { isDatabaseConfigured, getPostgresClient, ensureDatabaseTables } from '@/lib/db/pg';
 import { GEMINI_MODEL } from '@/lib/ai-config';
 import { realtimeHub } from '@/lib/realtime-hub';
-import { isR2Configured, getR2Config } from '@/lib/storage/r2';
+import { isR2Configured, getR2Config, getR2MissingConfigKeys } from '@/lib/storage/r2';
 import {
   getSupabaseKeyFormat,
   isSupabaseServerConfigured,
@@ -89,6 +89,7 @@ export async function GET() {
         provider: isR2Configured() ? 'Cloudflare R2' : 'inline_fallback',
         configured: isR2Configured(),
         bucket: isR2Configured() ? getR2Config().bucketName : null,
+        missingConfigKeys: getR2MissingConfigKeys(),
       },
       reviewDossiers: {
         storage: isR2Configured() ? 'runtime_with_r2_objects' : 'in_memory_runtime',
