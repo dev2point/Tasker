@@ -49,6 +49,7 @@ import {
   Check,
   Copy,
   RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -105,6 +106,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
   const [uploadedVersionId, setUploadedVersionId] = useState<string | undefined>();
   const [uploadedStorageProvider, setUploadedStorageProvider] = useState<'r2' | 'inline'>('inline');
   const [uploadedR2Key, setUploadedR2Key] = useState<string | undefined>();
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{
     file: TrackedFile;
@@ -125,104 +127,122 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       uploadFileTarget?.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const targetVersionId = `ver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
-    setUploadedFileId(targetFileId);
-    setUploadedVersionId(targetVersionId);
+    setUploadError(null);
+    setUploadedFileId(undefined);
+    setUploadedVersionId(undefined);
     setUploadedR2Key(undefined);
     setUploadedStorageProvider('inline');
     setUploadedBase64(undefined);
-    setUploadedName(file.name);
-    setUploadedSize(file.size);
-    setFormFileName(file.name);
+    setUploadedChecksum(undefined);
+    setUploadedSize(0);
+    setUploadedName('');
     setIsExtracting(true);
-
-    let storedInR2 = false;
 
     try {
       const buffer = await file.arrayBuffer();
       const rawBytes = new Uint8Array(buffer);
-      setUploadedChecksum(generateChecksum(rawBytes));
+      const checksum = generateChecksum(rawBytes);
 
-      // Upload binary payload to Cloudflare R2 when configured
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('fileId', targetFileId);
+      uploadForm.append('versionId', targetVersionId);
+
+      let uploadData: {
+        checksum?: string;
+        storageProvider?: string;
+        r2Key?: string;
+        downloadUrl?: string;
+      };
       try {
-        const uploadForm = new FormData();
-        uploadForm.append('file', file);
-        uploadForm.append('fileId', targetFileId);
-        uploadForm.append('versionId', targetVersionId);
         const uploadRes = await fetch('/api/review/files/upload', {
           method: 'POST',
           body: uploadForm,
         });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (typeof uploadData.checksum === 'string') {
-            setUploadedChecksum(uploadData.checksum);
-          }
-          if (uploadData.storageProvider === 'r2' && uploadData.r2Key) {
-            storedInR2 = true;
-            setUploadedStorageProvider('r2');
-            setUploadedR2Key(uploadData.r2Key);
-            setUploadedBase64(uploadData.downloadUrl);
-          }
+        if (!uploadRes.ok) {
+          const errorPayload = (await uploadRes.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(errorPayload.error || 'Téléversement R2 indisponible.');
         }
-      } catch {
-        // Offline fallback keeps inline data URL
+        uploadData = await uploadRes.json();
+      } catch (err) {
+        setUploadError(
+          err instanceof Error ? err.message : 'Téléversement R2 indisponible.'
+        );
+        return;
       }
 
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'pdf') {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          const res = await fetch('/api/review/files/extract', {
-            method: 'POST',
-            body: formData,
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (typeof data.textContent === 'string') {
-              setFormTextContent(data.textContent);
-            }
-            if (typeof data.checksum === 'string') {
-              setUploadedChecksum(data.checksum);
-            }
-            setFormGridData(undefined);
-          }
-        } catch {
-          // Offline fallback keeps binary SHA-256
-        }
-      } else if (ext === 'docx') {
-        const text = await extractDocxText(buffer);
-        setFormTextContent(text);
-        setFormGridData(undefined);
-      } else if (ext === 'xlsx' || ext === 'xls') {
-        const sheets = await extractXlsxData(buffer);
-        setFormGridData(sheets);
-        const summaryText = sheets
-          .map((s) => `--- Feuille : ${s.name} (${s.rowCount} lignes) ---\n` + s.rows.map((r) => r.join(' | ')).join('\n'))
-          .join('\n\n');
-        setFormTextContent(summaryText);
-      } else if (ext === 'csv') {
-        const text = await file.text();
-        const sheet = extractCsvData(text, file.name);
-        setFormGridData([sheet]);
-        setFormTextContent(text);
-      } else if (file.type.startsWith('text/') || ext === 'md' || ext === 'txt' || ext === 'json') {
-        const text = await file.text();
-        setFormTextContent(text);
-        setFormGridData(undefined);
+      if (
+        uploadData.storageProvider !== 'r2' ||
+        typeof uploadData.r2Key !== 'string' ||
+        !uploadData.r2Key
+      ) {
+        setUploadError('Le fichier n’a pas été stocké dans Cloudflare R2.');
+        return;
       }
-    } catch (err) {
-      console.error('Erreur lors de la lecture du fichier Office :', err);
+
+      setUploadedFileId(targetFileId);
+      setUploadedVersionId(targetVersionId);
+      setUploadedName(file.name);
+      setUploadedSize(file.size);
+      setUploadedChecksum(uploadData.checksum || checksum);
+      setUploadedR2Key(uploadData.r2Key);
+      setUploadedBase64(uploadData.downloadUrl);
+      setUploadedStorageProvider('r2');
+      setFormFileName(file.name);
+
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (ext === 'pdf') {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/review/files/extract', {
+              method: 'POST',
+              body: formData,
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (typeof data.textContent === 'string') {
+                setFormTextContent(data.textContent);
+              }
+              if (typeof data.checksum === 'string') {
+                setUploadedChecksum(data.checksum);
+              }
+              setFormGridData(undefined);
+            }
+          } catch (err) {
+            console.warn('Extraction PDF indisponible, empreinte binaire conservée.', err);
+          }
+        } else if (ext === 'docx') {
+          const text = await extractDocxText(buffer);
+          setFormTextContent(text);
+          setFormGridData(undefined);
+        } else if (ext === 'xlsx' || ext === 'xls') {
+          const sheets = await extractXlsxData(buffer);
+          setFormGridData(sheets);
+          const summaryText = sheets
+            .map((s) => `--- Feuille : ${s.name} (${s.rowCount} lignes) ---\n` + s.rows.map((r) => r.join(' | ')).join('\n'))
+            .join('\n\n');
+          setFormTextContent(summaryText);
+        } else if (ext === 'csv') {
+          const text = await file.text();
+          const sheet = extractCsvData(text, file.name);
+          setFormGridData([sheet]);
+          setFormTextContent(text);
+        } else if (file.type.startsWith('text/') || ext === 'md' || ext === 'txt' || ext === 'json') {
+          const text = await file.text();
+          setFormTextContent(text);
+          setFormGridData(undefined);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la lecture du fichier Office :', err);
+      }
     } finally {
       setIsExtracting(false);
-    }
-
-    if (!storedInR2) {
-      const readerData = new FileReader();
-      readerData.onload = (event) => {
-        setUploadedBase64(event.target?.result as string);
-      };
-      readerData.readAsDataURL(file);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (newVersionInputRef.current) newVersionInputRef.current.value = '';
     }
   };
 
@@ -231,6 +251,11 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     e.preventDefault();
     const fileName = (formFileName || uploadedName || 'document-travail.txt').trim();
     if (!fileName) return;
+    if (uploadError) return;
+    if (uploadedName && (!uploadedR2Key || uploadedStorageProvider !== 'r2')) {
+      setUploadError('Le fichier doit être téléversé dans Cloudflare R2 avant l’enregistrement.');
+      return;
+    }
 
     soundManager.playClickSound();
 
@@ -273,12 +298,18 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setUploadedVersionId(undefined);
     setUploadedStorageProvider('inline');
     setUploadedR2Key(undefined);
+    setUploadError(null);
   };
 
   // Add new revision version to existing tracked file
   const handleAddNewVersion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFileTarget) return;
+    if (uploadError) return;
+    if (uploadedName && (!uploadedR2Key || uploadedStorageProvider !== 'r2')) {
+      setUploadError('Le fichier doit être téléversé dans Cloudflare R2 avant l’enregistrement.');
+      return;
+    }
 
     soundManager.playClickSound();
 
@@ -322,6 +353,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
     setUploadedStorageProvider('inline');
     setUploadedR2Key(undefined);
     setFormIsMajor(false);
+    setUploadError(null);
   };
 
   // Moderation decision confirmed by supervisor
@@ -443,6 +475,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 setUploadedVersionId(undefined);
                 setUploadedStorageProvider('inline');
                 setUploadedR2Key(undefined);
+                setUploadError(null);
                 setIsNewFileModalOpen(true);
               }}
               className="h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer gap-1.5"
@@ -471,7 +504,10 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setIsNewFileModalOpen(true)}
+                onClick={() => {
+                  setUploadError(null);
+                  setIsNewFileModalOpen(true);
+                }}
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
@@ -585,6 +621,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                       setUploadedVersionId(undefined);
                       setUploadedStorageProvider('inline');
                       setUploadedR2Key(undefined);
+                      setUploadError(null);
                       setFormIsMajor(false);
                       setIsNewVersionModalOpen(true);
                     }}
@@ -857,6 +894,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 </div>
               </div>
 
+              {uploadError && (
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-200">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="text-[11px] font-bold text-slate-300 block mb-1">
                   Nom du document
@@ -998,6 +1042,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                   ) : null}
                 </div>
               </div>
+
+              {uploadError && (
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-200">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
 
               <div>
                 <label className="text-[11px] font-bold text-slate-300 block mb-1">
