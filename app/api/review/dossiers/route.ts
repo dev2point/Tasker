@@ -19,6 +19,17 @@ import {
   isR2Configured,
   uploadBufferToR2,
 } from '@/lib/storage/r2';
+import {
+  ensureDatabaseTables,
+  getDrizzleDb,
+  isDatabaseConfigured,
+} from '@/lib/db/pg';
+import { notifications as notificationsTable } from '@/src/db/schema';
+import {
+  buildDossierSubmissionNotification,
+  toTaskNotification,
+} from '@/lib/notifications-helper';
+import type { TaskNotification } from '@/types/task';
 
 export const dynamic = 'force-dynamic';
 
@@ -422,6 +433,48 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    let submissionNotification: TaskNotification | null = null;
+    if (eventType === 'DOSSIER_SUBMITTED') {
+      const draft = buildDossierSubmissionNotification({
+        dossier: finalizedDossier,
+        previousStatus,
+        actor: { id: user.id, name: user.name },
+      });
+
+      if (draft) {
+        submissionNotification = toTaskNotification(draft);
+        const db = getDrizzleDb();
+
+        if (db && isDatabaseConfigured()) {
+          try {
+            const setup = await ensureDatabaseTables();
+            if (setup.success) {
+              await db
+                .insert(notificationsTable)
+                .values({
+                  id: draft.id,
+                  recipientId: draft.recipientId,
+                  actorId: draft.actorId,
+                  actorName: draft.actorName,
+                  taskId: draft.taskId,
+                  taskTitle: draft.taskTitle,
+                  dueDate: draft.dueDate,
+                  dueTime: draft.dueTime || null,
+                  type: draft.type,
+                  message: draft.message,
+                  read: false,
+                  triggerTime: new Date(draft.triggerTime),
+                  createdAt: new Date(draft.triggerTime),
+                })
+                .onConflictDoNothing();
+            }
+          } catch (notifErr) {
+            console.warn('Dossier submission notification insert skipped:', notifErr);
+          }
+        }
+      }
+    }
+
     // Broadcast SSE event WITHOUT inline base64 file bytes (DT-ARCH-18)
     const safeBroadcastDossier = stripDossierFileBytesForBroadcast(finalizedDossier);
     realtimeHub.broadcast({
@@ -443,6 +496,26 @@ export async function PATCH(req: NextRequest) {
         newStatus: finalizedDossier.status,
       },
     });
+
+    if (submissionNotification) {
+      realtimeHub.broadcast({
+        type: 'TASK_ASSIGNED',
+        actor: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          department: user.department,
+          role: user.role,
+        },
+        targetId: finalizedDossier.id,
+        targetRef: finalizedDossier.ref,
+        targetUserId: submissionNotification.targetUserId,
+        message: submissionNotification.message || alertMessage,
+        payload: {
+          notification: submissionNotification,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

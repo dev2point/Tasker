@@ -8,7 +8,14 @@ import {
 } from '@/app/api/review/dossiers/route';
 import { executeWorkflowTransition, togglePreventiveLock } from '@/lib/review-service';
 import { realtimeHub, RealtimeEvent } from '@/lib/realtime-hub';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 import { ReviewDossier, WorkflowActor } from '@/types/review';
+
+const notificationInsert = vi.hoisted(() => ({
+  values: vi.fn((_values: unknown) => ({
+    onConflictDoNothing: vi.fn(async () => undefined),
+  })),
+}));
 
 // Mock auth-server to simulate authenticated manager / checker
 vi.mock('@/lib/auth-server', () => ({
@@ -19,6 +26,14 @@ vi.mock('@/lib/auth-server', () => ({
     role: 'manager',
     department: 'Fiscalité',
   })),
+}));
+
+vi.mock('@/lib/db/pg', () => ({
+  getDrizzleDb: () => ({
+    insert: () => ({ values: notificationInsert.values }),
+  }),
+  isDatabaseConfigured: () => true,
+  ensureDatabaseTables: async () => ({ success: true, message: 'ok' }),
 }));
 
 describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution (DT-REV-01)', () => {
@@ -82,6 +97,63 @@ describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution
   beforeEach(() => {
     _setRuntimeDossiersForTesting([JSON.parse(JSON.stringify(initialDossier))]);
     realtimeHub.reset();
+    notificationInsert.values.mockClear();
+  });
+
+  it('persists and broadcasts a targeted notification when the dossier is submitted to its checker', async () => {
+    const draftDossier: ReviewDossier = {
+      ...initialDossier,
+      status: 'brouillon',
+      submittedAt: undefined,
+      auditTrail: [],
+    };
+    _setRuntimeDossiersForTesting([JSON.parse(JSON.stringify(draftDossier))]);
+    realtimeHub.reset();
+    notificationInsert.values.mockClear();
+
+    vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
+      id: mockMaker.id,
+      name: mockMaker.name,
+      email: mockMaker.email,
+      role: mockMaker.role,
+      department: mockMaker.department,
+    });
+
+    const events: RealtimeEvent[] = [];
+    const unsub = realtimeHub.subscribe('test-sub-notification', (event) => events.push(event));
+
+    const req = new NextRequest('http://localhost:3000/api/review/dossiers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dossierId: draftDossier.id,
+        expectedVersion: 1,
+        updatedDossier: {
+          ...draftDossier,
+          status: 'soumis',
+          submittedAt: '2026-11-23T10:00:00.000Z',
+        },
+      }),
+    });
+
+    const res = await patchDossier(req);
+    unsub();
+
+    expect(res.status).toBe(200);
+    expect(notificationInsert.values).toHaveBeenCalledTimes(1);
+    expect(notificationInsert.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientId: mockChecker.id,
+        actorId: mockMaker.id,
+        taskId: draftDossier.id,
+        type: 'assigned',
+        read: false,
+      })
+    );
+
+    const targeted = events.find((event) => event.type === 'TASK_ASSIGNED');
+    expect(targeted?.targetUserId).toBe(mockChecker.id);
+    expect(targeted?.payload?.notification?.targetUserId).toBe(mockChecker.id);
   });
 
   it('increments version monotonically on successful PATCH updates', async () => {
