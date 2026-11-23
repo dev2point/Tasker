@@ -123,9 +123,11 @@ export interface DossierSnapshotForNotification {
   ref: string;
   title: string;
   status: string | null;
+  maker?: { id?: string; name?: string } | null;
   checker?: { id?: string; name?: string } | null;
   estimatedDeliverableDate?: string;
   submittedAt?: string;
+  correctionRequestedAt?: string;
   version?: number;
 }
 
@@ -154,6 +156,38 @@ export function buildDossierSubmissionNotification(params: {
     dueDate: dossier.estimatedDeliverableDate || nowIso.slice(0, 10),
     type: 'assigned',
     message: `${actor.name} vous a soumis le dossier « ${dossier.ref} » (${dossier.title}) pour revue.`,
+    triggerTime,
+    read: false,
+  };
+}
+
+export function buildDossierCorrectionNotification(params: {
+  dossier: DossierSnapshotForNotification;
+  previousStatus?: string | null;
+  actor: NotificationActor;
+  nowIso?: string;
+}): NotificationDraft | null {
+  const { dossier, previousStatus, actor, nowIso = new Date().toISOString() } = params;
+  const makerId = dossier.maker?.id;
+
+  if (dossier.status !== 'demande_corrections' || previousStatus === 'demande_corrections') {
+    return null;
+  }
+  if (!makerId || makerId === actor.id) return null;
+
+  const triggerTime = dossier.correctionRequestedAt || nowIso;
+  const taskTitle = `${dossier.ref} — ${dossier.title}`.slice(0, 500);
+
+  return {
+    id: `notif-correction-${dossier.id}-v${dossier.version || 1}-${makerId}`.slice(0, 96),
+    recipientId: makerId,
+    actorId: actor.id,
+    actorName: actor.name,
+    taskId: dossier.id,
+    taskTitle,
+    dueDate: dossier.estimatedDeliverableDate || nowIso.slice(0, 10),
+    type: 'assigned',
+    message: `${actor.name} a demandé des corrections sur le dossier « ${dossier.ref} » (${dossier.title}).`,
     triggerTime,
     read: false,
   };
