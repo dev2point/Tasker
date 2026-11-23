@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     isolate: true,
+    fileParallelism: false,
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
   },
   resolve: {
