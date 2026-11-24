@@ -9,21 +9,11 @@ on:
       - 'src/db/**'
       - 'drizzle/**'
       - 'drizzle.config.ts'
-      - 'scripts/migrate.mjs'
       - 'scripts/verify-db.mjs'
       - '.github/workflows/drizzle-migrations.yml'
   workflow_dispatch:
-    inputs:
-      command:
-        description: 'Action à exécuter'
-        required: true
-        default: 'migrate'
-        type: choice
-        options:
-          - migrate
-          - push
 
-concurrency:
+ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
@@ -82,13 +72,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          if [ "${{ inputs.command }}" = "push" ]; then
-            echo "📦 Application du schéma via drizzle-kit push..."
-            npx drizzle-kit push
-          else
-            echo "📦 Exécution de la synchronisation sécurisée et idempotente de la base de données..."
-            node scripts/migrate.mjs
-          fi
+          echo "📦 Exécution des migrations Drizzle..."
+          npm run db:migrate
 
           echo "🔍 Vérification des tables et politiques RLS créées..."
           node scripts/verify-db.mjs
