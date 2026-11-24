@@ -17,6 +17,21 @@ const notificationInsert = vi.hoisted(() => ({
   })),
 }));
 
+const webPushDeliveryMock = vi.hoisted(() => ({
+  enqueue: vi.fn(async (_notification: unknown) => ['delivery-1']),
+  process: vi.fn(async (_options: unknown) => ({
+    sent: 1,
+    failed: 0,
+    expired: 0,
+    retried: 0,
+  })),
+}));
+
+vi.mock('@/lib/web-push/delivery', () => ({
+  enqueueWebPushDeliveries: webPushDeliveryMock.enqueue,
+  processPendingWebPushDeliveries: webPushDeliveryMock.process,
+}));
+
 // Mock auth-server to simulate authenticated manager / checker
 vi.mock('@/lib/auth-server', () => ({
   getAuthenticatedUser: vi.fn(async () => ({
@@ -98,6 +113,8 @@ describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution
     _setRuntimeDossiersForTesting([JSON.parse(JSON.stringify(initialDossier))]);
     realtimeHub.reset();
     notificationInsert.values.mockClear();
+    webPushDeliveryMock.enqueue.mockClear();
+    webPushDeliveryMock.process.mockClear();
   });
 
   it('persists and broadcasts a targeted notification when the dossier is submitted to its checker', async () => {
@@ -150,6 +167,18 @@ describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution
         read: false,
       })
     );
+    await vi.waitFor(() => {
+      expect(webPushDeliveryMock.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetUserId: mockChecker.id,
+          taskId: draftDossier.id,
+        })
+      );
+      expect(webPushDeliveryMock.process).toHaveBeenCalledWith({
+        recipientId: mockChecker.id,
+        limit: 5,
+      });
+    });
 
     const targeted = events.find((event) => event.type === 'TASK_ASSIGNED');
     expect(targeted?.targetUserId).toBe(mockChecker.id);
@@ -199,6 +228,18 @@ describe('Piste 2 — Optimistic Concurrency Control (OCC) & Conflict Resolution
         read: false,
       })
     );
+    await vi.waitFor(() => {
+      expect(webPushDeliveryMock.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetUserId: mockMaker.id,
+          taskId: reviewedDossier.id,
+        })
+      );
+      expect(webPushDeliveryMock.process).toHaveBeenCalledWith({
+        recipientId: mockMaker.id,
+        limit: 5,
+      });
+    });
 
     const targeted = events.find((event) => event.type === 'TASK_ASSIGNED');
     expect(targeted?.targetUserId).toBe(mockMaker.id);

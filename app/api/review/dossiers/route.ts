@@ -31,6 +31,10 @@ import {
   toTaskNotification,
 } from '@/lib/notifications-helper';
 import type { TaskNotification } from '@/types/task';
+import {
+  enqueueWebPushDeliveries,
+  processPendingWebPushDeliveries,
+} from '@/lib/web-push/delivery';
 
 export const dynamic = 'force-dynamic';
 
@@ -523,6 +527,18 @@ export async function PATCH(req: NextRequest) {
           notification: workflowNotification,
         },
       });
+
+      const notification = workflowNotification;
+      void enqueueWebPushDeliveries(notification)
+        .then(() =>
+          processPendingWebPushDeliveries({
+            recipientId: notification.targetUserId,
+            limit: 5,
+          })
+        )
+        .catch((error: unknown) => {
+          console.error('Web Push delivery failed:', error);
+        });
     }
 
     return NextResponse.json({
