@@ -22,7 +22,7 @@ export const ServiceWorkerRegister: React.FC = () => {
       'serviceWorker' in navigator &&
       window.location.protocol.startsWith('http')
     ) {
-      window.addEventListener('load', () => {
+      const registerServiceWorker = () => {
         navigator.serviceWorker
           .register('/sw.js')
           .then(() => {
@@ -31,7 +31,14 @@ export const ServiceWorkerRegister: React.FC = () => {
           .catch((error) => {
             console.warn('PlanIt ServiceWorker registration failed:', error);
           });
-      });
+      };
+
+      if (document.readyState === 'complete') {
+        registerServiceWorker();
+      } else {
+        window.addEventListener('load', registerServiceWorker);
+        return () => window.removeEventListener('load', registerServiceWorker);
+      }
     }
   }, []);
 

@@ -86,3 +86,68 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+function isPushPayload(value) {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.title === 'string' &&
+    typeof value.body === 'string' &&
+    typeof value.url === 'string' &&
+    typeof value.tag === 'string' &&
+    typeof value.notificationId === 'string'
+  );
+}
+
+self.addEventListener('push', (event) => {
+  const fallback = {
+    title: 'Planit — nouvelle notification',
+    body: 'Vous avez une nouvelle notification.',
+    url: '/',
+    tag: 'planit-notification',
+    notificationId: 'unknown',
+  };
+
+  let payload = fallback;
+  if (event.data) {
+    try {
+      const parsed = JSON.parse(event.data.text());
+      if (isPushPayload(parsed)) payload = parsed;
+    } catch (error) {
+      console.warn('Invalid Web Push payload:', error);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      tag: payload.tag,
+      icon: '/pwa-192x192.png',
+      badge: '/icon.svg',
+      data: { url: payload.url, notificationId: payload.notificationId },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const data = event.notification.data || {};
+  let target = '/';
+  if (typeof data.url === 'string') {
+    try {
+      const resolved = new URL(data.url, self.location.origin);
+      if (resolved.origin === self.location.origin) target = `${resolved.pathname}${resolved.search}`;
+    } catch (error) {
+      console.warn('Invalid notification URL:', error);
+    }
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const existing = clientList.find((client) => client.url.includes(target));
+      if (existing) return existing.focus();
+      return clients.openWindow(target);
+    })
+  );
+});
