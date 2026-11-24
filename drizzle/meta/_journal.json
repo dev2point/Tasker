@@ -29,6 +29,13 @@
       "when": 1795516849261,
       "tag": "0003_web_push",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795528336232,
+      "tag": "0004_reconcile_user_schema",
+      "breakpoints": true
     }
   ]
 }
