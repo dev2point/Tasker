@@ -90,3 +90,15 @@ stateDiagram-v2
    npm run dev
    ```
 4. Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+
+---
+
+## 📲 Web Push
+
+Les notifications navigateur utilisent Web Push + VAPID, sans provider externe. Générer les clés une fois :
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Configurer `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` et `WEB_PUSH_VAPID_SUBJECT` (voir `.env.example`). La clé privée reste côté serveur. Appliquer la migration Drizzle `0003_web_push` avec `npm run db:migrate`, puis activer les notifications depuis l'accueil. Le transport SSE/Supabase Realtime reste actif pour les onglets ouverts ; Web Push couvre les notifications hors ligne. Le support natif (desktop/mobile) reste hors scope.
