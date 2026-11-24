@@ -1,4 +1,4 @@
-CREATE TABLE "activity_logs" (
+CREATE TABLE IF NOT EXISTS "activity_logs" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"task_id" varchar(64),
 	"user_id" varchar(64),
@@ -8,7 +8,7 @@ CREATE TABLE "activity_logs" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "categories" (
+CREATE TABLE IF NOT EXISTS "categories" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"name" varchar(128) NOT NULL,
 	"color" varchar(32) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE "categories" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "tasks" (
+CREATE TABLE IF NOT EXISTS "tasks" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"title" varchar(500) NOT NULL,
 	"description" text,
@@ -45,7 +45,7 @@ CREATE TABLE "tasks" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE TABLE "workspace_members" (
+CREATE TABLE IF NOT EXISTS "workspace_members" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"workspace_id" varchar(64) NOT NULL,
 	"userId" varchar(64) NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE "workspace_members" (
 	"joined_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "workspaces" (
+CREATE TABLE IF NOT EXISTS "workspaces" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" text,
@@ -75,12 +75,79 @@ CREATE TABLE "workspaces" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_task_id_tasks_id_fk" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "categories" ADD CONSTRAINT "categories_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_creator_id_users_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "workspaces" ADD CONSTRAINT "workspaces_owner_id_users_id_fk" FOREIGN KEY ("owner_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.activity_logs')
+			AND conname = 'activity_logs_task_id_tasks_id_fk'
+	) THEN
+		ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_task_id_tasks_id_fk" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.activity_logs')
+			AND conname = 'activity_logs_user_id_users_id_fk'
+	) THEN
+		ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.categories')
+			AND conname = 'categories_workspace_id_workspaces_id_fk'
+	) THEN
+		ALTER TABLE "categories" ADD CONSTRAINT "categories_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.tasks')
+			AND conname = 'tasks_workspace_id_workspaces_id_fk'
+	) THEN
+		ALTER TABLE "tasks" ADD CONSTRAINT "tasks_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.tasks')
+			AND conname = 'tasks_creator_id_users_id_fk'
+	) THEN
+		ALTER TABLE "tasks" ADD CONSTRAINT "tasks_creator_id_users_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.tasks')
+			AND conname = 'tasks_assignee_id_users_id_fk'
+	) THEN
+		ALTER TABLE "tasks" ADD CONSTRAINT "tasks_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.workspace_members')
+			AND conname = 'workspace_members_workspace_id_workspaces_id_fk'
+	) THEN
+		ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.workspace_members')
+			AND conname = 'workspace_members_userId_users_id_fk'
+	) THEN
+		ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_constraint
+		WHERE connamespace = 'public'::regnamespace
+			AND conrelid = to_regclass('public.workspaces')
+			AND conname = 'workspaces_owner_id_users_id_fk'
+	) THEN
+		ALTER TABLE "workspaces" ADD CONSTRAINT "workspaces_owner_id_users_id_fk" FOREIGN KEY ("owner_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+	END IF;
+END
+$$;
