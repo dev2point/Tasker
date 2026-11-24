@@ -22,6 +22,13 @@
       "when": 1789382493780,
       "tag": "0002_cuddly_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795516849261,
+      "tag": "0003_web_push",
+      "breakpoints": true
     }
   ]
 }

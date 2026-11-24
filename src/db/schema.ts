@@ -1,4 +1,16 @@
-import { pgTable, pgEnum, varchar, text, timestamp, boolean, integer, jsonb, pgPolicy } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  pgEnum,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  jsonb,
+  pgPolicy,
+  uniqueIndex,
+  index,
+} from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 // PostgreSQL Enum for User Roles (provides strict validation & native dropdowns in Supabase Studio)
@@ -286,6 +298,108 @@ export const notifications = pgTable('notifications', {
     using: sql`true`,
   }),
 ]).enableRLS();
+
+export const pushSubscriptions = pgTable(
+  'push_subscriptions',
+  {
+    id: varchar('id', { length: 96 }).primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    userAgent: text('user_agent'),
+    failureCount: integer('failure_count').notNull().default(0),
+    lastStatusCode: integer('last_status_code'),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('push_subscriptions_endpoint_unique').on(table.endpoint),
+    index('push_subscriptions_user_id_idx').on(table.userId),
+    pgPolicy('push_subscriptions_select_policy', {
+      for: 'select',
+      to: 'public',
+      using: sql`true`,
+    }),
+    pgPolicy('push_subscriptions_insert_policy', {
+      for: 'insert',
+      to: 'public',
+      withCheck: sql`true`,
+    }),
+    pgPolicy('push_subscriptions_update_policy', {
+      for: 'update',
+      to: 'public',
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    pgPolicy('push_subscriptions_delete_policy', {
+      for: 'delete',
+      to: 'public',
+      using: sql`true`,
+    }),
+  ]
+).enableRLS();
+
+export const notificationDeliveries = pgTable(
+  'notification_deliveries',
+  {
+    id: varchar('id', { length: 96 }).primaryKey(),
+    notificationId: varchar('notification_id', { length: 96 })
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    recipientId: text('recipient_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    channel: varchar('channel', { length: 32 }).notNull().default('web_push'),
+    dedupeKey: varchar('dedupe_key', { length: 160 }).notNull(),
+    status: varchar('status', { length: 32 }).notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(5),
+    nextAttemptAt: timestamp('next_attempt_at').notNull().defaultNow(),
+    sentAt: timestamp('sent_at'),
+    lastStatusCode: integer('last_status_code'),
+    lastError: text('last_error'),
+    payload: jsonb('payload')
+      .$type<{
+        title: string;
+        body: string;
+        url: string;
+        tag: string;
+        notificationId: string;
+      }>()
+      .notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('notification_deliveries_dedupe_key_unique').on(table.dedupeKey),
+    index('notification_deliveries_pending_idx').on(table.status, table.nextAttemptAt),
+    pgPolicy('notification_deliveries_select_policy', {
+      for: 'select',
+      to: 'public',
+      using: sql`true`,
+    }),
+    pgPolicy('notification_deliveries_insert_policy', {
+      for: 'insert',
+      to: 'public',
+      withCheck: sql`true`,
+    }),
+    pgPolicy('notification_deliveries_update_policy', {
+      for: 'update',
+      to: 'public',
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    pgPolicy('notification_deliveries_delete_policy', {
+      for: 'delete',
+      to: 'public',
+      using: sql`true`,
+    }),
+  ]
+).enableRLS();
 
 // 8. Review Files Metadata Table (Backed by Cloudflare R2 Object Storage)
 export const reviewFiles = pgTable('review_files', {
