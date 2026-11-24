@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as schema from '@/src/db/schema';
 import { GET as getHealth } from '@/app/api/health/route';
@@ -29,11 +29,52 @@ describe('Health & Database Schema Architecture', () => {
     expect(schema.usersRelations).toBeDefined();
   });
 
+  it('uses drizzle-kit migrate as the only npm migration command', () => {
+    const manifest = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'));
+
+    expect(manifest.scripts['db:migrate']).toBe('drizzle-kit migrate');
+    expect(manifest.scripts['db:push']).toBeUndefined();
+  });
+
+  it('runs drizzle-kit migrate in CI without alternate migration paths', () => {
+    const workflow = readFileSync(
+      resolve(process.cwd(), '.github/workflows/drizzle-migrations.yml'),
+      'utf8',
+    );
+
+    expect(workflow).toContain('npm run db:migrate');
+    expect(workflow).not.toContain('drizzle-kit push');
+    expect(workflow).not.toContain('scripts/migrate.mjs');
+  });
+
+  it('does not ship homegrown migration scripts', () => {
+    expect(existsSync(resolve(process.cwd(), 'scripts/migrate.mjs'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'scripts/migrate.ts'))).toBe(false);
+  });
+
+  it('ships a Drizzle migration chain that provisions the core schema', () => {
+    const migrationDir = resolve(process.cwd(), 'drizzle');
+    const journal = JSON.parse(readFileSync(resolve(migrationDir, 'meta/_journal.json'), 'utf8'));
+    const sql = journal.entries
+      .map((entry: { tag: string }) => readFileSync(resolve(migrationDir, `${entry.tag}.sql`), 'utf8'))
+      .join('\n');
+
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "notifications"');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "review_files"');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "review_file_versions"');
+    expect(sql).toContain('"pole" TEXT');
+    expect(sql).toContain('"grade" TEXT');
+  });
+
   it('targets unified "user"(id) for foreign keys and migrates legacy users FKs', () => {
     const pgInit = readFileSync(resolve(process.cwd(), 'lib/db/pg.ts'), 'utf8');
-    const migrateScript = readFileSync(resolve(process.cwd(), 'scripts/migrate.mjs'), 'utf8');
+    const migrationDir = resolve(process.cwd(), 'drizzle');
+    const journal = JSON.parse(readFileSync(resolve(migrationDir, 'meta/_journal.json'), 'utf8'));
+    const migrations = journal.entries
+      .map((entry: { tag: string }) => readFileSync(resolve(migrationDir, `${entry.tag}.sql`), 'utf8'))
+      .join('\n');
 
-    for (const source of [pgInit, migrateScript]) {
+    for (const source of [pgInit, migrations]) {
       expect(source).toContain('REFERENCES "user"(id)');
       expect(source).not.toContain('REFERENCES users(id)');
       expect(source).not.toContain('workspace_members_userId_user_id_fk');
