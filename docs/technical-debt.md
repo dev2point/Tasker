@@ -1,9 +1,9 @@
 # Dette Technique & Registre de Sécurité — mfisca-tasks
 
 **Projet :** `mfisca-tasks` (Plateforme de Gestion de Tâches & Revue Métier)  
-**Date de révision :** 20 Novembre 2026
+**Date de révision :** 24 Novembre 2026
 **Auteur :** Audit Sécurité Applicative (AppSec Senior) & Équipe Ingénierie  
-**Version du document :** 3.5 (Résolution des dettes solvables applicativement & sécurisation SSE/PDF/Sync)
+**Version du document :** 3.6 (Résolution des dettes solvables applicativement & sécurisation SSE/PDF/Sync/Web Push)
 
 ---
 
@@ -12,9 +12,9 @@
 Ce document consigne l'ensemble des vulnérabilités de sécurité applicative, des écarts d'architecture, des compromis d'implémentation et des dettes techniques du projet **mfisca-tasks**, ainsi que l'état d'avancement des résolutions.
 
 L'application repose sur une pile Next.js 16 (App Router), React 19, Better Auth 1.7, Drizzle ORM avec PostgreSQL/Supabase et l'API Google Gemini. 
-Une vague de remédiation applicative (v3.5) a permis de **résoudre l'intégralité des dettes solvables dans le code source sans dépendance d'infrastructure externe** (`SEC-03`, `SEC-07`, `SEC-08` sur auth, `SEC-10`, `SEC-11`, `DT-ARCH-05`, `DT-ARCH-08`, `DT-ARCH-10`, `DT-ARCH-11`, `DT-ARCH-13`, `DT-ARCH-16`, `DT-ARCH-17`, `DT-ARCH-18`, `DT-ARCH-19`).
+Une vague de remédiation applicative (v3.5/v3.6) a permis de **résoudre l'intégralité des dettes solvables dans le code source sans dépendance d'infrastructure externe** (`SEC-03`, `SEC-07`, `SEC-08` sur auth, `SEC-10`, `SEC-11`, `DT-ARCH-05`, `DT-ARCH-08`, `DT-ARCH-10`, `DT-ARCH-11`, `DT-ARCH-13`, `DT-ARCH-16`, `DT-ARCH-17`, `DT-ARCH-18`, `DT-ARCH-19`, `DT-ARCH-22`).
 
-Les pièces jointes bénéficient désormais de la conservation à la création (`POST /api/review/dossiers`), d'une extraction PDF serveur (`unpdf`), d'un véritable SHA-256 (FIPS 180-4 + `node:crypto`), d'une route de téléchargement authentifiée RBAC, d'une purge des octets base64 dans les diffusions SSE, ainsi que d'une **intégration Cloudflare R2 complète** (`/lib/storage/r2.ts`, `/api/review/files/upload`, streaming & URLs signées, tables Drizzle `review_files` et `review_file_versions`) et d'un **pont Supabase Realtime multi-instances** (`/lib/supabase/*`, HTTP Broadcast + WebSocket + Postgres Changes + Presence) avec repli local gracieux hors clés d'infrastructure. En revanche, l'activation effective de R2 et Supabase en production reste subordonnée au renseignement des variables d'environnement correspondantes, tandis que la migration complète des dossiers vers PostgreSQL (`DT-ARCH-01`), les politiques RLS par session (`DT-ARCH-04`), la suppression de `ensureDatabaseTables` (`DT-ARCH-06`), l'unification SQL des rôles (`DT-ARCH-07`), l'OCC SQL des tâches (`DT-ARCH-09`) et la chaîne complète de notification durable/cron/email/push/fuseaux (`DT-ARCH-02`, `DT-ARCH-14`, `DT-ARCH-20` à `DT-ARCH-24`) demeurent en attente d'infrastructure et d'approbation produit.
+Les pièces jointes bénéficient désormais de la conservation à la création (`POST /api/review/dossiers`), d'une extraction PDF serveur (`unpdf`), d'un véritable SHA-256 (FIPS 180-4 + `node:crypto`), d'une route de téléchargement authentifiée RBAC, d'une purge des octets base64 dans les diffusions SSE, ainsi que d'une **intégration Cloudflare R2 complète** (`/lib/storage/r2.ts`, `/api/review/files/upload`, streaming & URLs signées, tables Drizzle `review_files` et `review_file_versions`) et d'un **pont Supabase Realtime multi-instances** (`/lib/supabase/*`, HTTP Broadcast + WebSocket + Postgres Changes + Presence) avec repli local gracieux hors clés d'infrastructure. En revanche, l'activation effective de R2 et Supabase en production reste subordonnée au renseignement des variables d'environnement correspondantes, tandis que la migration complète des dossiers vers PostgreSQL (`DT-ARCH-01`), les politiques RLS par session (`DT-ARCH-04`), la suppression de `ensureDatabaseTables` (`DT-ARCH-06`), l'unification SQL des rôles (`DT-ARCH-07`), l'OCC SQL des tâches (`DT-ARCH-09`) et la chaîne complète de notification durable/cron/email/fuseaux (`DT-ARCH-02`, `DT-ARCH-14`, `DT-ARCH-20`, `DT-ARCH-21`, `DT-ARCH-23`, `DT-ARCH-24`) demeurent en attente d'infrastructure et d'approbation produit. Le transport Web Push standards-based est livré côté code (`DT-ARCH-22`) ; son activation réelle dépend de la migration `0003_web_push`, des clés VAPID et d'une autorisation explicite pour tout envoi externe.
 
 ---
 
@@ -198,12 +198,12 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Impact :** Notifications perdues en cas d'erreur SQL ou de redémarrage, doublons possibles, aucune retry, aucun dead-letter, aucune métrique de délivrabilité et aucune preuve opposable d'envoi.
 * **Remédiation :** Introduire une table `notification_deliveries` avec clé d'idempotence unique, statut, tentative, prochaine échéance et erreur fournisseur. Écrire notification et livraison dans la même transaction, puis traiter avec un worker utilisant verrouillage de ligne et backoff exponentiel.
 
-#### DT-ARCH-22 — Web Push non implémenté malgré la présence d'un service worker PWA
-* **Sévérité :** 🟠 **ÉLEVÉ**
-* **Localisation :** `public/sw.js:1-88` · `lib/reminders.ts:79-106` · `components/HomeWorkspace.tsx:551-590`
-* **Constat :** Le service worker ne contient que les événements `install`, `activate` et `fetch`. Il n'existe aucun gestionnaire `push`, `notificationclick`, aucun appel à `registration.showNotification`, aucune clé VAPID ni table d'abonnements Web Push. Le code utilise `new Notification(...)`, qui dépend d'un onglet actif.
-* **Impact :** Aucune notification n'est reçue lorsque l'onglet est fermé ou lorsque l'appareil est verrouillé. La PWA ne fournit aujourd'hui que du cache hors-ligne.
-* **Remédiation :** Ajouter l'abonnement Web Push, les clés VAPID côté serveur, une table `push_subscriptions`, les événements `push` et `notificationclick` dans `public/sw.js`, et remplacer `new Notification(...)` par `registration.showNotification(...)`.
+#### DT-ARCH-22 — Web Push standards-based implémenté (support natif hors scope)
+* **Sévérité :** ✅ **RÉSOLU CÔTÉ CODE**
+* **Localisation :** `public/sw.js` · `lib/web-push/*` · `app/api/push/*` · `src/db/schema.ts` · `drizzle/0003_web_push.sql` · `components/pwa/PushNotifications.tsx` · `app/api/review/dossiers/route.ts`
+* **Constat :** Les abonnements Web Push et la file de livraison durable sont implémentés avec VAPID, sans provider externe. Le service worker gère `push` et `notificationclick` via `registration.showNotification`. Les notifications du circuit de revue sont enfileuses et traitées par destinataire, en complément du transport SSE/Supabase Realtime pour les onglets ouverts.
+* **Impact :** La réception hors ligne est désormais prise en charge par le standard Web Push. Le support natif desktop/mobile reste hors scope ; la réception réelle nécessite la migration `0003_web_push`, les clés VAPID et une autorisation explicite pour tout envoi à un service push externe.
+* **Résolution :** Abonnement authentifié, clé publique exposée, désabonnement propriétaire, file idempotente avec retry/backoff et purge des abonnements expirés livrés. Aucun envoi réel ni migration de production n'a été exécuté pendant cette résolution.
 
 #### DT-ARCH-23 — Aucun canal de secours ni préférences de notification
 * **Sévérité :** 🟠 **ÉLEVÉ**
@@ -231,7 +231,7 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
                                 DT-ARCH-20 (Source de vérité unique notifications)
                                 DT-ARCH-21 (File d'envoi durable, idempotence & journal)
                                 DT-ARCH-14 (Rappels atomiques & journalisés)
-                                DT-ARCH-22 (Web Push via service worker & clés VAPID)
+                                DT-ARCH-22 ✅ (Web Push standards-based livré ; clés VAPID, migration et envoi réel en attente)
                                 DT-ARCH-23 (Canal e-mail & préférences utilisateur)
                                 DT-ARCH-24 (Fuseaux horaires & DST pour les échéances)
 [Priorité 3 - SQL & Scalabilité] DT-ARCH-04 (Durcissement RLS SQL)
