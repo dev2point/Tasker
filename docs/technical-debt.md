@@ -102,7 +102,7 @@ Ce registre recense **24 dettes techniques d'architecture** et **anomalies de co
 * **Localisation :** `lib/db/pg.ts` (`ensureDatabaseTables()`) vs répertoire `/drizzle`
 * **Constat :** Le schéma est maintenu à deux endroits distincts : d'une part les migrations officielles Drizzle Kit (`/drizzle/*.sql`), d'autre part une fonction utilitaire `ensureDatabaseTables()` qui exécute du DDL SQL brut (`CREATE TABLE IF NOT EXISTS`) appelée au runtime au début de presque chaque route API (`/api/tasks`, `/api/users`, `/api/categories`, etc.).
 * **Impact :** Dérives de schéma non tracées, ralentissement du cold start des routes API, risques de blocages ou de conflits de verrous DDL lors de requêtes concurrentes.
-* **Remédiation :** Supprimer les appels systématiques à `ensureDatabaseTables()` dans les routes API et s'appuyer exclusivement sur le cycle de migration de build/déploiement (`drizzle-kit migrate` ou script de release).
+* **Remédiation :** Supprimer les appels systématiques à `ensureDatabaseTables()` dans les routes API et s'appuyer exclusivement sur le cycle de migration de build/déploiement (`npm run db:migrate`, c'est-à-dire `drizzle-kit migrate`).
 
 #### DT-ARCH-07 — Écart de modélisation entre rôles système et rôles du workflow
 * **Sévérité :** 🟠 **ÉLEVÉ**

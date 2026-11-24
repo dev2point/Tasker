@@ -66,7 +66,7 @@ Ce module orchestre la synchronisation bidirectionnelle entre le cache local de 
 - **Résolution Dette SEC-01 (BOLA sur l'API Sync) :** Application systématique du filtrage RBAC sur `POST /api/sync` : un utilisateur non-administrateur ne peut extraire que les tâches dont il est le créateur ou l'assigné.
 - **Création du Healthcheck Système :** Mise en place de `/api/health` qui renvoie un statut HTTP 503 en cas de rupture de liaison PostgreSQL en production, permettant aux orchestrateurs (Render, Kubernetes) de relancer ou basculer les conteneurs.
 - **Persistance des Notifications & Enrichissement des Tâches (17/11/2026) :**
-  - Ajout de la table `notifications` dans `src/db/schema.ts`, `lib/db/pg.ts` et `scripts/migrate.mjs` (`recipient_id` FK → `"user".id` en cascade, index `notifications_recipient_idx` et politiques RLS dédiées) ainsi que de l'endpoint `/api/notifications`.
+  - Ajout de la table `notifications` dans `src/db/schema.ts`, `lib/db/pg.ts` et la chaîne de migrations Drizzle (`recipient_id` FK → `"user".id` en cascade, index `notifications_recipient_idx` et politiques RLS dédiées) ainsi que de l'endpoint `/api/notifications`.
   - Résolution automatique de `creatorName`, `assigneeName` et `assigneeAvatar` sur `GET` et `POST /api/tasks` pour garantir un affichage complet côté créateur et assigné.
   - Cohérence atomique des 4 statuts dans `sanitizeTaskForPostgres` (`todo`, `in_progress`, `waiting`, `completed`).
 - **Fiabilisation DDL PostgreSQL & CI/CD (17/11/2026) :**
