@@ -28,6 +28,7 @@ import { ReportType } from '@/lib/report-generator';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
+import { PushNotifications } from '@/components/pwa/PushNotifications';
 import { PWAFloatingInstallCard } from '@/components/pwa/PWAFloatingInstallCard';
 import { authClient, useSession, getSession } from '@/lib/auth-client';
 import {
@@ -1574,7 +1575,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           isSidebarCollapsed={isSidebarCollapsed}
         />
 
-        <ServiceWorkerRegister />
+        <>
+          <ServiceWorkerRegister />
+          <PushNotifications />
+        </>
         <OfflineIndicator />
         <PWAFloatingInstallCard />
       </div>
