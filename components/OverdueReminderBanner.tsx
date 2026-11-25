@@ -250,7 +250,7 @@ export const OverdueReminderBanner: React.FC<OverdueReminderBannerProps> = ({
               <span className="text-[#0B1F30] dark:text-slate-100 font-medium">à accomplir aujourd&apos;hui</span>
             </span>
           </div>
-          <Badge variant="soft" className="hidden sm:inline-flex text-[11px] font-bold py-0.5">
+          <Badge variant="default" className="hidden sm:inline-flex text-[11px] font-bold py-0.5">
             Rappels synchronisés
           </Badge>
         </div>

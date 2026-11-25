@@ -416,16 +416,16 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       case 'xlsx':
       case 'xls':
       case 'csv':
-        return <FileSpreadsheet className="w-4 h-4 text-emerald-400" />;
+        return <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
       case 'docx':
       case 'doc':
       case 'pdf':
-        return <FileText className="w-4 h-4 text-blue-400" />;
+        return <FileText className="w-4 h-4 text-[#004266] dark:text-[#7CC4EB]" />;
       case 'txt':
       case 'md':
-        return <FileCode className="w-4 h-4 text-amber-400" />;
+        return <FileCode className="w-4 h-4 text-[#F77F00] dark:text-[#FFB35C]" />;
       default:
-        return <File className="w-4 h-4 text-slate-400" />;
+        return <File className="w-4 h-4 text-[#486075] dark:text-slate-400" />;
     }
   };
 
@@ -436,21 +436,21 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full text-slate-100">
+    <div className="flex flex-col gap-4 w-full text-[#0B1F30] dark:text-slate-100">
       {/* Top Banner / Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/30">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#F4F7FA] dark:bg-[#061826]/70 border border-[#D8E2EC] dark:border-[#94B8D6]/20">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-8 h-8 rounded-xl bg-[#004266]/10 dark:bg-[#3895C9]/20 border border-[#004266]/20 dark:border-[#3895C9]/30 flex items-center justify-center text-[#004266] dark:text-[#7CC4EB]">
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+            <h4 className="text-xs sm:text-sm font-bold text-[#0B1F30] dark:text-white flex items-center gap-2">
               <span>Suivi &amp; Historique de Versions</span>
-              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 border-emerald-500/30 text-emerald-300">
+              <Badge variant="outline" className="text-[10px] bg-[#004266]/10 dark:bg-[#3895C9]/20 border-[#004266]/20 dark:border-[#3895C9]/30 text-[#004266] dark:text-[#7CC4EB]">
                 {files.length} document{files.length > 1 ? 's' : ''}
               </Badge>
             </h4>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-[#486075] dark:text-slate-400">
               Traçabilité complète, numérotation automatique, restauration en 1 clic et empreinte d&apos;intégrité.
             </p>
           </div>
@@ -460,6 +460,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
           <div className="flex items-center gap-2">
             <Button
               type="button"
+              variant="accent"
               size="sm"
               onClick={() => {
                 setUploadFileTarget(null);
@@ -478,7 +479,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 setUploadError(null);
                 setIsNewFileModalOpen(true);
               }}
-              className="h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer gap-1.5"
+              className="h-8 text-xs font-bold shadow-sm cursor-pointer gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Nouveau document versionné</span>
@@ -489,26 +490,27 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
       {/* Main Layout: Left File List + Right Version Timeline & Details */}
       {files.length === 0 ? (
-        <div className="p-8 text-center rounded-2xl bg-emerald-950/20 border border-emerald-500/20 flex flex-col items-center justify-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-slate-400">
-            <History className="w-6 h-6 text-amber-400" />
+        <div className="p-8 text-center rounded-2xl bg-[#F4F7FA]/70 dark:bg-[#061826]/40 border border-dashed border-[#D8E2EC] dark:border-[#94B8D6]/20 flex flex-col items-center justify-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF4E6] dark:bg-[#F77F00]/15 border border-[#F77F00]/25 dark:border-[#F77F00]/30 flex items-center justify-center">
+            <History className="w-6 h-6 text-[#F77F00]" />
           </div>
           <div className="max-w-md">
-            <p className="text-xs sm:text-sm font-bold text-white mb-1">
+            <p className="text-xs sm:text-sm font-bold text-[#0B1F30] dark:text-white mb-1">
               Aucun document versionné pour le moment
             </p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mb-4">
+            <p className="text-[11px] text-[#486075] dark:text-slate-400 leading-relaxed mb-4">
               Ajoutez des pièces jointes, comptes-rendus, tableaux Excel ou notes fiscales pour suivre l&apos;intégralité de leurs modifications avec auteurs, dates et versions successives.
             </p>
             {!readOnly && (
               <Button
                 type="button"
+                variant="accent"
                 size="sm"
                 onClick={() => {
                   setUploadError(null);
                   setIsNewFileModalOpen(true);
                 }}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
+                className="font-bold text-xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
                 Ajouter un premier fichier
@@ -520,7 +522,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* File selector column (4 cols on lg) */}
           <div className="lg:col-span-4 flex flex-col gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 px-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB] px-1">
               Documents suivis ({files.length})
             </span>
             <div className="flex flex-col gap-1.5 max-h-[420px] overflow-y-auto pr-1">
@@ -533,28 +535,28 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                     onClick={() => setSelectedFileId(file.id)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-2.5 ${
                       isSelected
-                        ? 'bg-[#061A13] border-emerald-400/60 shadow-lg ring-1 ring-emerald-400/40'
-                        : 'bg-emerald-950/40 border-emerald-500/20 hover:bg-emerald-900/30 text-slate-300'
+                        ? 'bg-white dark:bg-[#0B2438] border-[#004266] dark:border-[#3895C9] shadow-sm ring-1 ring-[#004266]/20 dark:ring-[#3895C9]/35'
+                        : 'bg-[#F4F7FA] dark:bg-[#061826]/55 border-[#D8E2EC] dark:border-[#94B8D6]/20 hover:bg-[#EDF2F7] dark:hover:bg-[#103049]/60 text-[#486075] dark:text-slate-300'
                     }`}
                   >
                     <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                      <div className="p-2 rounded-lg bg-emerald-950 border border-emerald-500/30 shrink-0 mt-0.5">
+                      <div className="p-2 rounded-lg bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 shrink-0 mt-0.5">
                         {getFileIcon(file.fileType)}
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-bold text-white truncate max-w-[170px]" title={file.name}>
+                          <span className="text-xs font-bold text-[#0B1F30] dark:text-white truncate max-w-[170px]" title={file.name}>
                             {file.name}
                           </span>
-                          <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-black bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border border-[#004266]/25 dark:border-[#3895C9]/35">
                             {file.currentVersion}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-0.5">
+                        <span className="text-[10px] text-[#486075] dark:text-slate-400 mt-0.5">
                           {file.versions.length} version{file.versions.length > 1 ? 's' : ''} • {latest ? formatBytes(latest.sizeBytes) : ''}
                         </span>
-                        <span className="text-[10px] text-slate-400 truncate">
-                          Dernier par <strong className="text-slate-300">{latest?.authorName || 'Collaborateur'}</strong>
+                        <span className="text-[10px] text-[#486075] dark:text-slate-400 truncate">
+                          Dernier par <strong className="text-[#0B1F30] dark:text-slate-200">{latest?.authorName || 'Collaborateur'}</strong>
                         </span>
                       </div>
                     </div>
@@ -566,7 +568,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                           e.stopPropagation();
                           handleDeleteTrackedFile(file.id);
                         }}
-                        className="text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 transition-colors cursor-pointer"
                         title="Supprimer ce document"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -582,22 +584,22 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
           {selectedFile && (
             <div className="lg:col-span-8 flex flex-col gap-3">
               {/* Active File Header */}
-              <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/65 border border-[#D8E2EC] dark:border-[#94B8D6]/20 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="p-2 rounded-lg bg-emerald-900/50 border border-emerald-500/30">
+                  <div className="p-2 rounded-lg bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25">
                     {getFileIcon(selectedFile.fileType)}
                   </div>
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h5 className="text-xs sm:text-sm font-bold text-white truncate">
+                      <h5 className="text-xs sm:text-sm font-bold text-[#0B1F30] dark:text-white truncate">
                         {selectedFile.name}
                       </h5>
-                      <span className="px-2 py-0.5 rounded-md font-mono text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      <span className="px-2 py-0.5 rounded-md font-mono text-[11px] font-black bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border border-[#004266]/25 dark:border-[#3895C9]/35">
                         Version active : {selectedFile.currentVersion}
                       </span>
                     </div>
                     {selectedFile.description && (
-                      <p className="text-[11px] text-slate-400 truncate">
+                      <p className="text-[11px] text-[#486075] dark:text-slate-400 truncate">
                         {selectedFile.description}
                       </p>
                     )}
@@ -625,9 +627,9 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                       setFormIsMajor(false);
                       setIsNewVersionModalOpen(true);
                     }}
-                    className="h-7 px-3 text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 gap-1.5 cursor-pointer"
+                    className="h-7 px-3 text-xs font-bold bg-[#FFF4E6] text-[#B85A00] border border-[#F77F00]/40 hover:bg-[#F77F00]/20 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/35 dark:hover:bg-[#F77F00]/30 gap-1.5 cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    <Plus className="w-3.5 h-3.5 text-[#F77F00]" />
                     <span>Publier nouvelle version ({calculateNextVersion(selectedFile.currentVersion, false)})</span>
                   </Button>
                 )}
@@ -635,11 +637,11 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
               {/* Timeline List of Snapshots */}
               <div className="flex flex-col gap-2.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 px-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB] px-1">
                   Chronologie complète des versions ({selectedFile.versions.length})
                 </span>
 
-                <div className="relative pl-6 space-y-3 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-emerald-500/30">
+                <div className="relative pl-6 space-y-3 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#D8E2EC] dark:before:bg-[#3895C9]/30">
                   {selectedFile.versions.map((snapshot, idx) => {
                     const isLatest = idx === 0;
                     return (
@@ -647,56 +649,56 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                         key={snapshot.id}
                         className={`relative p-3.5 rounded-xl border transition-all ${
                           isLatest
-                            ? 'bg-[#061A13] border-emerald-500/40 shadow-md ring-1 ring-emerald-500/20'
-                            : 'bg-emerald-950/30 border-emerald-500/20 text-slate-300 hover:bg-emerald-950/50'
+                            ? 'bg-white dark:bg-[#0B2438] border-[#004266]/45 dark:border-[#3895C9]/45 shadow-sm ring-1 ring-[#004266]/15 dark:ring-[#3895C9]/20'
+                            : 'bg-[#F4F7FA] dark:bg-[#061826]/45 border-[#D8E2EC] dark:border-[#94B8D6]/20 text-[#486075] dark:text-slate-300 hover:bg-[#EDF2F7] dark:hover:bg-[#103049]/40'
                         }`}
                       >
                         {/* Timeline dot */}
                         <div
                           className={`absolute -left-[23px] top-4 w-3.5 h-3.5 rounded-full border-2 ${
                             isLatest
-                              ? 'bg-emerald-400 border-slate-950 ring-2 ring-emerald-400/50'
-                              : 'bg-slate-700 border-emerald-500/50'
+                              ? 'bg-[#F77F00] border-white dark:border-[#0B2438] ring-2 ring-[#F77F00]/40'
+                              : 'bg-[#D8E2EC] dark:bg-slate-700 border-[#004266]/40 dark:border-[#3895C9]/50'
                           }`}
                         />
 
                         {/* Top line of snapshot */}
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded font-mono text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded font-mono text-xs font-black bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border border-[#004266]/25 dark:border-[#3895C9]/35">
                               {snapshot.versionNumber}
                             </span>
                             {isLatest && (
-                              <Badge className="bg-emerald-500 text-slate-950 font-bold text-[10px]">
+                              <Badge className="bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] font-bold text-[10px]">
                                 Version Active
                               </Badge>
                             )}
                             {snapshot.restoredFromVersion && (
-                              <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-300 border-amber-500/30">
+                              <Badge variant="outline" className="text-[10px] bg-[#FFF4E6] text-[#B85A00] border-[#F77F00]/35 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/35">
                                 Restauration de {snapshot.restoredFromVersion}
                               </Badge>
                             )}
                             {snapshot.moderationStatus === 'approved' && (
-                              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40 font-bold gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                 Validé par {snapshot.moderatedBy || 'Superviseur'}
                               </Badge>
                             )}
                             {snapshot.moderationStatus === 'rejected' && (
-                              <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold gap-1">
-                                <RotateCcw className="w-3 h-3 text-amber-400" />
+                              <Badge variant="outline" className="text-[10px] bg-[#FFF4E6] text-[#B85A00] border-[#F77F00]/35 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/40 font-bold gap-1">
+                                <RotateCcw className="w-3 h-3 text-[#F77F00]" />
                                 Corrections requises
                               </Badge>
                             )}
                             {(!snapshot.moderationStatus || snapshot.moderationStatus === 'pending') && (
-                              <Badge variant="outline" className="text-[10px] bg-slate-800/60 text-slate-400 border-slate-700/50">
+                              <Badge variant="outline" className="text-[10px] bg-slate-100 text-[#486075] border-[#D8E2EC] dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700/50">
                                 En attente de revue
                               </Badge>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                            <Clock className="w-3.5 h-3.5 text-slate-500" />
+                          <div className="flex items-center gap-2 text-[11px] text-[#486075] dark:text-slate-400">
+                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>
                               {new Date(snapshot.createdAt).toLocaleDateString('fr-FR', {
                                 day: '2-digit',
@@ -714,21 +716,21 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
 
                         {/* Author & Summary */}
                         <div className="flex flex-col gap-1 mb-2">
-                          <p className="text-xs font-semibold text-white">
+                          <p className="text-xs font-semibold text-[#0B1F30] dark:text-white">
                             {snapshot.summary}
                           </p>
                           {snapshot.moderationNote && (
-                            <div className="p-2 rounded-lg bg-black/40 border border-emerald-500/20 text-[11px] text-slate-300 mt-0.5">
-                              <span className="font-bold text-amber-400 mr-1.5">Note du modérateur :</span>
+                            <div className="p-2 rounded-lg bg-[#F4F7FA] dark:bg-[#061826]/70 border border-[#D8E2EC] dark:border-[#94B8D6]/20 text-[11px] text-[#486075] dark:text-slate-300 mt-0.5">
+                              <span className="font-bold text-[#B85A00] dark:text-[#FFB35C] mr-1.5">Note du modérateur :</span>
                               <span>« {snapshot.moderationNote} »</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
+                          <div className="flex items-center gap-2 text-[11px] text-[#486075] dark:text-slate-400 flex-wrap">
                             <span className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-emerald-400" />
-                              <strong className="text-slate-300">{snapshot.authorName}</strong>
+                              <User className="w-3 h-3 text-[#004266] dark:text-[#3895C9]" />
+                              <strong className="text-[#0B1F30] dark:text-slate-300">{snapshot.authorName}</strong>
                               {snapshot.authorDepartment && (
-                                <span className="text-slate-500">({snapshot.authorDepartment})</span>
+                                <span className="text-[#486075] dark:text-slate-500">({snapshot.authorDepartment})</span>
                               )}
                             </span>
                             <span>•</span>
@@ -739,13 +741,13 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => copyHash(snapshot.checksum!)}
-                                  className="flex items-center gap-1 font-mono text-[10px] text-slate-500 hover:text-emerald-300 cursor-pointer"
+                                  className="flex items-center gap-1 font-mono text-[10px] text-[#486075] dark:text-slate-500 hover:text-[#004266] dark:hover:text-[#7CC4EB] cursor-pointer"
                                   title="Cliquer pour copier l'empreinte de sécurité"
                                 >
-                                  <ShieldCheck className="w-3 h-3 text-purple-400" />
+                                  <ShieldCheck className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                                   <span>{snapshot.checksum.substring(0, 16)}...</span>
                                   {copiedHash === snapshot.checksum ? (
-                                    <Check className="w-2.5 h-2.5 text-emerald-400" />
+                                    <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                                   ) : (
                                     <Copy className="w-2.5 h-2.5 opacity-60" />
                                   )}
@@ -756,16 +758,16 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-2 pt-1 border-t border-emerald-500/10">
+                        <div className="flex items-center gap-2 pt-1.5 border-t border-[#E6EDF4] dark:border-[#94B8D6]/15 flex-wrap">
                           {/* Download snapshot */}
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => downloadSnapshotFile(snapshot)}
-                            className="h-6 px-2 text-[11px] font-medium text-slate-300 hover:text-white hover:bg-emerald-500/20 gap-1"
+                            className="h-6 px-2 text-[11px] font-medium gap-1"
                           >
-                            <Download className="w-3 h-3 text-emerald-400" />
+                            <Download className="w-3 h-3 text-[#004266] dark:text-[#3895C9]" />
                             <span>Télécharger</span>
                           </Button>
 
@@ -775,9 +777,9 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => setInspectingSnapshot(snapshot)}
-                            className="h-6 px-2 text-[11px] font-medium text-slate-300 hover:text-white hover:bg-emerald-500/20 gap-1"
+                            className="h-6 px-2 text-[11px] font-medium gap-1"
                           >
-                            <Eye className="w-3 h-3 text-blue-400" />
+                            <Eye className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                             <span>Inspecter</span>
                           </Button>
 
@@ -793,9 +795,9 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                                   v2: selectedFile.versions[0],
                                 });
                               }}
-                              className="h-6 px-2 text-[11px] font-medium text-slate-300 hover:text-white hover:bg-emerald-500/20 gap-1"
+                              className="h-6 px-2 text-[11px] font-medium gap-1"
                             >
-                              <History className="w-3 h-3 text-amber-400" />
+                              <History className="w-3 h-3 text-[#F77F00]" />
                               <span>Diff vs Actuelle</span>
                             </Button>
                           )}
@@ -807,10 +809,10 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => setModerationTarget({ file: selectedFile, snapshot })}
-                              className="h-6 px-2 text-[11px] font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-500/20 gap-1"
+                              className="h-6 px-2 text-[11px] font-bold text-[#B85A00] dark:text-[#FFB35C] hover:bg-[#F77F00]/10 gap-1"
                               title="Valider ou demander des corrections avec motif obligatoire"
                             >
-                              <ShieldCheck className="w-3 h-3 text-amber-400" />
+                              <ShieldCheck className="w-3 h-3 text-[#F77F00]" />
                               <span>Modérer</span>
                             </Button>
                           )}
@@ -822,9 +824,9 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRestore(selectedFile, snapshot)}
-                              className="h-6 px-2 text-[11px] font-bold text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/20 gap-1 ml-auto"
+                              className="h-6 px-2 text-[11px] font-bold text-[#004266] dark:text-[#7CC4EB] hover:bg-[#004266]/10 dark:hover:bg-[#3895C9]/20 gap-1 ml-auto"
                             >
-                              <RotateCcw className="w-3 h-3 text-emerald-400" />
+                              <RotateCcw className="w-3 h-3" />
                               <span>Restaurer cette version</span>
                             </Button>
                           )}
@@ -842,17 +844,17 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       {/* Modal: New Tracked File */}
       {isNewFileModalOpen && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-emerald-400" />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 rounded-2xl shadow-2xl p-5 text-[#0B1F30] dark:text-slate-100 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-3">
+              <h4 className="text-sm font-bold text-[#0B1F30] dark:text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#004266] dark:text-[#3895C9]" />
                 <span>Ajouter un document avec suivi de version</span>
               </h4>
               <button
                 type="button"
                 onClick={() => setIsNewFileModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -861,7 +863,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
             <form onSubmit={handleCreateNewFile} className="space-y-3.5">
               {/* File upload picker or name */}
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Fichier source (ou choisir un nom de document)
                 </label>
                 <div className="flex items-center gap-2">
@@ -876,18 +878,18 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-emerald-500/30 text-xs bg-emerald-950/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5"
+                    className="text-xs gap-1.5 cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Upload className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
                     <span>Parcourir l&apos;ordinateur</span>
                   </Button>
                   {isExtracting ? (
-                    <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
+                    <div className="flex items-center gap-1.5 text-xs text-[#B85A00] dark:text-[#FFB35C] font-medium">
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>Extraction automatique du contenu Word/Excel...</span>
                     </div>
                   ) : uploadedName ? (
-                    <span className="text-xs text-emerald-300 font-semibold truncate max-w-[200px]">
+                    <span className="text-xs text-[#004266] dark:text-[#7CC4EB] font-semibold truncate max-w-[200px]">
                       {uploadedName} ({formatBytes(uploadedSize)})
                     </span>
                   ) : null}
@@ -895,14 +897,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </div>
 
               {uploadError && (
-                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-200">
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-200 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-700 dark:text-rose-200">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   <span>{uploadError}</span>
                 </div>
               )}
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Nom du document
                 </label>
                 <input
@@ -911,12 +913,12 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                   value={formFileName}
                   onChange={(e) => setFormFileName(e.target.value)}
                   placeholder="ex: Liasse_Fiscale_2026_Audit.xlsx ou Note_Synthese.docx"
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#061826]/70 text-xs text-[#0B1F30] dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#004266]/30 dark:focus:ring-[#3895C9]/45 outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Motif / Note de version initiale (v1.0)
                 </label>
                 <input
@@ -924,12 +926,12 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                   value={formSummary}
                   onChange={(e) => setFormSummary(e.target.value)}
                   placeholder="ex: Première version du document de synthèse"
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#061826]/70 text-xs text-[#0B1F30] dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#004266]/30 dark:focus:ring-[#3895C9]/45 outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Description générale (optionnel)
                 </label>
                 <textarea
@@ -937,39 +939,40 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Objectif de ce document, destinataires ou consignes spécifiques..."
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden resize-none"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#061826]/70 text-xs text-[#0B1F30] dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#004266]/30 dark:focus:ring-[#3895C9]/45 outline-hidden resize-none"
                 />
               </div>
 
               {/* Text content preview/editor if text file */}
               {formTextContent && (
                 <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                  <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                     Aperçu du contenu texte (modifiable)
                   </label>
                   <textarea
                     rows={4}
                     value={formTextContent}
                     onChange={(e) => setFormTextContent(e.target.value)}
-                    className="w-full font-mono text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-slate-200 outline-hidden"
+                    className="w-full font-mono text-xs px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-[#F4F7FA] dark:bg-[#061826]/70 text-[#0B1F30] dark:text-slate-200 outline-hidden"
                   />
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-emerald-500/20">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsNewFileModalOpen(false)}
-                  className="text-xs text-slate-300 hover:text-white"
+                  className="text-xs cursor-pointer"
                 >
                   Annuler
                 </Button>
                 <Button
                   type="submit"
+                  variant="accent"
                   size="sm"
-                  className="text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950"
+                  className="text-xs font-bold cursor-pointer"
                 >
                   Créer et Démarrer v1.0
                 </Button>
@@ -983,17 +986,17 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       {/* Modal: New Version of existing file */}
       {isNewVersionModalOpen && uploadFileTarget && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 rounded-2xl shadow-2xl p-5 text-[#0B1F30] dark:text-slate-100 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-3">
               <div>
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <GitCommit className="w-4 h-4 text-amber-400" />
+                <h4 className="text-sm font-bold text-[#0B1F30] dark:text-white flex items-center gap-2">
+                  <GitCommit className="w-4 h-4 text-[#F77F00]" />
                   <span>Publier une nouvelle version de {uploadFileTarget.name}</span>
                 </h4>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-[#486075] dark:text-slate-400">
                   Version actuelle : <strong>{uploadFileTarget.currentVersion}</strong> → Prochaine version :{' '}
-                  <strong className="text-emerald-300">
+                  <strong className="text-[#004266] dark:text-[#7CC4EB]">
                     {calculateNextVersion(uploadFileTarget.currentVersion, formIsMajor)}
                   </strong>
                 </p>
@@ -1001,7 +1004,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsNewVersionModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1010,7 +1013,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
             <form onSubmit={handleAddNewVersion} className="space-y-3.5">
               {/* File upload picker */}
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Remplacer par un fichier mis à jour (facultatif)
                 </label>
                 <div className="flex items-center gap-2">
@@ -1025,18 +1028,18 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => newVersionInputRef.current?.click()}
-                    className="border-emerald-500/30 text-xs bg-emerald-950/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5"
+                    className="text-xs gap-1.5 cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Upload className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
                     <span>Choisir le nouveau fichier</span>
                   </Button>
                   {isExtracting ? (
-                    <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
+                    <div className="flex items-center gap-1.5 text-xs text-[#B85A00] dark:text-[#FFB35C] font-medium">
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>Extraction automatique du contenu Word/Excel...</span>
                     </div>
                   ) : uploadedName ? (
-                    <span className="text-xs text-emerald-300 font-semibold truncate max-w-[200px]">
+                    <span className="text-xs text-[#004266] dark:text-[#7CC4EB] font-semibold truncate max-w-[200px]">
                       {uploadedName} ({formatBytes(uploadedSize)})
                     </span>
                   ) : null}
@@ -1044,14 +1047,14 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </div>
 
               {uploadError && (
-                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-200">
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-200 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-2 text-[11px] text-rose-700 dark:text-rose-200">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   <span>{uploadError}</span>
                 </div>
               )}
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                   Motif du changement / Notes de révision (obligatoire)
                 </label>
                 <input
@@ -1060,19 +1063,19 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                   value={formSummary}
                   onChange={(e) => setFormSummary(e.target.value)}
                   placeholder="ex: Intégration des corrections de l'expert-comptable"
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-[#061A13] text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-400/50 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#061826]/70 text-xs text-[#0B1F30] dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#004266]/30 dark:focus:ring-[#3895C9]/45 outline-hidden"
                 />
               </div>
 
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/20">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/60 border border-[#D8E2EC] dark:border-[#94B8D6]/20">
                 <input
                   type="checkbox"
                   id="major-version-checkbox"
                   checked={formIsMajor}
                   onChange={(e) => setFormIsMajor(e.target.checked)}
-                  className="rounded accent-emerald-400 w-4 h-4"
+                  className="rounded accent-[#004266] dark:accent-[#F77F00] w-4 h-4"
                 />
-                <label htmlFor="major-version-checkbox" className="text-xs text-slate-300 cursor-pointer">
+                <label htmlFor="major-version-checkbox" className="text-xs text-[#0B1F30] dark:text-slate-300 cursor-pointer">
                   Marquer comme <strong>version majeure</strong> (ex: {calculateNextVersion(uploadFileTarget.currentVersion, true)})
                 </label>
               </div>
@@ -1080,32 +1083,33 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               {/* Text content if text document */}
               {uploadFileTarget.versions[0]?.textContent !== undefined && (
                 <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                  <label className="text-[11px] font-bold text-[#486075] dark:text-slate-300 block mb-1">
                     Contenu texte mis à jour
                   </label>
                   <textarea
                     rows={5}
                     value={formTextContent}
                     onChange={(e) => setFormTextContent(e.target.value)}
-                    className="w-full font-mono text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-slate-200 outline-hidden"
+                    className="w-full font-mono text-xs px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-[#F4F7FA] dark:bg-[#061826]/70 text-[#0B1F30] dark:text-slate-200 outline-hidden"
                   />
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-emerald-500/20">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsNewVersionModalOpen(false)}
-                  className="text-xs text-slate-300 hover:text-white"
+                  className="text-xs cursor-pointer"
                 >
                   Annuler
                 </Button>
                 <Button
                   type="submit"
+                  variant="accent"
                   size="sm"
-                  className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950"
+                  className="text-xs font-bold cursor-pointer"
                 >
                   Enregistrer {calculateNextVersion(uploadFileTarget.currentVersion, formIsMajor)}
                 </Button>
@@ -1119,50 +1123,50 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       {/* Modal: Inspect Snapshot Details */}
       {inspectingSnapshot && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-5 text-slate-100 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 rounded-2xl shadow-2xl p-5 text-[#0B1F30] dark:text-slate-100 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
+            <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded font-mono text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span className="px-2 py-0.5 rounded font-mono text-xs font-black bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border border-[#004266]/25 dark:border-[#3895C9]/35">
                   {inspectingSnapshot.versionNumber}
                 </span>
-                <h4 className="text-sm font-bold text-white truncate max-w-sm">
+                <h4 className="text-sm font-bold text-[#0B1F30] dark:text-white truncate max-w-sm">
                   {inspectingSnapshot.fileName}
                 </h4>
               </div>
               <button
                 type="button"
                 onClick={() => setInspectingSnapshot(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
-              <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20">
+              <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/60 border border-[#D8E2EC] dark:border-[#94B8D6]/20">
                 <div>
-                  <span className="text-slate-500 block">Auteur</span>
-                  <strong className="text-white">{inspectingSnapshot.authorName}</strong>
+                  <span className="text-[#486075] dark:text-slate-400 block">Auteur</span>
+                  <strong className="text-[#0B1F30] dark:text-white">{inspectingSnapshot.authorName}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Pôle / Département</span>
-                  <strong className="text-emerald-300">{inspectingSnapshot.authorDepartment || 'N/A'}</strong>
+                  <span className="text-[#486075] dark:text-slate-400 block">Pôle / Département</span>
+                  <strong className="text-[#004266] dark:text-[#7CC4EB]">{inspectingSnapshot.authorDepartment || 'N/A'}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Date et heure</span>
-                  <strong className="text-white">
+                  <span className="text-[#486075] dark:text-slate-400 block">Date et heure</span>
+                  <strong className="text-[#0B1F30] dark:text-white">
                     {new Date(inspectingSnapshot.createdAt).toLocaleString('fr-FR')}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Taille</span>
-                  <strong className="text-white">{formatBytes(inspectingSnapshot.sizeBytes)}</strong>
+                  <span className="text-[#486075] dark:text-slate-400 block">Taille</span>
+                  <strong className="text-[#0B1F30] dark:text-white">{formatBytes(inspectingSnapshot.sizeBytes)}</strong>
                 </div>
                 {inspectingSnapshot.checksum && (
                   <div className="col-span-2">
-                    <span className="text-slate-500 block">Empreinte d&apos;intégrité</span>
-                    <span className="font-mono text-[10px] text-purple-300 break-all">
+                    <span className="text-[#486075] dark:text-slate-400 block">Empreinte d&apos;intégrité</span>
+                    <span className="font-mono text-[10px] text-purple-700 dark:text-purple-300 break-all">
                       {inspectingSnapshot.checksum}
                     </span>
                   </div>
@@ -1170,31 +1174,31 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               </div>
 
               <div>
-                <span className="font-bold text-slate-300 block mb-1">Motif de version</span>
-                <p className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-slate-200">
+                <span className="font-bold text-[#004266] dark:text-[#7CC4EB] block mb-1">Motif de version</span>
+                <p className="p-2.5 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/55 border border-[#D8E2EC] dark:border-[#94B8D6]/20 text-[#0B1F30] dark:text-slate-200">
                   {inspectingSnapshot.summary}
                 </p>
               </div>
 
               {inspectingSnapshot.textContent && (
                 <div>
-                  <span className="font-bold text-slate-300 block mb-1">Contenu texte</span>
-                  <pre className="p-3 rounded-xl bg-black/60 border border-emerald-500/20 font-mono text-[11px] text-emerald-200 max-h-56 overflow-y-auto whitespace-pre-wrap">
+                  <span className="font-bold text-[#004266] dark:text-[#7CC4EB] block mb-1">Contenu texte</span>
+                  <pre className="p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/80 border border-[#D8E2EC] dark:border-[#94B8D6]/20 font-mono text-[11px] text-[#0B1F30] dark:text-slate-200 max-h-56 overflow-y-auto whitespace-pre-wrap">
                     {inspectingSnapshot.textContent}
                   </pre>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-emerald-500/20">
+            <div className="flex items-center justify-between pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => downloadSnapshotFile(inspectingSnapshot)}
-                className="border-emerald-500/30 text-xs bg-emerald-950/40 text-emerald-300 hover:bg-emerald-500/20 gap-1.5"
+                className="text-xs gap-1.5 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
                 <span>Télécharger ce fichier ({inspectingSnapshot.versionNumber})</span>
               </Button>
               <Button
@@ -1202,7 +1206,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setInspectingSnapshot(null)}
-                className="text-xs text-slate-300 hover:text-white"
+                className="text-xs cursor-pointer"
               >
                 Fermer
               </Button>
@@ -1215,45 +1219,45 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
       {/* Modal: Diff comparison between two versions */}
       {diffComparison && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-5xl bg-[#061A13] border border-emerald-500/40 rounded-2xl shadow-2xl p-4 sm:p-5 text-slate-100 flex flex-col gap-4 max-h-[92vh] overflow-hidden my-auto">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-5xl bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 rounded-2xl shadow-2xl p-4 sm:p-5 text-[#0B1F30] dark:text-slate-100 flex flex-col gap-4 max-h-[92vh] overflow-hidden my-auto">
+            <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-3">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-amber-400" />
-                <h4 className="text-sm font-bold text-white">
+                <History className="w-4 h-4 text-[#F77F00]" />
+                <h4 className="text-sm font-bold text-[#0B1F30] dark:text-white">
                   Comparaison différentielle : {diffComparison.v1.versionNumber} vs {diffComparison.v2.versionNumber}
                 </h4>
               </div>
               <button
                 type="button"
                 onClick={() => setDiffComparison(null)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg cursor-pointer transition-colors"
+                className="p-1 text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049] rounded-lg cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20">
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/60 border border-[#D8E2EC] dark:border-[#94B8D6]/20">
                 <div>
-                  <span className="font-mono text-xs font-bold text-slate-400 block mb-0.5">
+                  <span className="font-mono text-xs font-bold text-[#486075] dark:text-slate-400 block mb-0.5">
                     Ancienne version ({diffComparison.v1.versionNumber})
                   </span>
-                  <span className="text-[11px] text-slate-300 block">
+                  <span className="text-[11px] text-[#0B1F30] dark:text-slate-300 block">
                     Par {diffComparison.v1.authorName} le {new Date(diffComparison.v1.createdAt).toLocaleDateString('fr-FR')}
                   </span>
-                  <p className="text-[11px] text-slate-400 italic mt-0.5">
+                  <p className="text-[11px] text-[#486075] dark:text-slate-400 italic mt-0.5">
                     « {diffComparison.v1.summary} »
                   </p>
                 </div>
                 <div>
-                  <span className="font-mono text-xs font-bold text-emerald-300 block mb-0.5">
+                  <span className="font-mono text-xs font-bold text-[#004266] dark:text-[#7CC4EB] block mb-0.5">
                     Version active ({diffComparison.v2.versionNumber})
                   </span>
-                  <span className="text-[11px] text-slate-300 block">
+                  <span className="text-[11px] text-[#0B1F30] dark:text-slate-300 block">
                     Par {diffComparison.v2.authorName} le {new Date(diffComparison.v2.createdAt).toLocaleDateString('fr-FR')}
                   </span>
-                  <p className="text-[11px] text-slate-400 italic mt-0.5">
+                  <p className="text-[11px] text-[#486075] dark:text-slate-400 italic mt-0.5">
                     « {diffComparison.v2.summary} »
                   </p>
                 </div>
@@ -1292,8 +1296,8 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 />
               ) : (
                 /* Fallback for other binary formats */
-                <div className="p-6 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-center text-slate-400 text-xs">
-                  <p className="mb-1 font-bold text-white">Fichiers binaires non textuels</p>
+                <div className="p-6 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/45 border border-[#D8E2EC] dark:border-[#94B8D6]/20 text-center text-[#486075] dark:text-slate-400 text-xs">
+                  <p className="mb-1 font-bold text-[#0B1F30] dark:text-white">Fichiers binaires non textuels</p>
                   <p>
                     La comparaison automatique s&apos;applique aux documents Word (.docx), classeurs Excel (.xlsx), fichiers CSV et documents texte.
                     Pour les images ou formats personnalisés, téléchargez chaque version pour vérification.
@@ -1302,16 +1306,17 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-emerald-500/20">
+            <div className="flex items-center justify-between pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
               {!readOnly && (
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
+                    variant="accent"
                     size="sm"
                     onClick={() => {
                       setModerationTarget({ file: selectedFile, snapshot: diffComparison.v2 });
                     }}
-                    className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 gap-1.5 shadow-md cursor-pointer"
+                    className="text-xs font-bold gap-1.5 shadow-sm cursor-pointer"
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Modérer cette version ({diffComparison.v2.versionNumber})</span>
@@ -1323,7 +1328,7 @@ export const FileVersionManager: React.FC<FileVersionManagerProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setDiffComparison(null)}
-                className="text-xs text-slate-300 hover:text-white"
+                className="text-xs cursor-pointer"
               >
                 Fermer
               </Button>
