@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [currentDateStr, setCurrentDateStr] = useState<string>('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const { isCompatible, isInstalled, install } = usePWAInstall();
+  const { isCompatible, isInstalled, isIOS, promptInstall } = usePWAInstall();
 
   const handleMouseEnter = () => {
     isPointerInsideRef.current = true;
@@ -647,7 +647,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={async () => {
                   soundManager.playClickSound();
-                  await install();
+                  if (isIOS) {
+                    window.dispatchEvent(new CustomEvent('planit:pwa-manual-install'));
+                    return;
+                  }
+                  const outcome = await promptInstall();
+                  if (outcome === 'unavailable') {
+                    window.dispatchEvent(new CustomEvent('planit:pwa-manual-install'));
+                  }
                 }}
                 title={isVisuallyCollapsed ? "Installer l'application PlanIt" : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-amber-200 bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/40 transition-colors group ${

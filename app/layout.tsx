@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${plusJakarta.variable} dark h-full bg-[#03140E] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden`}
     >
       <body suppressHydrationWarning className="min-h-full font-sans antialiased overflow-x-hidden bg-[#03140E] text-slate-100">
+        <Script src="/pwa-install-capture.js" strategy="beforeInteractive" />
         {children}
       </body>
     </html>

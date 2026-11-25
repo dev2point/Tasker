@@ -18,7 +18,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   size = 'sm',
   showText = true,
 }) => {
-  const { isInstallable, isInstalled, isIOS, isCompatible, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isIOS, isCompatible, install, promptInstall } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   if (isInstalled || !isCompatible) {
@@ -133,7 +133,12 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       id="pwa-install-ambient-btn"
       variant={variant}
       size={size}
-      onClick={() => setShowIOSGuide(true)}
+      onClick={async () => {
+        const outcome = await promptInstall();
+        if (outcome === 'unavailable') {
+          window.dispatchEvent(new CustomEvent('planit:pwa-manual-install'));
+        }
+      }}
       className={`font-semibold text-xs gap-1.5 border-emerald-500/40 text-emerald-200 bg-emerald-500/20 hover:bg-emerald-500/35 hover:text-white backdrop-blur-md cursor-pointer ${className}`}
       title="Installer l'application"
     >

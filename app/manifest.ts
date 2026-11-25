@@ -51,5 +51,15 @@ export default function manifest(): MetadataRoute.Manifest {
         icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
       },
     ],
+    ...(process.env.APP_URL?.startsWith('https://')
+      ? {
+          related_applications: [
+            {
+              platform: 'webapp',
+              url: `${process.env.APP_URL.replace(/\/$/, '')}/manifest.webmanifest`,
+            },
+          ],
+        }
+      : {}),
   };
 }

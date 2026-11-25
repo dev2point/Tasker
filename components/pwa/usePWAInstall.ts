@@ -1,30 +1,91 @@
 'use client';
 
-import { useSyncExternalStore, useCallback } from 'react';
+import { useSyncExternalStore, useCallback, useEffect } from 'react';
+
+export type PWAInstallOutcome = 'accepted' | 'dismissed' | 'unavailable';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+interface RelatedApplication {
+  platform?: string;
+  url?: string;
+  id?: string;
+  version?: string;
+}
+
+interface NavigatorWithRelatedApps extends Navigator {
+  getInstalledRelatedApps?: () => Promise<RelatedApplication[]>;
+}
+
+interface WindowWithDeferredPrompt extends Window {
+  __planitDeferredPrompt?: BeforeInstallPromptEvent | null;
+  __planitAppInstalled?: boolean;
+}
+
+const INSTALLED_STORAGE_KEY = 'planit_pwa_installed';
+
 let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+let globalRelatedAppInstalled = false;
 const promptListeners = new Set<() => void>();
+const installedListeners = new Set<() => void>();
 
 function notifyPromptListeners() {
   promptListeners.forEach((l) => l());
 }
 
+function notifyInstalledListeners() {
+  installedListeners.forEach((l) => l());
+}
+
+function persistInstalledFlag(installed: boolean) {
+  if (typeof window === 'undefined') return;
+  (window as WindowWithDeferredPrompt).__planitAppInstalled = installed;
+  try {
+    if (installed) {
+      localStorage.setItem(INSTALLED_STORAGE_KEY, 'true');
+    } else {
+      localStorage.removeItem(INSTALLED_STORAGE_KEY);
+    }
+  } catch {
+    // ignore storage access errors
+  }
+}
+
+function markAppInstalled() {
+  globalDeferredPrompt = null;
+  if (typeof window !== 'undefined') {
+    (window as WindowWithDeferredPrompt).__planitDeferredPrompt = null;
+  }
+  persistInstalledFlag(true);
+  notifyPromptListeners();
+  notifyInstalledListeners();
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    globalDeferredPrompt = e as BeforeInstallPromptEvent;
+    const promptEvent = e as BeforeInstallPromptEvent;
+    globalDeferredPrompt = promptEvent;
+    (window as WindowWithDeferredPrompt).__planitDeferredPrompt = promptEvent;
+    globalRelatedAppInstalled = false;
+    persistInstalledFlag(false);
+    notifyInstalledListeners();
     notifyPromptListeners();
   });
 
   window.addEventListener('appinstalled', () => {
-    globalDeferredPrompt = null;
-    notifyPromptListeners();
+    markAppInstalled();
   });
+}
+
+function getActiveDeferredPrompt(): BeforeInstallPromptEvent | null {
+  if (typeof window !== 'undefined' && '__planitDeferredPrompt' in window) {
+    return (window as WindowWithDeferredPrompt).__planitDeferredPrompt ?? null;
+  }
+  return globalDeferredPrompt;
 }
 
 function subscribePrompt(cb: () => void) {
@@ -34,11 +95,32 @@ function subscribePrompt(cb: () => void) {
   };
 }
 
-function subscribeMatchMedia(cb: () => void) {
-  if (typeof window === 'undefined') return () => {};
-  const media = window.matchMedia('(display-mode: standalone)');
-  media.addEventListener('change', cb);
-  return () => media.removeEventListener('change', cb);
+function subscribeInstalled(cb: () => void) {
+  installedListeners.add(cb);
+  if (typeof window === 'undefined') {
+    return () => {
+      installedListeners.delete(cb);
+    };
+  }
+  const mediaStandalone = window.matchMedia('(display-mode: standalone)');
+  const mediaFullscreen = window.matchMedia('(display-mode: fullscreen)');
+  const mediaMinimal = window.matchMedia('(display-mode: minimal-ui)');
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === INSTALLED_STORAGE_KEY) {
+      cb();
+    }
+  };
+  mediaStandalone.addEventListener('change', cb);
+  mediaFullscreen.addEventListener('change', cb);
+  mediaMinimal.addEventListener('change', cb);
+  window.addEventListener('storage', handleStorage);
+  return () => {
+    installedListeners.delete(cb);
+    mediaStandalone.removeEventListener('change', cb);
+    mediaFullscreen.removeEventListener('change', cb);
+    mediaMinimal.removeEventListener('change', cb);
+    window.removeEventListener('storage', handleStorage);
+  };
 }
 
 interface ClientInfo {
@@ -146,28 +228,39 @@ function getIsInstalledSnapshot(): boolean {
   const navigatorStandalone =
     (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
-  // Clean up legacy persistent install flag if present so uninstalling correctly restores browser install button
+  if (standaloneMedia || navigatorStandalone) {
+    return true;
+  }
+
+  if (globalRelatedAppInstalled) {
+    return true;
+  }
+
+  if ((window as WindowWithDeferredPrompt).__planitAppInstalled) {
+    return true;
+  }
+
   try {
-    if (localStorage.getItem('planit_pwa_installed')) {
-      localStorage.removeItem('planit_pwa_installed');
+    if (localStorage.getItem(INSTALLED_STORAGE_KEY) === 'true') {
+      return true;
     }
   } catch {
     // ignore
   }
 
-  return standaloneMedia || navigatorStandalone;
+  return false;
 }
 
 export function usePWAInstall() {
   const isInstalled = useSyncExternalStore(
-    subscribeMatchMedia,
+    subscribeInstalled,
     getIsInstalledSnapshot,
     () => false
   );
 
   const deferredPrompt = useSyncExternalStore(
     subscribePrompt,
-    () => globalDeferredPrompt,
+    () => getActiveDeferredPrompt(),
     () => null
   );
 
@@ -177,23 +270,70 @@ export function usePWAInstall() {
     getServerClientInfo
   );
 
-  const install = useCallback(async () => {
-    if (!globalDeferredPrompt) return false;
-    try {
-      await globalDeferredPrompt.prompt();
-      const { outcome } = await globalDeferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        globalDeferredPrompt = null;
-        notifyPromptListeners();
-        return true;
-      }
-    } catch (err) {
-      console.warn('PWA install prompt error:', err);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let cancelled = false;
+    const nav = window.navigator as NavigatorWithRelatedApps;
+
+    if (typeof nav.getInstalledRelatedApps === 'function') {
+      nav
+        .getInstalledRelatedApps()
+        .then((relatedApps) => {
+          if (cancelled) return;
+          if (Array.isArray(relatedApps) && relatedApps.length > 0) {
+            globalRelatedAppInstalled = true;
+            markAppInstalled();
+          } else {
+            globalRelatedAppInstalled = false;
+          }
+        })
+        .catch(() => {
+          // Ignore unsupported environments (e.g. cross-origin iframes)
+        });
     }
-    return false;
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const isCompatible = !isInstalled && (!!deferredPrompt || clientInfo.isBrowserCompatible);
+  const promptInstall = useCallback(async (): Promise<PWAInstallOutcome> => {
+    const promptEvent = getActiveDeferredPrompt();
+    if (!promptEvent) return 'unavailable';
+    try {
+      await promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
+      globalDeferredPrompt = null;
+      if (typeof window !== 'undefined') {
+        (window as WindowWithDeferredPrompt).__planitDeferredPrompt = null;
+      }
+      if (outcome === 'accepted') {
+        persistInstalledFlag(true);
+        notifyInstalledListeners();
+      }
+      notifyPromptListeners();
+      return outcome === 'accepted' ? 'accepted' : 'dismissed';
+    } catch (err) {
+      console.warn('PWA install prompt error:', err);
+      globalDeferredPrompt = null;
+      if (typeof window !== 'undefined') {
+        (window as WindowWithDeferredPrompt).__planitDeferredPrompt = null;
+      }
+      notifyPromptListeners();
+      return 'unavailable';
+    }
+  }, []);
+
+  const install = useCallback(async () => {
+    const outcome = await promptInstall();
+    return outcome === 'accepted';
+  }, [promptInstall]);
+
+  // On desktop/Android, only show install button when the browser actually fires beforeinstallprompt
+  // (meaning the app is genuinely installable and not already installed). On iOS Safari, where
+  // beforeinstallprompt does not exist, show when Safari is compatible and not already standalone.
+  const isCompatible =
+    !isInstalled && (clientInfo.isIOS ? clientInfo.isBrowserCompatible : !!deferredPrompt);
 
   return {
     isInstallable: !!deferredPrompt,
@@ -207,5 +347,6 @@ export function usePWAInstall() {
     browser: clientInfo.browser,
     platformName: clientInfo.platformName,
     install,
+    promptInstall,
   };
 }

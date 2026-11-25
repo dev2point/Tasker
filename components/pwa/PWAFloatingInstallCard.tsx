@@ -1,17 +1,14 @@
 'use client';
 
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Download,
-  Calendar as CalendarIcon,
   X,
   Smartphone,
   Share2,
   PlusSquare,
-  Zap,
   Info,
-  CheckCircle2,
 } from 'lucide-react';
 import { usePWAInstall } from './usePWAInstall';
 import { soundManager } from '@/lib/sound';
@@ -44,25 +41,13 @@ function getDismissedSnapshot(): boolean {
   }
 }
 
-function getMinimizedSnapshot(): boolean {
-  if (typeof window === 'undefined') return true;
-  try {
-    const val = sessionStorage.getItem('planit_pwa_card_minimized');
-    return val !== 'false'; // Default to true (minimized) so it never blocks the workspace
-  } catch {
-    return true;
-  }
-}
-
 export const PWAFloatingInstallCard: React.FC = () => {
   const {
     isCompatible,
     isInstalled,
-    isInstallable,
     isIOS,
-    isDesktop,
     platformName,
-    install,
+    promptInstall,
   } = usePWAInstall();
 
   const isDismissed = useSyncExternalStore(
@@ -71,38 +56,28 @@ export const PWAFloatingInstallCard: React.FC = () => {
     () => false
   );
 
-  const isMinimized = useSyncExternalStore(
-    subscribeCardStorage,
-    getMinimizedSnapshot,
-    () => true
-  );
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(false);
   const [showManualHelp, setShowManualHelp] = useState<boolean>(false);
 
-  const handleMinimize = () => {
-    soundManager.playClickSound();
-    try {
-      sessionStorage.setItem('planit_pwa_card_minimized', 'true');
-    } catch {
-      // ignore
-    }
-    notifyCardStorage();
-  };
+  useEffect(() => {
+    const handleManualRequest = () => {
+      if (isIOS) {
+        setShowIOSGuide(true);
+      } else {
+        setShowManualHelp(true);
+      }
+    };
+
+    window.addEventListener('planit:pwa-manual-install', handleManualRequest);
+    return () => {
+      window.removeEventListener('planit:pwa-manual-install', handleManualRequest);
+    };
+  }, [isIOS]);
 
   const handleDismissPermanently = () => {
     soundManager.playClickSound();
     try {
       localStorage.setItem('planit_pwa_dismissed', 'true');
-    } catch {
-      // ignore
-    }
-    notifyCardStorage();
-  };
-
-  const handleExpand = () => {
-    soundManager.playClickSound();
-    try {
-      sessionStorage.setItem('planit_pwa_card_minimized', 'false');
     } catch {
       // ignore
     }
@@ -116,46 +91,35 @@ export const PWAFloatingInstallCard: React.FC = () => {
       return;
     }
 
-    if (isInstallable) {
-      const success = await install();
-      if (!success) {
-        setShowManualHelp(true);
-      }
-    } else {
-      const success = await install();
-      if (!success) {
-        setShowManualHelp(true);
-      }
+    const outcome = await promptInstall();
+    if (outcome === 'unavailable') {
+      setShowManualHelp(true);
     }
   };
 
-  if (isDismissed || isInstalled || !isCompatible) {
+  if (isInstalled || !isCompatible) {
     return null;
   }
 
   return (
     <>
-      <div
-        id="pwa-floating-container"
-        className="fixed bottom-22 left-4 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6 md:left-auto md:right-8 md:bottom-8 z-40 pointer-events-none flex flex-col items-start md:items-end"
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {isMinimized ? (
-            /* ============================================================ */
-            /* MINIMIZED FLOATING PILL BUTTON (Glassmorphism Dark)          */
-            /* ============================================================ */
-            <motion.button
-              key="minimized-pill"
+      {!isDismissed && (
+        <div
+          id="pwa-floating-container"
+          className="fixed bottom-22 left-4 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6 md:left-auto md:right-8 md:bottom-8 z-40 pointer-events-none flex flex-col items-start md:items-end"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            whileHover={{ scale: 1.03 }}
+            className="pointer-events-auto flex items-center rounded-full bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/30 shadow-xl shadow-black/50 hover:border-emerald-400 hover:bg-emerald-950/80 transition-all"
+          >
+            <button
               type="button"
               id="pwa-reopen-card-btn"
-              onClick={handleExpand}
-              initial={{ opacity: 0, scale: 0.85, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 10 }}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
+              onClick={handleInstallClick}
               title="Installer l'application PlanIt"
-              className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#061A13]/90 backdrop-blur-2xl border border-emerald-500/30 shadow-xl shadow-black/50 text-slate-200 hover:text-white hover:border-emerald-400 hover:bg-emerald-950/80 transition-all group cursor-pointer"
+              className="flex items-center gap-2 pl-3 pr-2 py-1.5 text-slate-200 hover:text-white cursor-pointer"
             >
               <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
                 <Download className="w-3 h-3 stroke-[2.5]" />
@@ -163,101 +127,22 @@ export const PWAFloatingInstallCard: React.FC = () => {
               <span className="text-xs font-semibold whitespace-nowrap text-emerald-200">
                 Installer l&apos;App
               </span>
-            </motion.button>
-          ) : (
-            /* ============================================================ */
-            /* EXPANDED INVITATION FLOATING CARD (Glassmorphism Dark)       */
-            /* ============================================================ */
-            <motion.div
-              key="expanded-card"
-              initial={{ opacity: 0, y: 16, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-              className="pointer-events-auto w-[calc(100vw-2.5rem)] max-w-[320px] bg-[#071d15] backdrop-blur-2xl border border-emerald-500/30 rounded-xl shadow-2xl shadow-black/80 p-3.5 text-slate-100 relative overflow-hidden"
+            </button>
+            <button
+              type="button"
+              onClick={handleDismissPermanently}
+              aria-label="Masquer le bouton d'installation"
+              title="Masquer"
+              className="pr-2.5 pl-1 py-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              {/* Subtle Top Accent */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500" />
-
-              {/* Card Header */}
-              <div className="flex items-start justify-between gap-2.5 pt-0.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <CalendarIcon className="w-4 h-4 stroke-[2.2]" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-white leading-tight">
-                      PlanIt · {isDesktop ? `App ${platformName}` : 'Application'}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 font-medium">
-                      Accès direct & mode hors-ligne
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleMinimize}
-                  aria-label="Réduire l'invitation"
-                  title="Réduire"
-                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Card Body Message */}
-              <p className="mt-2 text-xs text-slate-300 leading-relaxed">
-                {isDesktop
-                  ? `Installez l'application sur votre bureau ${platformName} pour une utilisation rapide et des rappels garantis.`
-                  : "Ajoutez PlanIt sur votre écran d'accueil pour profiter d'une expérience plein écran."}
-              </p>
-
-              {/* Action Buttons */}
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  id="pwa-floating-install-action"
-                  onClick={handleInstallClick}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs shadow-xs transition-all cursor-pointer"
-                >
-                  {isIOS ? (
-                    <>
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span>Installer</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-3.5 h-3.5 stroke-[2.4]" />
-                      <span>Installer</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleMinimize}
-                  className="py-1.5 px-2.5 rounded-lg border border-emerald-500/25 text-xs font-medium text-slate-300 hover:text-white hover:bg-emerald-500/15 transition-all cursor-pointer"
-                >
-                  Plus tard
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDismissPermanently}
-                  title="Ne plus proposer"
-                  className="py-1.5 px-2 rounded-lg text-[11px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
-                >
-                  Masquer
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <X className="w-3 h-3" />
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       {/* ============================================================ */}
-      {/* IOS SAFARI STEP-BY-STEP MODAL (Glassmorphism Dark)           */}
+      {/* IOS SAFARI STEP-BY-STEP MODAL (Fallback when no native prompt) */}
       {/* ============================================================ */}
       <AnimatePresence>
         {showIOSGuide && (
@@ -347,7 +232,7 @@ export const PWAFloatingInstallCard: React.FC = () => {
       </AnimatePresence>
 
       {/* ============================================================ */}
-      {/* DESKTOP BROWSER MANUAL TIP (Glassmorphism Dark)             */}
+      {/* DESKTOP BROWSER MANUAL TIP (Fallback if prompt unavailable)  */}
       {/* ============================================================ */}
       <AnimatePresence>
         {showManualHelp && (
