@@ -5,12 +5,7 @@ import { SpreadsheetSheet } from '@/types/file-version';
 import { computeGridDiff, getColumnLetter } from '@/lib/office-parser';
 import {
   FileSpreadsheet,
-  Columns,
   Filter,
-  CheckCircle2,
-  AlertCircle,
-  ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,20 +25,16 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
   versionOldLabel = 'Version précédente',
   versionNewLabel = 'Version active',
 }) => {
-  // Active sheet tab
   const [activeSheetIndex, setActiveSheetIndex] = useState<number>(0);
   const [filterChangedOnly, setFilterChangedOnly] = useState<boolean>(false);
 
-  // Synchronized scroll refs
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef<boolean>(false);
 
-  // Select active sheet
   const prevSheet = previousSheets[activeSheetIndex] || previousSheets[0];
   const currSheet = currentSheets[activeSheetIndex] || currentSheets[0];
 
-  // Compute cell-level diff
   const gridDiff = useMemo(() => {
     return computeGridDiff(prevSheet, currSheet);
   }, [prevSheet, currSheet]);
@@ -55,7 +46,6 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
     1
   );
 
-  // Rows to display (either all or only changed)
   const displayedRowIndices = useMemo(() => {
     const indices: number[] = [];
     for (let r = 0; r < maxRows; r++) {
@@ -66,7 +56,6 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
     return indices;
   }, [maxRows, filterChangedOnly, gridDiff.modifiedRowSet]);
 
-  // Synchronize scroll between left and right table
   const handleScroll = (source: 'left' | 'right') => {
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
@@ -84,7 +73,6 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
     });
   };
 
-  // Get common headers
   const columnHeaders = useMemo(() => {
     const list: string[] = [];
     for (let c = 0; c < maxCols; c++) {
@@ -95,7 +83,6 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
     return list;
   }, [maxCols, prevSheet, currSheet]);
 
-  // Available sheets tabs
   const allSheetNames = useMemo(() => {
     const set = new Set<string>();
     previousSheets.forEach((s) => s?.name && set.add(s.name));
@@ -104,21 +91,21 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
   }, [previousSheets, currentSheets]);
 
   return (
-    <div className="flex flex-col gap-3 w-full bg-[#061A13]/95 rounded-2xl border border-emerald-500/30 overflow-hidden text-slate-100 shadow-xl">
-      {/* 1. Header Bar: File name, Sheet Tabs & Diff Stats */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-emerald-950/70 border-b border-emerald-500/30">
+    <div className="flex flex-col gap-3 w-full bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 overflow-hidden text-[#0B1F30] dark:text-[#F1F5F9] shadow-sm">
+      {/* Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[#EDF2F7] dark:bg-[#103049] border-b border-[#D8E2EC] dark:border-[#94B8D6]/20">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          <div className="p-1.5 rounded-lg bg-[#004266]/10 text-[#004266] border border-[#004266]/20 dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] dark:border-[#3895C9]/30">
             <FileSpreadsheet className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-xs sm:text-sm font-bold text-white truncate">{fileName}</h4>
-              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-mono">
+              <h4 className="text-xs sm:text-sm font-bold text-[#0B1F30] dark:text-white truncate">{fileName}</h4>
+              <Badge variant="default" className="text-[10px] font-mono">
                 Double Grille .xlsx
               </Badge>
             </div>
-            <div className="text-[11px] text-slate-400 flex items-center gap-2">
+            <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8] flex items-center gap-2 tabular-nums">
               <span>{maxRows} ligne(s)</span>
               <span>·</span>
               <span>{maxCols} colonne(s)</span>
@@ -126,36 +113,30 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
           </div>
         </div>
 
-        {/* Diff statistics */}
         <div className="flex items-center gap-2 flex-wrap text-xs">
-          <div className="flex items-center gap-1.5 font-mono">
+          <div className="flex items-center gap-1.5 font-mono tabular-nums">
             <span
               className={`px-2 py-0.5 rounded-md font-bold border ${
                 gridDiff.totalModifiedCells > 0
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 ring-1 ring-amber-500/30'
-                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                  ? 'bg-[#FFF4E6] text-[#B85A00] border-[#F77F00]/35 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/40'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
               }`}
             >
               {gridDiff.totalModifiedCells} cellule(s) modifiée(s)
             </span>
             {gridDiff.totalAddedRows > 0 && (
-              <span className="px-2 py-0.5 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-md font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">
                 +{gridDiff.totalAddedRows} ligne(s)
               </span>
             )}
           </div>
 
-          {/* Filter toggle */}
           <Button
             type="button"
-            variant="outline"
+            variant={filterChangedOnly ? 'accent' : 'outline'}
             size="sm"
             onClick={() => setFilterChangedOnly((prev) => !prev)}
-            className={`h-7 px-2.5 text-xs font-semibold gap-1.5 transition-all ${
-              filterChangedOnly
-                ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                : 'border-emerald-500/30 text-slate-300 hover:text-white hover:bg-emerald-500/20'
-            }`}
+            className="h-7 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer"
           >
             <Filter className="w-3.5 h-3.5" />
             <span>{filterChangedOnly ? 'Lignes modifiées' : 'Toutes les lignes'}</span>
@@ -163,10 +144,10 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
         </div>
       </div>
 
-      {/* 2. Sheet selector tabs (if workbook has multiple sheets) */}
+      {/* Sheet selector tabs */}
       {allSheetNames.length > 1 && (
-        <div className="flex items-center gap-1 px-4 py-1.5 bg-black/40 border-b border-emerald-500/20 overflow-x-auto text-xs">
-          <span className="text-[11px] text-slate-500 font-bold uppercase mr-1">Feuilles :</span>
+        <div className="flex items-center gap-1 px-4 py-1.5 bg-[#F4F7FA] dark:bg-[#061826]/60 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15 overflow-x-auto text-xs">
+          <span className="text-[11px] text-[#64748B] font-bold uppercase mr-1">Feuilles :</span>
           {allSheetNames.map((name, idx) => {
             const isTabActive = activeSheetIndex === idx;
             return (
@@ -176,8 +157,8 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
                 onClick={() => setActiveSheetIndex(idx)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                   isTabActive
-                    ? 'bg-emerald-500/30 text-white border border-emerald-500/50 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-emerald-950/40'
+                    ? 'bg-[#004266] text-white font-bold shadow-xs dark:bg-[#3895C9] dark:text-[#061826]'
+                    : 'text-[#486075] hover:text-[#0B1F30] hover:bg-white dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#103049]'
                 }`}
               >
                 {name}
@@ -187,18 +168,18 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
         </div>
       )}
 
-      {/* 3. Dual side-by-side Spreadsheet Grid View */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-emerald-500/30">
-        {/* Left Column: Version précédente */}
+      {/* Dual side-by-side Spreadsheet Grid View */}
+      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#D8E2EC] dark:divide-[#94B8D6]/20">
+        {/* Left Column */}
         <div className="flex flex-col min-w-0">
-          <div className="px-4 py-2 bg-rose-950/30 border-b border-emerald-500/20 flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+          <div className="px-4 py-2 bg-rose-50 dark:bg-rose-950/30 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15 flex items-center justify-between">
+            <span className="text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
               <span>{versionOldLabel}</span>
-              <span className="text-[10px] text-slate-400 font-normal">
+              <span className="text-[10px] text-[#486075] dark:text-[#9FB3C8] font-normal tabular-nums">
                 ({prevSheet?.rows.length || 0} lignes)
               </span>
             </span>
-            <span className="text-[10px] font-mono text-slate-400">Origine</span>
+            <span className="text-[10px] font-mono text-[#64748B] dark:text-[#9FB3C8]">Origine</span>
           </div>
 
           <div
@@ -206,34 +187,34 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
             onScroll={() => handleScroll('left')}
             className="overflow-auto max-h-[380px] p-2 font-mono text-[11px]"
           >
-            <table className="w-full border-collapse border border-emerald-500/20 select-text">
+            <table className="w-full border-collapse border border-[#D8E2EC] dark:border-[#94B8D6]/20 select-text">
               <thead>
-                <tr className="bg-emerald-950/70 border-b border-emerald-500/30 sticky top-0 z-10">
-                  <th className="w-9 p-1.5 text-center text-[10px] text-slate-500 border-r border-emerald-500/20 font-normal">
+                <tr className="bg-[#EDF2F7] dark:bg-[#103049] border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 sticky top-0 z-10">
+                  <th className="w-9 p-1.5 text-center text-[10px] text-[#64748B] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 font-normal">
                     #
                   </th>
                   {columnHeaders.map((hdr, cIdx) => (
                     <th
                       key={cIdx}
-                      className="p-1.5 text-left text-[11px] font-bold text-emerald-300 border-r border-emerald-500/20 min-w-[90px] whitespace-nowrap"
+                      className="p-1.5 text-left text-[11px] font-bold text-[#004266] dark:text-[#7CC4EB] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 min-w-[90px] whitespace-nowrap"
                     >
                       {hdr}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-emerald-500/10">
+              <tbody className="divide-y divide-[#D8E2EC] dark:divide-[#94B8D6]/15">
                 {displayedRowIndices.map((r) => {
                   const row = prevSheet?.rows[r];
                   const isModifiedRow = gridDiff.modifiedRowSet.has(r);
                   return (
                     <tr
                       key={r}
-                      className={`hover:bg-emerald-500/10 transition-colors ${
-                        isModifiedRow ? 'bg-rose-950/20' : ''
+                      className={`hover:bg-[#F4F7FA] dark:hover:bg-[#103049]/50 transition-colors ${
+                        isModifiedRow ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''
                       }`}
                     >
-                      <td className="w-9 p-1.5 text-center text-[10px] text-slate-500 border-r border-emerald-500/20 bg-emerald-950/30">
+                      <td className="w-9 p-1.5 text-center text-[10px] text-[#64748B] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/40 tabular-nums">
                         {r + 1}
                       </td>
                       {columnHeaders.map((_, cIdx) => {
@@ -243,10 +224,10 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
                         return (
                           <td
                             key={cIdx}
-                            className={`p-1.5 border-r border-emerald-500/20 truncate max-w-[160px] ${
+                            className={`p-1.5 border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 truncate max-w-[160px] ${
                               isChanged
-                                ? 'bg-rose-500/20 text-rose-200 border-rose-500/40 font-semibold line-through'
-                                : 'text-slate-300'
+                                ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-500/20 dark:text-rose-200 dark:border-rose-500/40 font-semibold line-through'
+                                : 'text-[#486075] dark:text-[#9FB3C8]'
                             }`}
                             title={val !== null && val !== undefined ? String(val) : ''}
                           >
@@ -262,16 +243,16 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Version active révisée */}
+        {/* Right Column */}
         <div className="flex flex-col min-w-0">
-          <div className="px-4 py-2 bg-emerald-950/50 border-b border-emerald-500/20 flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/40 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15 flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
               <span>{versionNewLabel}</span>
-              <span className="text-[10px] text-slate-400 font-normal">
+              <span className="text-[10px] text-[#486075] dark:text-[#9FB3C8] font-normal tabular-nums">
                 ({currSheet?.rows.length || 0} lignes)
               </span>
             </span>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold">Actuel / Révisé</span>
+            <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">Actuel / Révisé</span>
           </div>
 
           <div
@@ -279,34 +260,34 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
             onScroll={() => handleScroll('right')}
             className="overflow-auto max-h-[380px] p-2 font-mono text-[11px]"
           >
-            <table className="w-full border-collapse border border-emerald-500/20 select-text">
+            <table className="w-full border-collapse border border-[#D8E2EC] dark:border-[#94B8D6]/20 select-text">
               <thead>
-                <tr className="bg-emerald-950/70 border-b border-emerald-500/30 sticky top-0 z-10">
-                  <th className="w-9 p-1.5 text-center text-[10px] text-slate-500 border-r border-emerald-500/20 font-normal">
+                <tr className="bg-[#EDF2F7] dark:bg-[#103049] border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 sticky top-0 z-10">
+                  <th className="w-9 p-1.5 text-center text-[10px] text-[#64748B] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 font-normal">
                     #
                   </th>
                   {columnHeaders.map((hdr, cIdx) => (
                     <th
                       key={cIdx}
-                      className="p-1.5 text-left text-[11px] font-bold text-emerald-300 border-r border-emerald-500/20 min-w-[90px] whitespace-nowrap"
+                      className="p-1.5 text-left text-[11px] font-bold text-[#004266] dark:text-[#7CC4EB] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 min-w-[90px] whitespace-nowrap"
                     >
                       {hdr}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-emerald-500/10">
+              <tbody className="divide-y divide-[#D8E2EC] dark:divide-[#94B8D6]/15">
                 {displayedRowIndices.map((r) => {
                   const row = currSheet?.rows[r];
                   const isModifiedRow = gridDiff.modifiedRowSet.has(r);
                   return (
                     <tr
                       key={r}
-                      className={`hover:bg-emerald-500/10 transition-colors ${
-                        isModifiedRow ? 'bg-amber-950/20' : ''
+                      className={`hover:bg-[#F4F7FA] dark:hover:bg-[#103049]/50 transition-colors ${
+                        isModifiedRow ? 'bg-[#FFF4E6]/50 dark:bg-[#F77F00]/10' : ''
                       }`}
                     >
-                      <td className="w-9 p-1.5 text-center text-[10px] text-slate-500 border-r border-emerald-500/20 bg-emerald-950/30">
+                      <td className="w-9 p-1.5 text-center text-[10px] text-[#64748B] border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/40 tabular-nums">
                         {r + 1}
                       </td>
                       {columnHeaders.map((_, cIdx) => {
@@ -317,10 +298,10 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
                         return (
                           <td
                             key={cIdx}
-                            className={`p-1.5 border-r border-emerald-500/20 truncate max-w-[160px] ${
+                            className={`p-1.5 border-r border-[#D8E2EC] dark:border-[#94B8D6]/20 truncate max-w-[160px] ${
                               isChanged
-                                ? 'bg-amber-500/25 text-amber-200 border-amber-500/50 ring-1 ring-amber-400/40 font-bold'
-                                : 'text-slate-200'
+                                ? 'bg-[#FFF4E6] text-[#B85A00] border-[#F77F00]/45 ring-1 ring-[#F77F00]/40 dark:bg-[#F77F00]/25 dark:text-[#FFB35C] dark:border-[#F77F00]/50 font-bold'
+                                : 'text-[#0B1F30] dark:text-[#F1F5F9]'
                             }`}
                             title={
                               isChanged
@@ -343,20 +324,20 @@ export const SpreadsheetDiffViewer: React.FC<SpreadsheetDiffViewerProps> = ({
         </div>
       </div>
 
-      {/* 4. Footer Note & Visual Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-emerald-950/40 border-t border-emerald-500/20 text-[11px] text-slate-400">
+      {/* Visual Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-[#EDF2F7] dark:bg-[#103049] border-t border-[#D8E2EC] dark:border-[#94B8D6]/20 text-[11px] text-[#486075] dark:text-[#9FB3C8]">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-rose-500/30 border border-rose-500/50 inline-block" />
+            <span className="w-3 h-3 rounded bg-rose-100 border border-rose-300 dark:bg-rose-500/30 dark:border-rose-500/50 inline-block" />
             <span>Valeur d&apos;origine supprimée ou modifiée</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500/50 ring-1 ring-amber-400/50 inline-block" />
+            <span className="w-3 h-3 rounded bg-[#FFF4E6] border border-[#F77F00]/50 ring-1 ring-[#F77F00]/40 dark:bg-[#F77F00]/30 inline-block" />
             <span>Nouvelle valeur saisie (Version active)</span>
           </span>
         </div>
-        <span className="text-slate-500">
-          Survol d&apos;une cellule ambre pour inspecter l&apos;ancienne valeur.
+        <span className="text-[#64748B] dark:text-[#9FB3C8]">
+          Survol d&apos;une cellule orange pour inspecter l&apos;ancienne valeur.
         </span>
       </div>
     </div>

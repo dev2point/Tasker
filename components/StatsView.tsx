@@ -48,7 +48,6 @@ export const StatsView: React.FC<StatsViewProps> = ({
   const overdueTasks = tasks.filter((t) => isTaskOverdue(t));
   const activeReminders = tasks.filter((t) => !t.completed && t.reminderMinutesBefore >= 0);
 
-  // Category distribution
   const categoryStats = useMemo(() => {
     return categories.map((cat) => {
       const catTasks = tasks.filter((t) => t.category === cat.id);
@@ -63,7 +62,6 @@ export const StatsView: React.FC<StatsViewProps> = ({
     });
   }, [tasks, categories]);
 
-  // Priority distribution
   const priorityStats = useMemo(() => {
     const priorities: Priority[] = ['urgent', 'high', 'medium', 'low'];
     return priorities.map((p) => {
@@ -79,7 +77,6 @@ export const StatsView: React.FC<StatsViewProps> = ({
     });
   }, [tasks]);
 
-  // Lifecycle Status distribution
   const statusStats = useMemo(() => {
     return TASK_STATUS_ORDER.map((statusId) => {
       const cfg = TASK_STATUS_CONFIG[statusId];
@@ -96,7 +93,6 @@ export const StatsView: React.FC<StatsViewProps> = ({
     });
   }, [tasks, totalTasks]);
 
-  // Upcoming reminders timeline
   const upcomingRemindersList = useMemo(() => {
     return tasks
       .filter((t) => !t.completed && t.reminderMinutesBefore >= 0)
@@ -113,32 +109,31 @@ export const StatsView: React.FC<StatsViewProps> = ({
 
   return (
     <div className="space-y-5 pb-16 md:pb-6">
-      
-      {/* Productivity Intelligence Ambient Banner with Dotted Glow Background */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#061A13]/90 backdrop-blur-2xl p-5 sm:p-6 text-white shadow-md border border-emerald-500/30">
+      {/* Corporate Cabinet Blue Hero Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#004266] dark:bg-[#0B2438] p-5 sm:p-6 text-white shadow-md border border-[#00314D] dark:border-[#94B8D6]/25">
         <DottedGlowBackground
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-0 opacity-35"
           gap={14}
-          radius={1.8}
-          color="rgba(255, 255, 255, 0.4)"
-          glowColor="rgba(16, 185, 129, 0.9)"
+          radius={1.6}
+          color="rgba(255, 255, 255, 0.35)"
+          glowColor="rgba(247, 127, 0, 0.85)"
           speedMin={0.4}
-          speedMax={1.5}
+          speedMax={1.4}
         />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wide">
-                Tableau de bord & IA
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F77F00]/20 text-[#FFB35C] border border-[#F77F00]/40 uppercase tracking-wide">
+                Tableau de bord &amp; Pilotage
               </span>
-              <span className="text-xs text-slate-400 font-medium">Synthèse en temps réel</span>
+              <span className="text-xs text-white/75 font-medium">Synthèse en temps réel</span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-              Performances & Rythme de Travail
+              Performances &amp; Rythme de Travail
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+            <p className="text-xs sm:text-sm text-white/80 max-w-xl">
               {completionRate >= 70
-                ? "Excellente cadence ! La majorité de vos objectifs sont atteints avec succès."
+                ? 'Excellente cadence ! La majorité des dossiers et objectifs du cabinet sont finalisés.'
                 : totalTasks === 0
                 ? "Créez vos premières tâches pour activer l'analyse d'activité."
                 : `${totalTasks - completedTasks} tâche(s) restent à finaliser pour optimiser votre flux.`}
@@ -147,21 +142,24 @@ export const StatsView: React.FC<StatsViewProps> = ({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <div className="px-3 sm:px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
-                <div className="text-xl font-extrabold text-emerald-400">{completionRate}%</div>
-                <div className="text-[10px] font-medium text-slate-300 truncate">Succès global</div>
+                <div className="text-xl font-extrabold text-[#FFB35C] tabular-nums">{completionRate}%</div>
+                <div className="text-[10px] font-medium text-white/80 truncate">Succès global</div>
               </div>
               <div className="px-3 sm:px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center flex-1 sm:min-w-[90px]">
-                <div className="text-xl font-extrabold text-emerald-300">{todayCompleted} / {todayTasks.length}</div>
-                <div className="text-[10px] font-medium text-slate-300 truncate">Aujourd&apos;hui</div>
+                <div className="text-xl font-extrabold text-[#7CC4EB] tabular-nums">
+                  {todayCompleted} / {todayTasks.length}
+                </div>
+                <div className="text-[10px] font-medium text-white/80 truncate">Aujourd&apos;hui</div>
               </div>
             </div>
 
             {onOpenReportModal && (
               <Button
                 type="button"
+                variant="accent"
                 onClick={onOpenReportModal}
                 size="sm"
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs gap-1.5 shadow-md border border-emerald-400/50 cursor-pointer h-9 px-3 rounded-xl shrink-0"
+                className="font-bold text-xs gap-1.5 shadow-md cursor-pointer h-9 px-3.5 rounded-xl shrink-0"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Rapport PDF Comité</span>
@@ -173,86 +171,85 @@ export const StatsView: React.FC<StatsViewProps> = ({
 
       {/* Top High-Level KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        
         {/* Metric 1: Completion Rate */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
               Complétion
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+            <div className="w-8 h-8 rounded-xl bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] flex items-center justify-center border border-[#004266]/20 dark:border-[#3895C9]/30">
               <Award className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-[#0B1F30] dark:text-[#F1F5F9] tracking-tight tabular-nums">
               {completionRate}%
             </div>
-            <p className="text-xs text-slate-300 mt-0.5 font-medium">
+            <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-0.5 font-medium tabular-nums">
               {completedTasks}/{totalTasks} terminées
             </p>
           </div>
-          <Progress value={completionRate} className="h-1.5 bg-emerald-950 border border-emerald-500/20" />
+          <Progress value={completionRate} className="h-1.5" />
         </div>
 
         {/* Metric 2: Today Focus */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
               Aujourd&apos;hui
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+            <div className="w-8 h-8 rounded-xl bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] flex items-center justify-center border border-[#004266]/20 dark:border-[#3895C9]/30">
               <Clock className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-[#0B1F30] dark:text-[#F1F5F9] tracking-tight tabular-nums">
               {todayCompleted}/{todayTasks.length}
             </div>
-            <p className="text-xs text-slate-300 mt-0.5 font-medium">
+            <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-0.5 font-medium tabular-nums">
               {todayTasks.length - todayCompleted} restantes
             </p>
           </div>
           <Progress
             value={todayTasks.length > 0 ? (todayCompleted / todayTasks.length) * 100 : 0}
-            className="h-1.5 bg-emerald-950 border border-emerald-500/20"
+            className="h-1.5"
           />
         </div>
 
         {/* Metric 3: Active Reminders */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#B85A00] dark:text-[#FFB35C]">
               Rappels Actifs
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+            <div className="w-8 h-8 rounded-xl bg-[#F77F00]/12 text-[#B85A00] dark:bg-[#F77F00]/20 dark:text-[#FFB35C] flex items-center justify-center border border-[#F77F00]/30">
               <Bell className="w-4.5 h-4.5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-[#0B1F30] dark:text-[#F1F5F9] tracking-tight tabular-nums">
               {activeReminders.length}
             </div>
-            <p className="text-xs text-slate-300 mt-0.5 font-medium">
+            <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-0.5 font-medium">
               Automatisés et synchronisés
             </p>
           </div>
-          <div className="h-1.5 bg-emerald-950 rounded-full overflow-hidden border border-emerald-500/20">
-            <div className="h-full bg-emerald-400 rounded-full w-full" />
+          <div className="h-1.5 bg-[#EDF2F7] dark:bg-[#103049] rounded-full overflow-hidden">
+            <div className="h-full bg-[#F77F00] rounded-full w-full" />
           </div>
         </div>
 
         {/* Metric 4: Overdue Alert */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md flex flex-col justify-between gap-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
               En Retard
             </span>
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
                 overdueTasks.length > 0
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
               }`}
             >
               <AlertTriangle className="w-4.5 h-4.5" />
@@ -260,24 +257,28 @@ export const StatsView: React.FC<StatsViewProps> = ({
           </div>
           <div>
             <div
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                overdueTasks.length > 0 ? 'text-rose-400' : 'text-white'
+              className={`text-2xl sm:text-3xl font-extrabold tracking-tight tabular-nums ${
+                overdueTasks.length > 0
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-[#0B1F30] dark:text-[#F1F5F9]'
               }`}
             >
               {overdueTasks.length}
             </div>
-            <p className="text-xs text-slate-300 mt-0.5 font-medium">
+            <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-0.5 font-medium">
               {overdueTasks.length > 0 ? 'Nécessite votre attention' : 'Tout est à jour !'}
             </p>
           </div>
           <div
-            className={`h-1.5 rounded-full overflow-hidden border ${
-              overdueTasks.length > 0 ? 'bg-rose-950 border-rose-500/30' : 'bg-emerald-950 border-emerald-500/20'
+            className={`h-1.5 rounded-full overflow-hidden ${
+              overdueTasks.length > 0
+                ? 'bg-rose-100 dark:bg-rose-950'
+                : 'bg-emerald-100 dark:bg-emerald-950'
             }`}
           >
             <div
               className={`h-full rounded-full ${
-                overdueTasks.length > 0 ? 'bg-rose-500 w-full' : 'bg-emerald-400 w-full'
+                overdueTasks.length > 0 ? 'bg-rose-500 w-full' : 'bg-emerald-600 dark:bg-emerald-400 w-full'
               }`}
             />
           </div>
@@ -285,10 +286,10 @@ export const StatsView: React.FC<StatsViewProps> = ({
       </div>
 
       {/* Lifecycle Status Summary Strip */}
-      <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-3">
-        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2.5">
-          <h3 className="font-bold text-sm text-white">Cycle de vie des tâches</h3>
-          <span className="text-xs text-slate-400 font-mono tabular-nums">
+      <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm space-y-3">
+        <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 pb-2.5">
+          <h3 className="font-bold text-sm text-[#0B1F30] dark:text-[#F1F5F9]">Cycle de vie des tâches</h3>
+          <span className="text-xs text-[#486075] dark:text-[#9FB3C8] font-mono tabular-nums">
             {totalTasks} tâche{totalTasks > 1 ? 's' : ''}
           </span>
         </div>
@@ -297,20 +298,20 @@ export const StatsView: React.FC<StatsViewProps> = ({
           {statusStats.map(({ statusId, cfg, count, pct }) => (
             <div
               key={statusId}
-              className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 space-y-2"
+              className="p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 space-y-2"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor}`} />
-                  <span className="text-xs font-semibold text-slate-200 truncate">
+                  <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] truncate">
                     {cfg.label}
                   </span>
                 </div>
-                <span className="text-sm font-extrabold font-mono tabular-nums text-white shrink-0">
+                <span className="text-sm font-extrabold font-mono tabular-nums text-[#004266] dark:text-[#7CC4EB] shrink-0">
                   {count}
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-emerald-950 rounded-full overflow-hidden border border-emerald-500/20">
+              <div className="h-1.5 w-full bg-[#D8E2EC] dark:bg-[#061826] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${cfg.dotColor}`}
                   style={{ width: `${pct}%` }}
@@ -321,17 +322,18 @@ export const StatsView: React.FC<StatsViewProps> = ({
         </div>
       </div>
 
-      {/* Breakdown Section: Category + Priorities */}
+      {/* Breakdown Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        
         {/* Category Breakdown */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
-          <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-emerald-400" />
-              <h3 className="font-bold text-sm text-white">Répartition par Catégorie</h3>
+              <Layers className="w-4 h-4 text-[#004266] dark:text-[#3895C9]" />
+              <h3 className="font-bold text-sm text-[#0B1F30] dark:text-[#F1F5F9]">Répartition par Pôle</h3>
             </div>
-            <span className="text-xs text-slate-400 font-semibold">{categories.length} catégories</span>
+            <span className="text-xs text-[#486075] dark:text-[#9FB3C8] font-semibold tabular-nums">
+              {categories.length} pôles
+            </span>
           </div>
 
           <div className="space-y-3.5">
@@ -343,17 +345,17 @@ export const StatsView: React.FC<StatsViewProps> = ({
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: cat.color }}
                     />
-                    <span className="font-bold text-slate-200">{cat.name}</span>
+                    <span className="font-bold text-[#0B1F30] dark:text-[#F1F5F9]">{cat.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <span className="font-semibold text-white">
+                  <div className="flex items-center gap-2 text-[#486075] dark:text-[#9FB3C8] tabular-nums">
+                    <span className="font-semibold text-[#0B1F30] dark:text-[#F1F5F9]">
                       {cat.completed}/{cat.total}
                     </span>
-                    <span className="text-slate-400">({cat.pct}%)</span>
+                    <span>({cat.pct}%)</span>
                   </div>
                 </div>
 
-                <div className="h-2 w-full bg-emerald-950/80 rounded-full overflow-hidden border border-emerald-500/20">
+                <div className="h-2 w-full bg-[#EDF2F7] dark:bg-[#103049] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-300"
                     style={{
@@ -368,13 +370,15 @@ export const StatsView: React.FC<StatsViewProps> = ({
         </div>
 
         {/* Priority Breakdown */}
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-4">
-          <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 pb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h3 className="font-bold text-sm text-white">Distribution par Priorité</h3>
+              <TrendingUp className="w-4 h-4 text-[#F77F00]" />
+              <h3 className="font-bold text-sm text-[#0B1F30] dark:text-[#F1F5F9]">Distribution par Priorité</h3>
             </div>
-            <span className="text-xs text-slate-400 font-semibold">{totalTasks} tâches au total</span>
+            <span className="text-xs text-[#486075] dark:text-[#9FB3C8] font-semibold tabular-nums">
+              {totalTasks} tâches au total
+            </span>
           </div>
 
           <div className="space-y-3">
@@ -383,22 +387,22 @@ export const StatsView: React.FC<StatsViewProps> = ({
               return (
                 <div
                   key={p.priority}
-                  className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between gap-3"
+                  className="p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${p.config.badge}`}>
                       {p.config.label}
                     </span>
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] tabular-nums">
                       {p.total} tâche{p.total > 1 ? 's' : ''}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="text-slate-300">
-                      <strong className="text-white font-bold">{p.completed}</strong> terminées
+                  <div className="flex items-center gap-3 text-xs tabular-nums">
+                    <span className="text-[#486075] dark:text-[#9FB3C8]">
+                      <strong className="text-[#0B1F30] dark:text-[#F1F5F9] font-bold">{p.completed}</strong> terminées
                     </span>
-                    <span className="text-emerald-400 font-mono text-[11px]">{pct}%</span>
+                    <span className="text-[#004266] dark:text-[#7CC4EB] font-mono text-[11px] font-bold">{pct}%</span>
                   </div>
                 </div>
               );
@@ -409,10 +413,10 @@ export const StatsView: React.FC<StatsViewProps> = ({
 
       {/* Upcoming Reminders Section */}
       {upcomingRemindersList.length > 0 && (
-        <div className="bg-[#061A13]/85 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-md space-y-3">
-          <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-3">
-            <Bell className="w-4 h-4 text-emerald-400" />
-            <h3 className="font-bold text-sm text-white">Prochains Rappels Automatiques</h3>
+        <div className="bg-white dark:bg-[#0B2438] p-4 sm:p-5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 border-b border-[#D8E2EC] dark:border-[#94B8D6]/20 pb-3">
+            <Bell className="w-4 h-4 text-[#F77F00]" />
+            <h3 className="font-bold text-sm text-[#0B1F30] dark:text-[#F1F5F9]">Prochains Rappels Automatiques</h3>
           </div>
 
           <div className="space-y-2">
@@ -420,21 +424,21 @@ export const StatsView: React.FC<StatsViewProps> = ({
               <div
                 key={task.id}
                 onClick={() => onOpenTaskModal(task)}
-                className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all cursor-pointer flex items-center justify-between gap-3"
+                className="p-3 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049] hover:border-[#004266]/45 dark:hover:border-[#3895C9]/45 transition-all cursor-pointer flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                  <div className="w-7 h-7 rounded-lg bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] flex items-center justify-center shrink-0 border border-[#004266]/20 dark:border-[#3895C9]/30">
                     <Clock className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-white truncate">{task.title}</h4>
-                    <p className="text-[11px] text-slate-300 font-medium">
+                    <h4 className="text-xs font-bold text-[#0B1F30] dark:text-[#F1F5F9] truncate">{task.title}</h4>
+                    <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8] font-medium">
                       Échéance : {formatDueDateFrench(task.dueDate, task.dueTime)}
                     </p>
                   </div>
                 </div>
 
-                <Badge variant="outline" className="text-[10px] shrink-0 font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <Badge variant="apricot" className="text-[10px] shrink-0 font-bold tabular-nums">
                   {task.reminderMinutesBefore === 0
                     ? 'À l’heure pile'
                     : `${task.reminderMinutesBefore}m avant`}

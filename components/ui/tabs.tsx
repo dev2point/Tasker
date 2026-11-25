@@ -40,7 +40,7 @@ export const TabsList: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "inline-flex items-center justify-center rounded-xl bg-slate-100 p-1 text-slate-500 border border-slate-200/80 shadow-2xs",
+        "inline-flex items-center justify-center rounded-xl bg-[#EDF2F7] dark:bg-[#061826] p-1 text-[#486075] dark:text-slate-400 border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-2xs",
         className
       )}
       {...props}
@@ -73,10 +73,10 @@ export const TabsTrigger: React.FC<TabsTriggerProps> = ({
       aria-selected={isActive}
       onClick={() => ctx.onValueChange(value)}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ring-offset-white transition-all focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 select-none",
+        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ring-offset-white dark:ring-offset-[#061826] transition-all focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer",
         isActive
-          ? "bg-white text-slate-900 shadow-xs font-bold"
-          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50",
+          ? "bg-white dark:bg-[#103049] text-[#004266] dark:text-white shadow-xs font-bold border border-[#D8E2EC]/70 dark:border-[#3895C9]/40"
+          : "text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-[#103049]/60",
         className
       )}
       {...props}

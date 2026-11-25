@@ -4,48 +4,54 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: 'fiscalite',
     name: 'Fiscalité & Déclarations',
-    color: '#10b981', // emerald-500
-    bgLight: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    color: '#004266',
+    bgLight:
+      'bg-[#004266]/10 text-[#004266] border-[#004266]/25 dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] dark:border-[#3895C9]/30',
     iconName: 'Receipt',
     isDefault: true,
   },
   {
     id: 'comptabilite',
     name: 'Comptabilité & Bilan',
-    color: '#3b82f6', // blue-500
-    bgLight: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    color: '#2563eb',
+    bgLight:
+      'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30',
     iconName: 'Calculator',
     isDefault: true,
   },
   {
     id: 'juridique',
     name: 'Juridique & Droit des Sociétés',
-    color: '#8b5cf6', // purple-500
-    bgLight: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    color: '#6366f1',
+    bgLight:
+      'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/30',
     iconName: 'Scale',
     isDefault: true,
   },
   {
     id: 'innovation',
     name: 'Recherche & Innovation (CIR/CII)',
-    color: '#06b6d4', // cyan-500
-    bgLight: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    color: '#0891b2',
+    bgLight:
+      'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30',
     iconName: 'Lightbulb',
     isDefault: true,
   },
   {
     id: 'audit_contentieux',
     name: 'Audit & Contentieux Fiscal',
-    color: '#f59e0b', // amber-500
-    bgLight: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    color: '#F77F00',
+    bgLight:
+      'bg-[#F77F00]/12 text-[#B85A00] border-[#F77F00]/30 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/35',
     iconName: 'ShieldAlert',
     isDefault: true,
   },
   {
     id: 'gestion_cabinet',
     name: 'Gestion Cabinet & Paie',
-    color: '#14b8a6', // teal-500
-    bgLight: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+    color: '#0d9488',
+    bgLight:
+      'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/30',
     iconName: 'Building2',
     isDefault: true,
   },
@@ -67,30 +73,34 @@ export const REMINDER_OPTIONS = [
 export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; badge: string; border: string; dot: string }> = {
   urgent: {
     label: 'Urgent',
-    color: '#ef4444',
-    badge: 'bg-rose-950/80 text-rose-300 border border-rose-500/40',
+    color: '#e11d48',
+    badge:
+      'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/75 dark:text-rose-300 dark:border-rose-500/40',
     border: 'border-l-rose-500',
     dot: 'bg-rose-500',
   },
   high: {
     label: 'Élevée',
-    color: '#10b981',
-    badge: 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40',
-    border: 'border-l-emerald-500',
-    dot: 'bg-emerald-500',
+    color: '#F77F00',
+    badge:
+      'bg-[#FFF4E6] text-[#B85A00] border border-[#F77F00]/35 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/40',
+    border: 'border-l-[#F77F00]',
+    dot: 'bg-[#F77F00]',
   },
   medium: {
     label: 'Moyenne',
-    color: '#3b82f6',
-    badge: 'bg-blue-950/80 text-blue-300 border border-blue-500/40',
-    border: 'border-l-blue-500',
-    dot: 'bg-blue-500',
+    color: '#004266',
+    badge:
+      'bg-[#004266]/10 text-[#004266] border border-[#004266]/25 dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] dark:border-[#3895C9]/40',
+    border: 'border-l-[#004266] dark:border-l-[#3895C9]',
+    dot: 'bg-[#004266] dark:bg-[#3895C9]',
   },
   low: {
     label: 'Faible',
     color: '#64748b',
-    badge: 'bg-slate-900/80 text-slate-300 border border-slate-700/50',
-    border: 'border-l-slate-500',
+    badge:
+      'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/60',
+    border: 'border-l-slate-400',
     dot: 'bg-slate-400',
   },
 };
@@ -115,40 +125,48 @@ export const TASK_STATUS_CONFIG: Record<
     label: 'Non démarrée',
     shortLabel: 'Non démarrée',
     dotColor: 'bg-slate-400',
-    accentBorder: 'border-t-slate-400/80',
-    textColor: 'text-slate-300',
-    selectClass: 'border-slate-500/35 bg-slate-900/80 text-slate-200',
-    badgeClass: 'bg-slate-900/80 text-slate-200 border-slate-500/40',
+    accentBorder: 'border-t-slate-400',
+    textColor: 'text-slate-600 dark:text-slate-300',
+    selectClass:
+      'border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-500/40 dark:bg-[#103049] dark:text-slate-200',
+    badgeClass:
+      'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/80 dark:text-slate-200 dark:border-slate-500/40',
   },
   in_progress: {
     value: 'in_progress',
     label: 'En cours',
     shortLabel: 'En cours',
-    dotColor: 'bg-emerald-400',
-    accentBorder: 'border-t-emerald-500/80',
-    textColor: 'text-emerald-300',
-    selectClass: 'border-emerald-500/40 bg-emerald-950/80 text-emerald-200',
-    badgeClass: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40',
+    dotColor: 'bg-[#004266] dark:bg-[#3895C9]',
+    accentBorder: 'border-t-[#004266] dark:border-t-[#3895C9]',
+    textColor: 'text-[#004266] dark:text-[#7CC4EB]',
+    selectClass:
+      'border-[#004266]/30 bg-[#004266]/10 text-[#004266] dark:border-[#3895C9]/45 dark:bg-[#004266]/60 dark:text-[#7CC4EB]',
+    badgeClass:
+      'bg-[#004266]/10 text-[#004266] border-[#004266]/30 dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] dark:border-[#3895C9]/40',
   },
   waiting: {
     value: 'waiting',
     label: 'En attente',
     shortLabel: 'En attente',
-    dotColor: 'bg-amber-400',
-    accentBorder: 'border-t-amber-500/80',
-    textColor: 'text-amber-300',
-    selectClass: 'border-amber-500/40 bg-amber-950/70 text-amber-200',
-    badgeClass: 'bg-amber-950/80 text-amber-300 border-amber-500/40',
+    dotColor: 'bg-[#F77F00]',
+    accentBorder: 'border-t-[#F77F00]',
+    textColor: 'text-[#B85A00] dark:text-[#FFB35C]',
+    selectClass:
+      'border-[#F77F00]/40 bg-[#FFF4E6] text-[#B85A00] dark:border-[#F77F00]/45 dark:bg-[#F77F00]/15 dark:text-[#FFB35C]',
+    badgeClass:
+      'bg-[#FFF4E6] text-[#B85A00] border-[#F77F00]/35 dark:bg-[#F77F00]/20 dark:text-[#FFB35C] dark:border-[#F77F00]/40',
   },
   completed: {
     value: 'completed',
     label: 'Terminée',
     shortLabel: 'Terminée',
-    dotColor: 'bg-teal-400',
-    accentBorder: 'border-t-teal-400/80',
-    textColor: 'text-teal-300',
-    selectClass: 'border-teal-500/40 bg-teal-950/80 text-teal-200',
-    badgeClass: 'bg-teal-500/20 text-teal-200 border-teal-400/40',
+    dotColor: 'bg-emerald-600 dark:bg-emerald-400',
+    accentBorder: 'border-t-emerald-600 dark:border-t-emerald-400',
+    textColor: 'text-emerald-700 dark:text-emerald-300',
+    selectClass:
+      'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-950/70 dark:text-emerald-200',
+    badgeClass:
+      'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-400/40',
   },
 };
 

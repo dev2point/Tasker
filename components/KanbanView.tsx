@@ -45,8 +45,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
     categories.find((c) => c.id === catId) || {
       id: catId,
       name: catId,
-      color: '#10b981',
-      bgLight: 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30',
+      color: '#004266',
+      bgLight: 'bg-[#004266]/10 text-[#004266] border-[#004266]/25',
       iconName: 'Folder',
     };
 
@@ -84,7 +84,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
         particleCount: 45,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#10B981', '#34D399', '#6EE7B7'],
+        colors: ['#004266', '#F77F00', '#3895C9'],
       });
     } else {
       soundManager.playClickSound();
@@ -98,8 +98,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
   return (
     <div className="space-y-4 pb-16 md:pb-6">
-      {/* Mobile Column Segment Switcher (4 statuses, horizontally scrollable) */}
-      <div className="md:hidden flex items-center gap-1 overflow-x-auto scrollbar-none bg-[#051812] p-1 rounded-xl border border-emerald-500/20 shadow-md">
+      {/* Mobile Column Segment Switcher */}
+      <div className="md:hidden flex items-center gap-1 overflow-x-auto scrollbar-none bg-white dark:bg-[#0B2438] p-1 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm">
         {columns.map((col) => {
           const count = getColumnTasks(col.id).length;
           const active = activeMobileColumn === col.id;
@@ -110,15 +110,21 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
               onClick={() => setActiveMobileColumn(col.id)}
               className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 active
-                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#004266] text-white font-bold shadow-xs dark:bg-[#3895C9] dark:text-[#061826]'
+                  : 'text-[#486075] hover:text-[#0B1F30] dark:text-[#9FB3C8] dark:hover:text-white'
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-slate-950' : col.dotColor}`} />
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  active ? 'bg-[#F77F00]' : col.dotColor
+                }`}
+              />
               <span>{col.title}</span>
               <span
                 className={`font-mono text-[11px] tabular-nums font-semibold px-1.5 py-0.2 rounded-md ${
-                  active ? 'bg-slate-950/20 text-slate-950' : 'bg-emerald-950/60 text-emerald-300'
+                  active
+                    ? 'bg-white/20 text-white dark:bg-[#061826]/20 dark:text-[#061826]'
+                    : 'bg-[#EDF2F7] text-[#004266] dark:bg-[#103049] dark:text-[#7CC4EB]'
                 }`}
               >
                 {count}
@@ -128,7 +134,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
         })}
       </div>
 
-      {/* Kanban Desktop Grid (4 Lifecycle Status Columns) */}
+      {/* Kanban Desktop Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
         {columns.map((col, colIndex) => {
           const columnTasks = getColumnTasks(col.id);
@@ -163,22 +169,22 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                   handleStatusChange(task, col.id);
                 }
               }}
-              className={`bg-[#051812]/90 rounded-2xl p-3 sm:p-3.5 border flex flex-col min-h-[480px] border-t-2 ${
+              className={`bg-[#EDF2F7]/80 dark:bg-[#0B2438]/90 rounded-2xl p-3 sm:p-3.5 border flex flex-col min-h-[480px] border-t-2 ${
                 col.accentBorder
-              } shadow-lg transition-colors ${
+              } shadow-sm transition-colors ${
                 isDropTarget
-                  ? 'border-emerald-400/70 bg-emerald-950/35'
-                  : 'border-emerald-500/15'
+                  ? 'border-[#004266] bg-[#004266]/5 dark:border-[#3895C9] dark:bg-[#103049]/80'
+                  : 'border-[#D8E2EC] dark:border-[#94B8D6]/20'
               } ${isHiddenOnMobile ? 'hidden md:flex' : 'flex'}`}
             >
               {/* Column Header */}
-              <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-emerald-500/10">
+              <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${col.dotColor}`} />
-                  <h3 className="font-bold text-xs uppercase tracking-wide text-slate-200 truncate">
+                  <h3 className="font-bold text-xs uppercase tracking-wide text-[#0B1F30] dark:text-[#F1F5F9] truncate">
                     {col.title}
                   </h3>
-                  <span className="font-mono text-xs tabular-nums text-emerald-400/80 font-bold ml-0.5 shrink-0">
+                  <span className="font-mono text-xs tabular-nums text-[#004266] dark:text-[#7CC4EB] font-bold ml-0.5 shrink-0">
                     {columnTasks.length}
                   </span>
                 </div>
@@ -186,7 +192,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenTaskModal()}
-                  className="p-1 rounded-lg text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/15 transition-colors cursor-pointer shrink-0"
+                  className="p-1 rounded-lg text-[#486075] hover:text-[#004266] hover:bg-[#004266]/10 dark:text-[#9FB3C8] dark:hover:text-[#7CC4EB] dark:hover:bg-[#3895C9]/15 transition-colors cursor-pointer shrink-0"
                   title="Ajouter une tâche"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -196,9 +202,9 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
               {/* Tasks List */}
               <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-0.5">
                 {columnTasks.length === 0 ? (
-                  <div className="h-44 border border-dashed border-emerald-500/20 rounded-xl flex flex-col items-center justify-center text-slate-500 text-xs p-4 text-center">
-                    <p className="font-medium text-slate-400">Aucune tâche</p>
-                    <p className="text-[11px] text-slate-500 mt-1">
+                  <div className="h-44 border border-dashed border-[#D8E2EC] dark:border-[#94B8D6]/25 rounded-xl flex flex-col items-center justify-center text-[#64748B] dark:text-[#9FB3C8] text-xs p-4 text-center bg-white/50 dark:bg-[#061826]/40">
+                    <p className="font-medium text-[#486075] dark:text-[#9FB3C8]">Aucune tâche</p>
+                    <p className="text-[11px] text-[#64748B] dark:text-[#9FB3C8]/80 mt-1">
                       Glissez ou déplacez une tâche ici
                     </p>
                   </div>
@@ -234,25 +240,25 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.96 }}
                           transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                          className={`group relative bg-[#072219]/90 hover:bg-[#092d21] rounded-xl p-3 border transition-all flex flex-col justify-between gap-2.5 shadow-sm cursor-pointer ${
+                          className={`group relative rounded-xl p-3 border transition-all flex flex-col justify-between gap-2.5 shadow-xs cursor-pointer ${
                             task.completed
-                              ? 'border-emerald-500/10 opacity-75'
+                              ? 'bg-white/70 border-[#D8E2EC] opacity-75 dark:bg-[#103049]/50 dark:border-[#94B8D6]/15'
                               : overdue
-                              ? 'border-rose-500/40 bg-rose-950/20'
-                              : 'border-emerald-500/20 hover:border-emerald-500/40'
+                              ? 'bg-rose-50/70 border-rose-200 hover:border-rose-300 dark:bg-rose-950/25 dark:border-rose-500/40'
+                              : 'bg-white hover:bg-[#F8FAFC] border-[#D8E2EC] hover:border-[#004266]/40 dark:bg-[#103049] dark:hover:bg-[#143B59] dark:border-[#94B8D6]/20 dark:hover:border-[#3895C9]/45'
                           }`}
                           onClick={() => onOpenTaskModal(task)}
                         >
-                          {/* Card Top: Unboxed Category & Priority Meta */}
+                          {/* Card Top */}
                           <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium gap-2">
+                            <div className="flex items-center justify-between text-[11px] font-medium gap-2">
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <CategoryIcon
                                   name={cat.iconName}
                                   className="w-3 h-3 shrink-0"
                                   style={{ color: cat.color }}
                                 />
-                                <span className="text-slate-300 font-semibold truncate">
+                                <span className="text-[#486075] dark:text-[#9FB3C8] font-semibold truncate">
                                   {cat.name}
                                 </span>
                               </div>
@@ -260,10 +266,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                               <span
                                 className={`text-[10px] font-bold shrink-0 ${
                                   task.priority === 'urgent'
-                                    ? 'text-rose-400'
+                                    ? 'text-rose-600 dark:text-rose-400'
                                     : task.priority === 'high'
-                                    ? 'text-amber-400'
-                                    : 'text-slate-400'
+                                    ? 'text-[#B85A00] dark:text-[#FFB35C]'
+                                    : 'text-[#486075] dark:text-[#9FB3C8]'
                                 }`}
                               >
                                 {priority.label}
@@ -272,8 +278,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
                             {/* Title */}
                             <h4
-                              className={`text-xs font-semibold leading-snug transition-colors group-hover:text-emerald-300 ${
-                                task.completed ? 'line-through text-slate-400' : 'text-slate-100'
+                              className={`text-xs font-semibold leading-snug transition-colors group-hover:text-[#004266] dark:group-hover:text-[#7CC4EB] ${
+                                task.completed
+                                  ? 'line-through text-[#64748B] dark:text-[#9FB3C8]/70'
+                                  : 'text-[#0B1F30] dark:text-[#F1F5F9]'
                               }`}
                             >
                               {task.title}
@@ -281,42 +289,42 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
                             {/* Description preview */}
                             {task.description && (
-                              <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                              <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8] line-clamp-2 leading-relaxed">
                                 {task.description}
                               </p>
                             )}
 
                             {/* Tags inline */}
                             {task.tags && task.tags.length > 0 && (
-                              <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[10px] text-emerald-300/80 font-mono">
+                              <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[10px] text-[#004266] dark:text-[#7CC4EB] font-mono">
                                 {task.tags.map((t) => (
-                                  <span key={t} className="hover:text-emerald-200">
-                                    #{t}
-                                  </span>
+                                  <span key={t}>#{t}</span>
                                 ))}
                               </div>
                             )}
                           </div>
 
-                          {/* Card Footer: Tabular Due Date, Assignee & Status Controls */}
+                          {/* Card Footer */}
                           <div
-                            className="pt-2 border-t border-emerald-500/10 flex flex-col gap-2 text-xs"
+                            className="pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/15 flex flex-col gap-2 text-xs"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex items-center justify-between gap-2 text-[11px]">
                               <span
                                 className={`flex items-center gap-1 font-mono tabular-nums truncate ${
-                                  overdue ? 'text-rose-400 font-bold' : 'text-slate-400'
+                                  overdue
+                                    ? 'text-rose-600 dark:text-rose-400 font-bold'
+                                    : 'text-[#486075] dark:text-[#9FB3C8]'
                                 }`}
                               >
-                                <Calendar className="w-3 h-3 text-emerald-400/80 shrink-0" />
+                                <Calendar className="w-3 h-3 text-[#004266] dark:text-[#3895C9] shrink-0" />
                                 <span className="truncate">
                                   {formatDueDateFrench(task.dueDate, task.dueTime)}
                                 </span>
                               </span>
 
                               {task.assigneeName && (
-                                <span className="text-slate-400 text-[10px] flex items-center gap-1 shrink-0">
+                                <span className="text-[#486075] dark:text-[#9FB3C8] text-[10px] flex items-center gap-1 shrink-0">
                                   <span>·</span>
                                   <span>{task.assigneeName.split(' ')[0]}</span>
                                 </span>
@@ -341,7 +349,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                     key={statusOption}
                                     value={statusOption}
                                     disabled={statusOption === 'completed' && !canComplete}
-                                    className="bg-slate-900 text-white"
+                                    className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]"
                                   >
                                     {TASK_STATUS_CONFIG[statusOption].label}
                                   </option>
@@ -354,7 +362,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                     type="button"
                                     disabled={!canModifyTaskStatus(task, prevStatus)}
                                     onClick={() => handleStatusChange(task, prevStatus)}
-                                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                    className="p-1 rounded-md text-[#486075] hover:text-[#004266] hover:bg-[#004266]/10 dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#3895C9]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                     title={`Passer à ${TASK_STATUS_CONFIG[prevStatus].label}`}
                                   >
                                     <ArrowLeft className="w-3 h-3" />
@@ -366,7 +374,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                     type="button"
                                     disabled={!canModifyTaskStatus(task, nextStatus)}
                                     onClick={() => handleStatusChange(task, nextStatus)}
-                                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                    className="p-1 rounded-md text-[#486075] hover:text-[#004266] hover:bg-[#004266]/10 dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#3895C9]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                     title={`Passer à ${TASK_STATUS_CONFIG[nextStatus].label}`}
                                   >
                                     <ArrowRight className="w-3 h-3" />

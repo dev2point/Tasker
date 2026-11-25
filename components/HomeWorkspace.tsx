@@ -634,7 +634,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
 
         const firstTask = triggeredTasks[0];
         const dueFormatted = formatDueDateFrench(firstTask.dueDate, firstTask.dueTime);
-        sendBrowserNotification(`⏰ Rappel Planit: ${firstTask.title}`, {
+        sendBrowserNotification(`⏰ Rappel — La Maison de la Fiscalité : ${firstTask.title}`, {
           body: `Échéance : ${dueFormatted || 'Non spécifiée'}.`,
         });
 
@@ -1240,11 +1240,11 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
     : null;
 
   return (
-    <div className="relative min-h-screen bg-[#03140E] glass-canvas flex flex-col md:flex-row text-slate-100 selection:bg-emerald-500 selection:text-slate-950 overflow-x-clip">
+    <div className="relative min-h-screen bg-[#F4F7FA] dark:bg-[#061826] glass-canvas flex flex-col md:flex-row text-[#0B1F30] dark:text-slate-100 selection:bg-[#F77F00] selection:text-white overflow-x-clip">
       {/* Ambient Radial Glass Light Orbs */}
-      <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none z-0" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-emerald-600/12 blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-teal-600/10 blur-[100px] pointer-events-none z-0" />
+      <div className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#004266]/6 dark:bg-[#3895C9]/14 blur-[120px] pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-[#F77F00]/6 dark:bg-[#F77F00]/10 blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-[#004266]/5 dark:bg-[#2D82B5]/10 blur-[100px] pointer-events-none z-0" />
 
       {/* Ambient Dotted Glow Canvas Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -1252,8 +1252,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           className="pointer-events-none w-full h-full"
           gap={28}
           radius={1}
-          color="rgba(16, 185, 129, 0.12)"
-          glowColor="rgba(52, 211, 153, 0.35)"
+          color="rgba(0, 66, 102, 0.14)"
+          darkColor="rgba(56, 149, 201, 0.18)"
+          glowColor="rgba(247, 127, 0, 0.35)"
+          darkGlowColor="rgba(247, 127, 0, 0.45)"
           opacity={0.18}
           speedMin={0.2}
           speedMax={0.8}
@@ -1329,10 +1331,10 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
           {taskSyncError && (
             <div
               role="alert"
-              className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-950/60 px-4 py-3 text-xs text-amber-100 shadow-lg backdrop-blur-md"
+              className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-950/60 px-4 py-3 text-xs text-amber-900 dark:text-amber-100 shadow-sm backdrop-blur-md"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                <AlertTriangle className="h-4 w-4 text-[#F77F00] dark:text-amber-400 shrink-0" />
                 <span className="truncate font-medium">{taskSyncError}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -1345,7 +1347,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
                         persistTaskToDb(t);
                       });
                     }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100 hover:bg-amber-500/30 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-lg border border-amber-300 dark:border-amber-400/40 bg-[#F77F00]/15 dark:bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-900 dark:text-amber-100 hover:bg-[#F77F00]/25 dark:hover:bg-amber-500/30 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="h-3 w-3" />
                     Réessayer ({tasks.filter((t) => t.syncPending).length})
@@ -1355,7 +1357,7 @@ export const HomeWorkspace: React.FC<HomeWorkspaceProps> = ({ initialSession }) 
                   type="button"
                   onClick={() => setTaskSyncError(null)}
                   aria-label="Fermer l'alerte de synchronisation"
-                  className="rounded-lg p-1 text-amber-300/80 hover:bg-amber-500/20 hover:text-amber-100 transition-colors"
+                  className="rounded-lg p-1 text-amber-700 dark:text-amber-300/80 hover:bg-amber-200/60 dark:hover:bg-amber-500/20 hover:text-amber-950 dark:hover:text-amber-100 transition-colors cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

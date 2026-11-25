@@ -59,34 +59,34 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       <div
         id="notifications-modal-backdrop"
         onClick={onClose}
-        className="fixed inset-0 z-[95] flex items-start justify-end p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+        className="fixed inset-0 z-[95] flex items-start justify-end p-3 sm:p-6 bg-[#061826]/65 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
       >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Centre de notifications"
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-150 mt-12 sm:mt-14 text-slate-100 cursor-default"
+        className="bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-3xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 max-w-md w-full max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-150 mt-12 sm:mt-14 text-[#0B1F30] dark:text-slate-100 cursor-default"
       >
         {/* Header */}
-        <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between bg-emerald-950/40">
+        <div className="p-4 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center justify-between bg-[#F4F7FA] dark:bg-[#061826]/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#F77F00]/15 text-[#F77F00] border border-[#F77F00]/30 flex items-center justify-center shrink-0">
               <Bell className="w-4.5 h-4.5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white">Centre de Notifications</h3>
+                <h3 className="font-bold text-sm text-[#0B1F30] dark:text-white">Centre de Notifications</h3>
                 {unreadCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="text-[10px] py-0 px-1.5 font-black tabular-nums h-4.5 flex items-center shadow-xs bg-rose-500 text-white"
+                    className="text-[10px] py-0 px-1.5 font-black tabular-nums h-4.5 flex items-center shadow-xs"
                   >
                     {unreadCount}
                   </Badge>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 font-medium tabular-nums">
+              <p className="text-[11px] text-[#486075] dark:text-slate-300 font-medium tabular-nums">
                 {unreadCount > 0
                   ? `${unreadCount} non lue(s)`
                   : 'Toutes les notifications sont lues'}
@@ -102,7 +102,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   size="icon-sm"
                   onClick={onMarkAllAsRead}
                   title="Tout marquer comme lu"
-                  className="text-slate-400 hover:text-amber-300 hover:bg-emerald-500/20"
+                  className="text-[#486075] dark:text-slate-400 hover:text-[#004266] dark:hover:text-[#7CC4EB]"
                 >
                   <CheckCheck className="w-4 h-4" />
                 </Button>
@@ -111,7 +111,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   size="icon-sm"
                   onClick={onClearAll}
                   title="Tout effacer"
-                  className="text-slate-400 hover:text-rose-400 hover:bg-rose-950/40"
+                  className="text-[#486075] dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -121,7 +121,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={onClose}
-              className="text-slate-400 hover:text-white hover:bg-emerald-500/20"
+              className="text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -131,12 +131,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {/* Notifications List */}
         <div className="p-3 overflow-y-auto custom-scrollbar flex-1 space-y-2">
           {notifications.length === 0 ? (
-            <div className="py-12 text-center text-slate-400">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto mb-2.5">
+            <div className="py-12 text-center text-[#486075] dark:text-slate-400">
+              <div className="w-12 h-12 rounded-2xl bg-[#EDF2F7] dark:bg-[#061826]/70 text-[#004266] dark:text-[#3895C9] border border-[#D8E2EC] dark:border-[#94B8D6]/20 flex items-center justify-center mx-auto mb-2.5">
                 <Bell className="w-6 h-6 stroke-[1.5]" />
               </div>
-              <p className="text-sm font-bold text-white">Aucune notification pour le moment</p>
-              <p className="text-xs text-slate-300 mt-1 max-w-xs mx-auto">
+              <p className="text-sm font-bold text-[#0B1F30] dark:text-white">Aucune notification pour le moment</p>
+              <p className="text-xs text-[#486075] dark:text-slate-300 mt-1 max-w-xs mx-auto">
                 Vos assignations, validations de tâches et rappels d&apos;échéance apparaîtront ici.
               </p>
             </div>
@@ -153,31 +153,31 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
               const getNotificationIcon = () => {
                 if (isAssigned) {
-                  return <UserCheck className="w-4 h-4 text-sky-300" />;
+                  return <UserCheck className="w-4 h-4 text-[#004266] dark:text-sky-300" />;
                 }
                 if (isTaskCompleted) {
-                  return <CheckCircle2 className="w-4 h-4 text-teal-300" />;
+                  return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />;
                 }
                 if (notif.type === 'admin_completed') {
-                  return <ShieldCheck className="w-4 h-4 text-emerald-300" />;
+                  return <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />;
                 }
                 if (notif.type === 'admin_delete') {
-                  return <ShieldAlert className="w-4 h-4 text-rose-300" />;
+                  return <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-300" />;
                 }
                 if (notif.type === 'admin_update') {
-                  return <Shield className="w-4 h-4 text-purple-300" />;
+                  return <Shield className="w-4 h-4 text-purple-600 dark:text-purple-300" />;
                 }
                 if (isOverdue) {
-                  return <AlertTriangle className="w-4 h-4 text-rose-300" />;
+                  return <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-300" />;
                 }
-                return <Clock className="w-4 h-4 text-amber-300" />;
+                return <Clock className="w-4 h-4 text-[#F77F00] dark:text-amber-300" />;
               };
 
               const getKindTag = () => {
-                if (isAssigned) return { label: 'Assignation', cls: 'text-sky-300' };
-                if (isTaskCompleted) return { label: 'Terminée', cls: 'text-teal-300' };
-                if (isAdminAction) return { label: 'Admin', cls: 'text-purple-300' };
-                if (isOverdue) return { label: 'Retard', cls: 'text-rose-300' };
+                if (isAssigned) return { label: 'Assignation', cls: 'text-[#004266] dark:text-sky-300' };
+                if (isTaskCompleted) return { label: 'Terminée', cls: 'text-emerald-700 dark:text-emerald-300' };
+                if (isAdminAction) return { label: 'Admin', cls: 'text-purple-700 dark:text-purple-300' };
+                if (isOverdue) return { label: 'Retard', cls: 'text-rose-700 dark:text-rose-300' };
                 return null;
               };
 
@@ -197,29 +197,29 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   }}
                   className={`p-3 rounded-xl border transition-all cursor-pointer hover:shadow-xs flex items-start gap-3 ${
                     notif.read
-                      ? 'bg-emerald-950/30 border-emerald-500/20 opacity-75 hover:opacity-100'
+                      ? 'bg-[#F4F7FA] dark:bg-[#061826]/40 border-[#D8E2EC] dark:border-[#94B8D6]/15 opacity-75 hover:opacity-100'
                       : isAssigned
-                      ? 'bg-sky-950/40 border-sky-500/40'
+                      ? 'bg-sky-50/70 dark:bg-sky-950/40 border-sky-200 dark:border-sky-500/40'
                       : isTaskCompleted
-                      ? 'bg-teal-950/45 border-teal-400/40'
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-400/40'
                       : isAdminAction
-                      ? 'bg-purple-950/40 border-purple-500/40'
+                      ? 'bg-purple-50/70 dark:bg-purple-950/40 border-purple-200 dark:border-purple-500/40'
                       : isOverdue
-                      ? 'bg-rose-950/60 border-rose-500/40'
-                      : 'bg-emerald-950/60 border-emerald-500/40'
+                      ? 'bg-rose-50/80 dark:bg-rose-950/50 border-rose-200 dark:border-rose-500/40'
+                      : 'bg-[#004266]/5 dark:bg-[#103049]/70 border-[#004266]/20 dark:border-[#3895C9]/40'
                   }`}
                 >
                   <div
                     className={`p-2 rounded-xl shrink-0 mt-0.5 border ${
                       isAssigned
-                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                        ? 'bg-sky-100 dark:bg-sky-500/20 border-sky-200 dark:border-sky-500/30'
                         : isTaskCompleted
-                        ? 'bg-teal-500/20 text-teal-300 border-teal-400/30'
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-200 dark:border-emerald-400/30'
                         : isAdminAction
-                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                        ? 'bg-purple-100 dark:bg-purple-500/20 border-purple-200 dark:border-purple-500/30'
                         : isOverdue
-                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        ? 'bg-rose-100 dark:bg-rose-500/20 border-rose-200 dark:border-rose-500/30'
+                        : 'bg-[#F77F00]/15 dark:bg-amber-500/20 border-[#F77F00]/30 dark:border-amber-500/30'
                     }`}
                   >
                     {getNotificationIcon()}
@@ -233,19 +233,19 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             {kindTag.label} ·
                           </span>
                         )}
-                        <span className="font-bold text-xs text-white truncate">
+                        <span className="font-bold text-xs text-[#0B1F30] dark:text-white truncate">
                           {notif.taskTitle}
                         </span>
                       </div>
                       {!notif.read && (
                         <span
-                          className="w-2 h-2 rounded-full bg-amber-400 shrink-0"
+                          className="w-2 h-2 rounded-full bg-[#F77F00] shrink-0"
                           title="Non lue"
                         />
                       )}
                     </div>
 
-                    <p className="text-[11px] text-slate-300 mt-0.5 font-medium leading-relaxed">
+                    <p className="text-[11px] text-[#486075] dark:text-slate-300 mt-0.5 font-medium leading-relaxed">
                       {notif.message ? (
                         notif.message
                       ) : (
@@ -256,7 +256,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       )}
                     </p>
 
-                    <span className="text-[10px] text-amber-300/90 font-mono tabular-nums mt-1 block">
+                    <span className="text-[10px] text-[#C26200] dark:text-amber-300/90 font-mono tabular-nums mt-1 block">
                       {new Date(notif.triggerTime).toLocaleDateString('fr-FR', {
                         day: '2-digit',
                         month: 'short',
@@ -278,4 +278,3 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     </ModalPortal>
   );
 };
-

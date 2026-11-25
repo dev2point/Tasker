@@ -4,28 +4,30 @@ import { cn } from "@/lib/utils"
 import { BorderBeam } from "@/components/magicui/border-beam"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98] relative overflow-hidden",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#004266] dark:focus-visible:ring-[#3895C9] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98] relative overflow-hidden",
   {
     variants: {
       variant: {
         default:
-          "bg-emerald-500 text-white font-bold shadow-md hover:bg-emerald-400 hover:shadow-emerald-500/20 border border-emerald-400/50 active:bg-emerald-600",
+          "bg-[#004266] text-white font-semibold shadow-sm hover:bg-[#00314D] dark:bg-[#0E5D8A] dark:hover:bg-[#1472A6] border border-[#004266] dark:border-[#3895C9]/40",
+        accent:
+          "bg-[#F77F00] text-white font-bold shadow-sm hover:bg-[#DE7200] border border-[#F77F00] active:bg-[#C86600]",
         destructive:
-          "bg-rose-600 text-white shadow-sm hover:bg-rose-500 hover:shadow-rose-500/30 border border-rose-500/40 active:bg-rose-700",
+          "bg-rose-600 text-white shadow-sm hover:bg-rose-500 border border-rose-600/80 active:bg-rose-700",
         outline:
-          "border border-emerald-500/30 bg-[#082219]/90 text-emerald-200 shadow-xs hover:bg-emerald-500/20 hover:text-white hover:border-emerald-500/50 active:bg-emerald-500/30",
+          "border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-slate-100 shadow-2xs hover:bg-[#EDF2F7] dark:hover:bg-[#103049] hover:border-[#004266]/40 dark:hover:border-[#3895C9]/50",
         secondary:
-          "bg-[#082219] text-slate-200 border border-emerald-500/20 shadow-xs hover:bg-emerald-500/20 hover:text-white active:bg-emerald-500/30",
+          "bg-[#EDF2F7] dark:bg-[#103049] text-[#0B1F30] dark:text-slate-100 border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-2xs hover:bg-[#E2EAF2] dark:hover:bg-[#163D5C]",
         ghost:
-          "text-slate-300 hover:bg-emerald-500/20 hover:text-white active:bg-emerald-500/30",
+          "text-[#486075] dark:text-slate-300 hover:bg-[#004266]/8 dark:hover:bg-[#3895C9]/15 hover:text-[#004266] dark:hover:text-white",
         link:
-          "text-emerald-400 underline-offset-4 hover:underline",
+          "text-[#004266] dark:text-[#4FA8DC] underline-offset-4 hover:underline",
         soft:
-          "bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/80 active:bg-emerald-800/80 border border-emerald-500/30",
+          "bg-[#004266]/10 dark:bg-[#3895C9]/15 text-[#004266] dark:text-[#7CC4EA] hover:bg-[#004266]/15 dark:hover:bg-[#3895C9]/25 border border-[#004266]/20 dark:border-[#3895C9]/30",
         success:
-          "bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 hover:shadow-emerald-500/20 border border-emerald-400/50",
+          "bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 border border-emerald-500/50",
         warning:
-          "bg-amber-500 text-white shadow-sm hover:bg-amber-400 hover:shadow-amber-500/20 border border-amber-400/50",
+          "bg-[#F77F00] text-white shadow-sm hover:bg-[#DE7200] border border-[#F77F00]",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -52,7 +54,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, showBorderBeam = true, children, ...props }, ref) => {
+  ({ className, variant, size, showBorderBeam = false, children, ...props }, ref) => {
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
@@ -61,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {children}
         {showBorderBeam && (
-          <BorderBeam size={80} duration={6} colorFrom="#10b981" colorTo="#34d399" borderWidth={1} />
+          <BorderBeam size={80} duration={6} colorFrom="#004266" colorTo="#F77F00" borderWidth={1} />
         )}
       </button>
     )

@@ -18,14 +18,14 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         aria-valuemax={100}
         aria-valuenow={clampedValue}
         className={cn(
-          "relative h-2 w-full overflow-hidden rounded-full bg-slate-100",
+          "relative h-2 w-full overflow-hidden rounded-full bg-[#EDF2F7] dark:bg-[#061826]",
           className
         )}
         {...props}
       >
         <div
           className={cn(
-            "h-full w-full flex-1 bg-[#F7C59F] transition-all duration-300 ease-out",
+            "h-full w-full flex-1 bg-[#004266] dark:bg-[#3895C9] transition-all duration-300 ease-out",
             indicatorClassName
           )}
           style={{ transform: `translateX(-${100 - clampedValue}%)` }}

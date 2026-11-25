@@ -75,13 +75,14 @@ export const AVAILABLE_CATEGORY_ICONS = [
 ] as const;
 
 export const PRESET_CATEGORY_COLORS = [
+  { name: 'Bleu LMF', hex: '#004266', bgLight: 'bg-[#004266]/10 text-[#004266] border-[#004266]/25' },
+  { name: 'Orange LMF', hex: '#F77F00', bgLight: 'bg-orange-50 text-orange-800 border-orange-200' },
   { name: 'Bleu Océan', hex: '#3b82f6', bgLight: 'bg-blue-50 text-blue-700 border-blue-200' },
   { name: 'Émeraude', hex: '#10b981', bgLight: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   { name: 'Violet Royal', hex: '#8b5cf6', bgLight: 'bg-purple-50 text-purple-700 border-purple-200' },
   { name: 'Rose Vif', hex: '#f43f5e', bgLight: 'bg-rose-50 text-rose-700 border-rose-200' },
   { name: 'Ambre / Or', hex: '#f59e0b', bgLight: 'bg-amber-50 text-amber-700 border-amber-200' },
   { name: 'Cyan Lagon', hex: '#06b6d4', bgLight: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  { name: 'Abricot Planit', hex: '#EE8D4B', bgLight: 'bg-orange-50 text-orange-800 border-orange-200' },
   { name: 'Indigo Nuit', hex: '#6366f1', bgLight: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   { name: 'Fuchsia', hex: '#d946ef', bgLight: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' },
   { name: 'Sarcelle', hex: '#14b8a6', bgLight: 'bg-teal-50 text-teal-700 border-teal-200' },

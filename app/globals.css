@@ -1,13 +1,45 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: var(--font-plus-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --color-primary: #10B981;
+  --color-primary: #004266;
+  --color-accent: #F77F00;
 }
 
-/* Custom Glassmorphism & Translucent Scrollbar Rules */
+:root {
+  --canvas: #F4F7FA;
+  --surface: #FFFFFF;
+  --surface-elevated: #EDF2F7;
+  --border: #D8E2EC;
+  --border-subtle: #E6EDF4;
+  --text-primary: #0B1F30;
+  --text-secondary: #486075;
+  --brand-blue: #004266;
+  --brand-blue-hover: #00314D;
+  --brand-orange: #F77F00;
+  --brand-orange-hover: #DE7200;
+  --scrollbar-thumb: rgba(0, 66, 102, 0.25);
+  --scrollbar-thumb-hover: rgba(0, 66, 102, 0.48);
+}
+
+.dark {
+  --canvas: #061826;
+  --surface: #0B2438;
+  --surface-elevated: #103049;
+  --border: rgba(148, 184, 214, 0.18);
+  --border-subtle: rgba(148, 184, 214, 0.10);
+  --text-primary: #F1F5F9;
+  --text-secondary: #9FB3C8;
+  --brand-blue: #3895C9;
+  --brand-blue-hover: #4FA8DC;
+  --brand-orange: #F77F00;
+  --brand-orange-hover: #FF931E;
+  --scrollbar-thumb: rgba(56, 149, 201, 0.35);
+  --scrollbar-thumb-hover: rgba(247, 127, 0, 0.55);
+}
+
 @layer utilities {
-  /* Hide scrollbar completely for horizontal pill bars and carousels */
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -18,61 +50,98 @@
     height: 0px;
   }
 
-  /* Glassmorphism Design System (Elton Hounnou Inspired) */
+  /* Corporate Dual-Theme Surfaces — La Maison de la Fiscalité */
   .glass-canvas {
-    background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.20) 0%, transparent 45%),
-                radial-gradient(circle at 90% 90%, rgba(5, 150, 105, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 50% 40%, rgba(5, 46, 35, 0.4) 0%, transparent 75%),
-                #03140E;
+    background:
+      radial-gradient(circle at 8% 8%, rgba(0, 66, 102, 0.06) 0%, transparent 45%),
+      radial-gradient(circle at 92% 90%, rgba(247, 127, 0, 0.05) 0%, transparent 50%),
+      var(--canvas);
+  }
+
+  .dark .glass-canvas {
+    background:
+      radial-gradient(circle at 10% 10%, rgba(0, 66, 102, 0.36) 0%, transparent 48%),
+      radial-gradient(circle at 90% 90%, rgba(247, 127, 0, 0.10) 0%, transparent 50%),
+      #061826;
   }
 
   .glass-panel {
-    background: rgba(10, 31, 24, 0.65);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px -12px rgba(0, 66, 102, 0.12);
+  }
+
+  .dark .glass-panel {
+    background: rgba(11, 36, 56, 0.88);
+    border: 1px solid rgba(148, 184, 214, 0.18);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 20px 50px -10px rgba(0, 0, 0, 0.55);
   }
 
   .glass-card {
-    background: rgba(12, 36, 28, 0.55);
-    backdrop-filter: blur(18px) saturate(160%);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 12px 32px -8px rgba(0, 0, 0, 0.5);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px -6px rgba(0, 66, 102, 0.08);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .glass-card:hover {
-    background: rgba(16, 46, 36, 0.7);
-    border-color: rgba(16, 185, 129, 0.35);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), 0 18px 40px -8px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 185, 129, 0.18);
+    border-color: rgba(0, 66, 102, 0.35);
+    box-shadow: 0 10px 26px -10px rgba(0, 66, 102, 0.15);
+  }
+
+  .dark .glass-card {
+    background: rgba(11, 36, 56, 0.78);
+    border: 1px solid rgba(148, 184, 214, 0.16);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 10px 28px -8px rgba(0, 0, 0, 0.45);
+  }
+
+  .dark .glass-card:hover {
+    background: rgba(16, 48, 73, 0.92);
+    border-color: rgba(56, 149, 201, 0.42);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 16px 36px -8px rgba(0, 0, 0, 0.55);
   }
 
   .glass-pill {
-    background: rgba(6, 22, 17, 0.75);
-    backdrop-filter: blur(28px) saturate(200%);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 12px 30px -5px rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 24px -6px rgba(0, 66, 102, 0.14);
+  }
+
+  .dark .glass-pill {
+    background: rgba(11, 36, 56, 0.90);
+    border: 1px solid rgba(148, 184, 214, 0.22);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 12px 30px -5px rgba(0, 0, 0, 0.5);
   }
 
   .glass-input {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-  }
-  .glass-input:focus {
-    border-color: rgba(16, 185, 129, 0.6);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
   }
 
-  /* Sleek translucent custom scrollbar */
+  .glass-input:focus {
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 2px rgba(0, 66, 102, 0.16);
+  }
+
+  .dark .glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 184, 214, 0.2);
+    color: #ffffff;
+  }
+
+  .dark .glass-input:focus {
+    border-color: rgba(56, 149, 201, 0.7);
+    box-shadow: 0 0 0 2px rgba(56, 149, 201, 0.22);
+  }
+
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(16, 185, 129, 0.4) transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
@@ -82,21 +151,20 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(16, 185, 129, 0.3);
+    background: var(--scrollbar-thumb);
     border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(16, 185, 129, 0.6);
+    background: var(--scrollbar-thumb-hover);
   }
 }
 
-/* Global scrollbar design */
 html, body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(16, 185, 129, 0.4) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
   scroll-behavior: smooth;
-  background-color: #03140E;
-  color: #f1f5f9;
+  background-color: var(--canvas);
+  color: var(--text-primary);
 }
 
 ::-webkit-scrollbar {
@@ -109,7 +177,7 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
   border: 1px solid transparent;
   background-clip: padding-box;
@@ -117,7 +185,7 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.6);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -149,6 +217,28 @@ html, body {
 }
 
 /* ==========================================================================
+   Theme Switch Radial Wave Propagation (View Transitions API)
+   ========================================================================== */
+html.theme-wave-transition,
+html.theme-wave-transition * {
+  transition: none !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* ==========================================================================
    Print Styles for Executive Reports & PDF Generation
    ========================================================================== */
 @media print {
@@ -157,14 +247,13 @@ html, body {
     margin: 12mm 15mm;
   }
 
-  /* Hide everything on the page except the printable report */
   body * {
     visibility: hidden;
   }
 
   body {
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    color: #0B1F30 !important;
   }
 
   #printable-report-content,
@@ -183,12 +272,11 @@ html, body {
     border: none !important;
     box-shadow: none !important;
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    color: #0B1F30 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Prevent awkward page breaks */
   tr, .kpi-card, h3, .section-title {
     break-inside: avoid;
     page-break-inside: avoid;

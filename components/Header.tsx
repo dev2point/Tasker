@@ -24,8 +24,9 @@ import {
   GitPullRequest,
   LogOut,
   Building,
-  FileText,
   Printer,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { ViewMode } from '@/types/task';
 import { User } from '@/types/user';
@@ -34,6 +35,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { MobileFloatingGlassMenu } from '@/components/MobileFloatingGlassMenu';
+import { BrandLogo } from '@/components/BrandLogo';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -71,11 +74,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenReportModal,
   currentUser,
   unreadNotificationsCount,
-  activeRemindersCount,
   soundEnabled,
   onToggleSound,
   pendingTasksCount = 0,
 }) => {
+  const { isDark, toggleTheme } = useTheme();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDateStr, setCurrentDateStr] = useState<string>('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -99,7 +102,6 @@ export const Header: React.FC<HeaderProps> = ({
         day: 'numeric',
         month: 'short',
       });
-      // Capitalize first letter of weekday
       setCurrentDateStr(formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1));
     };
 
@@ -108,7 +110,6 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Close desktop dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -125,7 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDesktopToolsOpen, isUserMenuOpen]);
 
-  // Primary workspace tabs with responsive labels
   const navItems: {
     id: ViewMode;
     label: string;
@@ -157,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
       id: 'review' as ViewMode,
       label: 'Revue Métier',
       shortLabel: 'Revue',
-      icon: <GitPullRequest className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-emerald-400" />,
+      icon: <GitPullRequest className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-[#F77F00]" />,
     },
     {
       id: 'stats',
@@ -171,7 +171,7 @@ export const Header: React.FC<HeaderProps> = ({
             id: 'admin' as ViewMode,
             label: 'Admin',
             shortLabel: 'Admin',
-            icon: <Shield className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-purple-600" />,
+            icon: <Shield className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 text-purple-600 dark:text-purple-400" />,
             special: true,
           },
         ]
@@ -180,14 +180,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      {/* Top Application Bar - Visible only on mobile (< md), while desktop and tablet use the Left Sidebar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#061A13]/90 backdrop-blur-2xl border-b border-emerald-500/20 shadow-xl w-full max-w-full text-white">
+      {/* Top Application Bar - Visible on mobile (< md) */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0B2438]/95 backdrop-blur-2xl border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 shadow-sm w-full max-w-full text-[#0B1F30] dark:text-white">
         <DottedGlowBackground
-          className="pointer-events-none absolute inset-0 opacity-30 overflow-hidden"
-          gap={12}
-          radius={1.2}
-          color="rgba(16, 185, 129, 0.4)"
-          glowColor="rgba(16, 185, 129, 0.9)"
+          className="pointer-events-none absolute inset-0 opacity-20 dark:opacity-30 overflow-hidden"
+          gap={14}
+          radius={1.1}
+          color="rgba(0, 66, 102, 0.25)"
+          darkColor="rgba(56, 149, 201, 0.35)"
+          glowColor="rgba(247, 127, 0, 0.5)"
           speedMin={0.4}
           speedMax={1.4}
         />
@@ -196,26 +197,18 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* 1. Brand Logo & Compact Live Clock */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-950/50 shrink-0 font-bold">
-                <CalendarIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.3]" />
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base sm:text-lg font-black tracking-tight text-white leading-none">
-                  mfisca-tasks
-                </span>
-                {/* Minimalist Live Clock Pill */}
-                <div
-                  title={currentDateStr}
-                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-mono text-emerald-200 font-semibold shrink-0"
-                >
-                  <Clock className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>{currentTime}</span>
-                </div>
+              <BrandLogo size="sm" />
+              <div
+                title={currentDateStr}
+                className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F4F7FA] dark:bg-[#061826]/70 border border-[#D8E2EC] dark:border-[#94B8D6]/25 text-[11px] font-mono text-[#004266] dark:text-[#7CC4EB] font-semibold shrink-0 tabular-nums"
+              >
+                <Clock className="w-3 h-3 text-[#F77F00] shrink-0" />
+                <span>{currentTime}</span>
               </div>
             </div>
 
-            {/* 2. Desktop Primary Navigation Segment (Ergonomic, auto-fitting) */}
-            <nav className="hidden md:flex items-center bg-emerald-950/60 p-0.5 lg:p-1 rounded-xl border border-emerald-500/20 shadow-xs shrink-0">
+            {/* 2. Desktop Primary Navigation Segment (hidden on mobile) */}
+            <nav className="hidden md:flex items-center bg-[#EDF2F7] dark:bg-[#061826] p-0.5 lg:p-1 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-xs shrink-0">
               {navItems.map((item) => {
                 const active = currentView === item.id;
                 return (
@@ -230,11 +223,11 @@ export const Header: React.FC<HeaderProps> = ({
                     className={`flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1 lg:py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap cursor-pointer ${
                       active
                         ? item.special
-                          ? 'bg-purple-500/20 text-purple-300 shadow-xs border border-purple-500/30 font-bold'
-                          : 'bg-emerald-500/20 text-emerald-300 shadow-xs border border-emerald-500/40 font-bold'
+                          ? 'bg-purple-600 text-white shadow-xs font-bold'
+                          : 'bg-[#004266] text-white dark:bg-[#103049] shadow-xs font-bold'
                         : item.special
-                          ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10'
-                          : 'text-slate-300 hover:text-white hover:bg-emerald-500/10'
+                          ? 'text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10'
+                          : 'text-[#486075] dark:text-slate-300 hover:text-[#0B1F30] dark:hover:text-white'
                     }`}
                   >
                     {item.icon}
@@ -243,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {item.badge !== undefined && (
                       <span
                         className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                          active ? 'bg-emerald-500/30 text-emerald-200' : 'bg-emerald-950 text-slate-300'
+                          active ? 'bg-[#F77F00] text-white' : 'bg-white dark:bg-[#0B2438] text-[#004266] dark:text-[#7CC4EB]'
                         }`}
                       >
                         {item.badge}
@@ -254,7 +247,7 @@ export const Header: React.FC<HeaderProps> = ({
               })}
             </nav>
 
-            {/* 3. Right Action Tools & Controls - Unified & Non-Overflowing */}
+            {/* 3. Right Action Tools & Controls */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
               {/* Notification Bell */}
@@ -265,12 +258,12 @@ export const Header: React.FC<HeaderProps> = ({
                   size="icon-sm"
                   onClick={onOpenNotifications}
                   title="Centre de rappels & alertes"
-                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 text-emerald-200 border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 hover:text-white shrink-0 overflow-visible rounded-xl transition-colors cursor-pointer"
+                  className="h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 overflow-visible rounded-xl transition-colors cursor-pointer"
                 >
-                  <Bell className="w-4 h-4 text-emerald-300" />
+                  <Bell className="w-4 h-4 text-[#004266] dark:text-[#7CC4EB]" />
                 </Button>
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 z-20 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-xs ring-2 ring-slate-900 animate-pulse pointer-events-none whitespace-nowrap">
+                  <span className="absolute -top-1.5 -right-1.5 z-20 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-xs ring-2 ring-white dark:ring-[#0B2438] pointer-events-none whitespace-nowrap">
                     {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
                   </span>
                 )}
@@ -291,12 +284,12 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 title={
                   currentUser
-                    ? 'Assistant IA Gemini (Création intelligente & planificateur)'
-                    : 'Assistant IA (Connexion requise pour utiliser Gemini)'
+                    ? 'Assistant IA (Création intelligente & planificateur)'
+                    : 'Assistant IA (Connexion requise)'
                 }
-                className="relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl border-emerald-500/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 shadow-md backdrop-blur-md cursor-pointer"
+                className="relative h-8.5 sm:h-9 px-2 sm:px-2.5 lg:px-3 text-xs gap-1.5 font-semibold transition-all shrink-0 rounded-xl cursor-pointer"
               >
-                <Bot className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                <Bot className="w-3.5 h-3.5 text-[#004266] dark:text-[#7CC4EB] shrink-0" />
                 <span className="hidden xl:inline">Assistant IA</span>
                 <span className="inline xl:hidden font-bold">IA</span>
                 {!currentUser && (
@@ -312,28 +305,23 @@ export const Header: React.FC<HeaderProps> = ({
                   size="sm"
                   onClick={() => setIsDesktopToolsOpen((prev) => !prev)}
                   title="Outils, sons & export"
-                  className={`h-8.5 sm:h-9 px-2 sm:px-2.5 text-xs font-semibold gap-1 rounded-xl transition-all cursor-pointer ${
-                    isDesktopToolsOpen
-                      ? 'border-emerald-400 bg-emerald-500/20 text-white'
-                      : 'border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20 hover:text-white'
-                  }`}
+                  className="h-8.5 sm:h-9 px-2 sm:px-2.5 text-xs font-semibold gap-1 rounded-xl transition-all cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-300" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#004266] dark:text-[#7CC4EB]" />
                   <span className="hidden xl:inline">Outils</span>
                   <ChevronDown
-                    className={`w-3 h-3 text-slate-400 transition-transform ${
+                    className={`w-3 h-3 text-[#486075] dark:text-slate-400 transition-transform ${
                       isDesktopToolsOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </Button>
 
                 {isDesktopToolsOpen && (
-                  <div className="absolute right-0 top-full mt-1.5 w-60 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
-                    <div className="px-2.5 py-1.5 border-b border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                      Outils & Préférences
+                  <div className="absolute right-0 top-full mt-1.5 w-60 bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-2xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-[#0B1F30] dark:text-slate-100">
+                    <div className="px-2.5 py-1.5 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 text-[10px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
+                      Outils &amp; Préférences
                     </div>
                     <div className="py-1 space-y-1 text-xs">
-                      {/* Sound Toggle */}
                       <button
                         id="toggle-sound-btn"
                         type="button"
@@ -341,32 +329,19 @@ export const Header: React.FC<HeaderProps> = ({
                           onToggleSound();
                           soundManager.playClickSound();
                         }}
-                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
+                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
-                          <span
-                            className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                              soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-950 text-slate-500'
-                            }`}
-                          >
-                            {soundEnabled ? (
-                              <Volume2 className="w-3.5 h-3.5" />
-                            ) : (
-                              <VolumeX className="w-3.5 h-3.5" />
-                            )}
+                          <span className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
+                            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
                           </span>
                           <span>Sons &amp; Alertes</span>
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                            soundEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
-                          }`}
-                        >
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[#EDF2F7] dark:bg-[#061826] text-[#004266] dark:text-[#7CC4EB]">
                           {soundEnabled ? 'Activé' : 'Coupé'}
                         </span>
                       </button>
 
-                      {/* Categories & Tags */}
                       {onOpenCategoryTagManager && (
                         <button
                           id="open-categories-modal-btn"
@@ -375,16 +350,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onOpenCategoryTagManager();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                         >
-                          <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+                          <span className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                             <FolderPlus className="w-3.5 h-3.5" />
                           </span>
                           <span>Catégories &amp; Tags</span>
                         </button>
                       )}
 
-                      {/* Export iCal */}
                       <button
                         id="open-export-btn"
                         type="button"
@@ -392,15 +366,14 @@ export const Header: React.FC<HeaderProps> = ({
                           setIsDesktopToolsOpen(false);
                           onOpenExportModal();
                         }}
-                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-slate-200 hover:text-white cursor-pointer"
+                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                       >
-                        <span className="w-6 h-6 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                           <Download className="w-3.5 h-3.5" />
                         </span>
                         <span>Exporter l&apos;agenda (.ics)</span>
                       </button>
 
-                      {/* Executive Report & PDF */}
                       {onOpenReportModal && (
                         <button
                           id="open-report-btn"
@@ -409,21 +382,20 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onOpenReportModal();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors font-semibold text-emerald-200 hover:text-white cursor-pointer"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                            <span className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                               <Printer className="w-3.5 h-3.5" />
                             </span>
                             <span>Rapport &amp; Synthèse Comité</span>
                           </span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB]">
                             PDF
                           </span>
                         </button>
                       )}
 
-                      {/* Microsoft 365 Hub */}
                       {onOpenM365Modal && (
                         <button
                           id="open-m365-btn"
@@ -432,21 +404,20 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onOpenM365Modal();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 transition-colors font-semibold text-blue-200 hover:text-white cursor-pointer"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                            <span className="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-300 flex items-center justify-center">
                               <Building className="w-3.5 h-3.5" />
                             </span>
-                            <span>Microsoft 365 (Office, Outlook)</span>
+                            <span>Microsoft 365</span>
                           </span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-200">
                             M365
                           </span>
                         </button>
                       )}
 
-                      {/* Diagnostic Postgres if applicable */}
                       {onOpenPostgresModal && currentUser?.role === 'admin' && (
                         <button
                           type="button"
@@ -454,16 +425,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onOpenPostgresModal();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors font-semibold text-slate-700"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors font-semibold cursor-pointer"
                         >
-                          <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-300 flex items-center justify-center">
                             <Database className="w-3.5 h-3.5" />
                           </span>
                           <span>Diagnostic Base SQL</span>
                         </button>
                       )}
 
-                      {/* Administration link inside tools */}
                       {currentUser?.role === 'admin' && (
                         <button
                           type="button"
@@ -472,15 +442,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsDesktopToolsOpen(false);
                             onViewChange('admin');
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 transition-colors font-semibold text-purple-200 border-t border-emerald-500/20 mt-1"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors font-semibold text-purple-700 dark:text-purple-200 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18 mt-1 cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+                            <span className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 flex items-center justify-center">
                               <Shield className="w-3.5 h-3.5" />
                             </span>
                             <span>Espace Admin</span>
                           </span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200 uppercase">
                             Admin
                           </span>
                         </button>
@@ -499,25 +469,16 @@ export const Header: React.FC<HeaderProps> = ({
                       type="button"
                       onClick={() => setIsUserMenuOpen((prev) => !prev)}
                       title={`Connecté : ${currentUser.name} (${currentUser.role})`}
-                      className={`flex items-center gap-1.5 px-2 py-1 h-8.5 sm:h-9 rounded-xl border transition-colors shrink-0 max-w-[130px] sm:max-w-[150px] cursor-pointer ${
-                        isUserMenuOpen
-                          ? 'border-emerald-400 bg-emerald-500/20 text-white'
-                          : 'border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-500/20 text-slate-100'
-                      }`}
+                      className="flex items-center gap-1.5 px-2 py-1 h-8.5 sm:h-9 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-[#F4F7FA] dark:bg-[#061826]/70 hover:border-[#004266]/40 dark:hover:border-[#3895C9]/50 transition-colors shrink-0 max-w-[130px] sm:max-w-[150px] cursor-pointer"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/40">
+                      <span className="w-6 h-6 rounded-lg bg-[#004266] text-white font-bold text-xs flex items-center justify-center shrink-0">
                         {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                       </span>
-                      <span className="truncate font-bold text-xs text-slate-100">
+                      <span className="truncate font-bold text-xs text-[#0B1F30] dark:text-slate-100">
                         {currentUser.name.split(' ')[0]}
                       </span>
-                      {currentUser.role === 'admin' && (
-                        <span className="hidden xl:inline-flex text-[9px] px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold uppercase shrink-0">
-                          Admin
-                        </span>
-                      )}
                       <ChevronDown
-                        className={`w-3 h-3 text-emerald-400 shrink-0 transition-transform ${
+                        className={`w-3 h-3 text-[#486075] dark:text-slate-400 shrink-0 transition-transform ${
                           isUserMenuOpen ? 'rotate-180' : ''
                         }`}
                       />
@@ -529,7 +490,7 @@ export const Header: React.FC<HeaderProps> = ({
                       size="sm"
                       onClick={onOpenAuthModal}
                       title="Se connecter ou créer un compte"
-                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shadow-md shrink-0 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/50 cursor-pointer transition-colors"
+                      className="font-bold px-2.5 sm:px-3 h-8.5 sm:h-9 text-xs gap-1.5 shrink-0 rounded-xl cursor-pointer"
                     >
                       <UserIcon className="w-3.5 h-3.5 shrink-0" />
                       <span>Connexion</span>
@@ -538,31 +499,29 @@ export const Header: React.FC<HeaderProps> = ({
 
                   {/* User Profile Popover */}
                   {isUserMenuOpen && currentUser && (
-                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
-                      {/* User Info Header */}
-                      <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/30 text-emerald-300 font-bold text-sm flex items-center justify-center shrink-0 border border-emerald-500/40">
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-2xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-[#0B1F30] dark:text-slate-100">
+                      <div className="p-2.5 rounded-xl bg-[#F4F7FA] dark:bg-[#061826]/70 border border-[#D8E2EC] dark:border-[#94B8D6]/20 flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-[#004266] text-white font-bold text-sm flex items-center justify-center shrink-0">
                           {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold text-white truncate">
+                          <span className="text-xs font-bold text-[#0B1F30] dark:text-white truncate">
                             {currentUser.name}
                           </span>
-                          <span className="text-[11px] text-slate-300 truncate">
+                          <span className="text-[11px] text-[#486075] dark:text-slate-300 truncate">
                             {currentUser.email}
                           </span>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-500/30 font-semibold">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] font-semibold">
                               {currentUser.department || 'Général'}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 font-bold uppercase">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-bold uppercase">
                               {currentUser.role}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Quick Actions */}
                       <div className="py-1 mt-1 space-y-0.5 text-xs">
                         {currentUser.role === 'admin' && (
                           <button
@@ -572,13 +531,13 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsUserMenuOpen(false);
                               onViewChange('admin');
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 font-semibold transition-colors cursor-pointer"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-200 font-semibold transition-colors cursor-pointer"
                           >
                             <span className="flex items-center gap-2">
-                              <Shield className="w-3.5 h-3.5 text-purple-400" />
+                              <Shield className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                               <span>Espace Administration</span>
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200">
                               Ouvrir
                             </span>
                           </button>
@@ -590,9 +549,9 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsUserMenuOpen(false);
                             onOpenAuthModal();
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-emerald-500/20 text-slate-200 font-semibold transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] font-semibold transition-colors cursor-pointer"
                         >
-                          <UserIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          <UserIcon className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
                           <span>Gérer le profil</span>
                         </button>
 
@@ -608,9 +567,9 @@ export const Header: React.FC<HeaderProps> = ({
                               onOpenAuthModal();
                             }
                           }}
-                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-950/40 text-rose-300 font-semibold transition-colors border-t border-emerald-500/15 mt-1 cursor-pointer"
+                          className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-semibold transition-colors border-t border-[#D8E2EC] dark:border-[#94B8D6]/18 mt-1 cursor-pointer"
                         >
-                          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                          <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                           <span>Se déconnecter</span>
                         </button>
                       </div>
@@ -622,9 +581,10 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Desktop New Task CTA Button */}
               <Button
                 id="open-new-task-btn"
+                variant="accent"
                 size="sm"
                 onClick={onOpenNewTaskModal}
-                className="hidden md:inline-flex bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40 backdrop-blur-md shadow-md h-8.5 sm:h-9 shrink-0 gap-1.5 px-2.5 lg:px-3 rounded-xl transition-all cursor-pointer"
+                className="hidden md:inline-flex font-bold h-8.5 sm:h-9 shrink-0 gap-1.5 px-2.5 lg:px-3 rounded-xl transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span className="hidden xl:inline">Nouvelle tâche</span>
@@ -639,16 +599,11 @@ export const Header: React.FC<HeaderProps> = ({
                   size="icon-sm"
                   onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                   title="Options & Paramètres"
-                  className={`h-8.5 w-8.5 rounded-xl transition-colors ${
-                    isMobileMenuOpen
-                      ? 'border-emerald-400 bg-emerald-500/20 text-white'
-                      : 'border-emerald-500/30 bg-emerald-950/40 text-slate-200 hover:bg-emerald-500/20 hover:text-white'
-                  }`}
+                  className="h-8.5 w-8.5 rounded-xl transition-colors cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-300" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#004266] dark:text-[#7CC4EB]" />
                 </Button>
 
-                {/* Mobile Dropdown Popover */}
                 {isMobileMenuOpen && (
                   <>
                     <div
@@ -656,21 +611,52 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => setIsMobileMenuOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-[#061A13]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-emerald-500/30 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
-                      <div className="px-2.5 py-1.5 border-b border-emerald-500/20 flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                          Options & Réglages
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-2xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-[#0B1F30] dark:text-slate-100">
+                      <div className="px-2.5 py-1.5 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
+                          Options &amp; Réglages
                         </span>
                         <button
                           type="button"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="p-1 rounded-md text-slate-400 hover:text-white"
+                          className="p-1 rounded-md text-[#486075] dark:text-slate-400 hover:text-[#0B1F30] dark:hover:text-white cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       <div className="py-1 space-y-1">
+                        {/* Theme Switch Toggle (Mobile) */}
+                        <button
+                          id="mobile-toggle-theme-btn"
+                          type="button"
+                          onClick={(e) => {
+                            soundManager.playClickSound();
+                            toggleTheme(e);
+                          }}
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-lg bg-[#004266]/10 dark:bg-[#F77F00]/20 flex items-center justify-center">
+                              {isDark ? (
+                                <Sun className="w-3.5 h-3.5 text-[#F77F00]" />
+                              ) : (
+                                <Moon className="w-3.5 h-3.5 text-[#004266]" />
+                              )}
+                            </span>
+                            <span>Apparence</span>
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isDark
+                                ? 'bg-[#F77F00]/20 text-[#FFB35C] border border-[#F77F00]/40'
+                                : 'bg-[#004266]/10 text-[#004266] border border-[#004266]/25'
+                            }`}
+                          >
+                            {isDark ? 'Sombre' : 'Clair'}
+                          </span>
+                        </button>
+
                         {/* Sound Toggle */}
                         <button
                           type="button"
@@ -678,31 +664,19 @@ export const Header: React.FC<HeaderProps> = ({
                             onToggleSound();
                             soundManager.playClickSound();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold cursor-pointer"
                         >
                           <span className="flex items-center gap-2.5">
-                            <span
-                              className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                                soundEnabled
-                                  ? 'bg-emerald-500/20 text-emerald-400'
-                                  : 'bg-emerald-950 text-slate-500'
-                              }`}
-                            >
+                            <span className="w-7 h-7 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                               {soundEnabled ? (
                                 <Volume2 className="w-3.5 h-3.5" />
                               ) : (
-                                <VolumeX className="w-3.5 h-3.5" />
+                                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
                               )}
                             </span>
                             <span>Alertes sonores</span>
                           </span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              soundEnabled
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                : 'bg-slate-800 text-slate-400'
-                            }`}
-                          >
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EDF2F7] dark:bg-[#061826] text-[#004266] dark:text-[#7CC4EB]">
                             {soundEnabled ? 'Activé' : 'Coupé'}
                           </span>
                         </button>
@@ -715,15 +689,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onOpenCategoryTagManager();
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold cursor-pointer"
                           >
                             <span className="flex items-center gap-2.5">
-                              <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+                              <span className="w-7 h-7 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                                 <FolderPlus className="w-3.5 h-3.5" />
                               </span>
                               <span>Catégories &amp; Tags</span>
                             </span>
-                            <span className="text-[10px] text-slate-500 font-bold">Gérer</span>
+                            <span className="text-[10px] text-[#486075] dark:text-slate-400 font-bold">Gérer</span>
                           </button>
                         )}
 
@@ -734,15 +708,15 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsMobileMenuOpen(false);
                             onOpenExportModal();
                           }}
-                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-slate-200"
+                          className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold cursor-pointer"
                         >
                           <span className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
+                            <span className="w-7 h-7 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center">
                               <Download className="w-3.5 h-3.5" />
                             </span>
                             <span>Export iCal (.ics)</span>
                           </span>
-                          <Badge variant="outline" className="text-[9px] border-emerald-500/30 text-emerald-300">
+                          <Badge variant="outline" className="text-[9px]">
                             Agenda
                           </Badge>
                         </button>
@@ -755,15 +729,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onOpenReportModal();
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/20 transition-colors text-xs font-semibold text-emerald-200"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold text-[#004266] dark:text-[#7CC4EB] cursor-pointer"
                           >
                             <span className="flex items-center gap-2.5">
-                              <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center">
+                              <span className="w-7 h-7 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 flex items-center justify-center">
                                 <Printer className="w-3.5 h-3.5" />
                               </span>
                               <span>Rapport &amp; Synthèse Comité</span>
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB]">
                               PDF
                             </span>
                           </button>
@@ -777,15 +751,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onOpenM365Modal();
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-950/40 text-blue-200 transition-colors text-xs font-semibold"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors text-xs font-semibold cursor-pointer"
                           >
                             <span className="flex items-center gap-2.5">
-                              <span className="w-7 h-7 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-500/40 flex items-center justify-center">
+                              <span className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-300 flex items-center justify-center">
                                 <Building className="w-3.5 h-3.5" />
                               </span>
-                              <span>Microsoft 365 (Office, Outlook)</span>
+                              <span>Microsoft 365</span>
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-200 border border-blue-500/40">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-200">
                               M365
                             </span>
                           </button>
@@ -800,15 +774,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setIsMobileMenuOpen(false);
                               onViewChange('admin');
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-950/40 text-purple-200 transition-colors text-xs font-semibold border-t border-emerald-500/20 mt-1"
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-200 transition-colors text-xs font-semibold border-t border-[#D8E2EC] dark:border-[#94B8D6]/18 mt-1 cursor-pointer"
                           >
                             <span className="flex items-center gap-2.5">
-                              <span className="w-7 h-7 rounded-lg bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+                              <span className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 flex items-center justify-center">
                                 <Shield className="w-3.5 h-3.5" />
                               </span>
                               <span>Administration</span>
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40 uppercase">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200 uppercase">
                               Admin
                             </span>
                           </button>
@@ -823,7 +797,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Mobile Floating Glass Speed-Dial Menu (Inspired by Amanga Store & Supabase) */}
+      {/* Mobile Floating Glass Speed-Dial Menu */}
       <MobileFloatingGlassMenu
         currentView={currentView}
         onViewChange={onViewChange}
@@ -834,4 +808,3 @@ export const Header: React.FC<HeaderProps> = ({
     </>
   );
 };
-

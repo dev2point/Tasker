@@ -93,7 +93,6 @@ export const ListView: React.FC<ListViewProps> = ({
   const [showAdvancedQuickAdd, setShowAdvancedQuickAdd] = useState(false);
   const [quickAddError, setQuickAddError] = useState<string | null>(null);
 
-  // Compute all available tags across tasks
   const allAvailableTags = useMemo(() => {
     const counts: Record<string, number> = {};
     tasks.forEach((t) => {
@@ -115,8 +114,8 @@ export const ListView: React.FC<ListViewProps> = ({
     categories.find((c) => c.id === catId) || {
       id: catId,
       name: catId,
-      color: '#10b981',
-      bgLight: 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30',
+      color: '#004266',
+      bgLight: 'bg-[#004266]/10 text-[#004266] border-[#004266]/25',
       iconName: 'Folder',
     };
 
@@ -164,12 +163,10 @@ export const ListView: React.FC<ListViewProps> = ({
     setShowAdvancedQuickAdd(false);
   };
 
-  // Filter tasks based on all active criteria
   const filteredTasks = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
 
     return tasks.filter((task) => {
-      // 1. Completion / status filter
       const normalizedStatus = normalizeTaskStatus(task.status, task.completed);
       if (activeFilter === 'today' && (task.dueDate !== todayStr || task.completed)) {
         return false;
@@ -196,24 +193,20 @@ export const ListView: React.FC<ListViewProps> = ({
         return false;
       }
 
-      // 2. Category filter
       if (selectedCategory !== 'all' && task.category !== selectedCategory) {
         return false;
       }
 
-      // 3. Priority filter
       if (selectedPriority !== 'all' && task.priority !== selectedPriority) {
         return false;
       }
 
-      // 4. Tags filter
       if (selectedTags.length > 0) {
         const taskTagsLower = (task.tags || []).map((t) => t.toLowerCase());
         const hasAllSelected = selectedTags.every((st) => taskTagsLower.includes(st));
         if (!hasAllSelected) return false;
       }
 
-      // 5. Full text search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = task.title.toLowerCase().includes(q);
@@ -229,7 +222,6 @@ export const ListView: React.FC<ListViewProps> = ({
     });
   }, [tasks, activeFilter, selectedCategory, selectedPriority, selectedTags, searchQuery]);
 
-  // Sort tasks
   const sortedTasks = useMemo(() => {
     const list = [...filteredTasks];
     const priorityWeights: Record<Priority, number> = {
@@ -265,7 +257,6 @@ export const ListView: React.FC<ListViewProps> = ({
     });
   }, [filteredTasks, sortBy]);
 
-  // Group tasks
   const groupedTasks = useMemo<{ id: string; title: string; tasks: Task[]; badge?: string }[]>(() => {
     if (groupBy === 'none') {
       return [{ id: 'all', title: 'Toutes les tâches', tasks: sortedTasks, badge: '' }];
@@ -301,19 +292,19 @@ export const ListView: React.FC<ListViewProps> = ({
 
       const result = [];
       if (groups.overdue.length > 0) {
-        result.push({ id: 'overdue', title: 'En retard', tasks: groups.overdue, badge: 'text-rose-400 border-rose-500/30' });
+        result.push({ id: 'overdue', title: 'En retard', tasks: groups.overdue, badge: 'text-rose-600 dark:text-rose-400' });
       }
       if (groups.today.length > 0) {
-        result.push({ id: 'today', title: "Aujourd'hui", tasks: groups.today, badge: 'text-amber-400 border-amber-500/30' });
+        result.push({ id: 'today', title: "Aujourd'hui", tasks: groups.today, badge: 'text-[#B85A00] dark:text-[#FFB35C]' });
       }
       if (groups.tomorrow.length > 0) {
-        result.push({ id: 'tomorrow', title: 'Demain', tasks: groups.tomorrow, badge: 'text-sky-400 border-sky-500/30' });
+        result.push({ id: 'tomorrow', title: 'Demain', tasks: groups.tomorrow, badge: 'text-[#004266] dark:text-[#7CC4EB]' });
       }
       if (groups.later.length > 0) {
-        result.push({ id: 'later', title: 'À venir plus tard', tasks: groups.later, badge: 'text-slate-300 border-emerald-500/20' });
+        result.push({ id: 'later', title: 'À venir plus tard', tasks: groups.later, badge: 'text-[#486075] dark:text-[#9FB3C8]' });
       }
       if (groups.completed.length > 0) {
-        result.push({ id: 'completed', title: 'Terminées', tasks: groups.completed, badge: 'text-teal-400 border-teal-500/30' });
+        result.push({ id: 'completed', title: 'Terminées', tasks: groups.completed, badge: 'text-emerald-700 dark:text-emerald-400' });
       }
       return result;
     }
@@ -325,7 +316,7 @@ export const ListView: React.FC<ListViewProps> = ({
           id: p,
           title: `Priorité ${PRIORITY_CONFIG[p]?.label}`,
           tasks: sortedTasks.filter((t) => t.priority === p),
-          badge: 'border-emerald-500/20 text-slate-300',
+          badge: 'text-[#486075] dark:text-[#9FB3C8]',
         }))
         .filter((g) => g.tasks.length > 0);
     }
@@ -336,7 +327,7 @@ export const ListView: React.FC<ListViewProps> = ({
           id: cat.id,
           title: cat.name,
           tasks: sortedTasks.filter((t) => t.category === cat.id),
-          badge: 'border-emerald-500/20 text-slate-300',
+          badge: 'text-[#486075] dark:text-[#9FB3C8]',
         }))
         .filter((g) => g.tasks.length > 0);
     }
@@ -363,7 +354,7 @@ export const ListView: React.FC<ListViewProps> = ({
           id: `tag-${tag}`,
           title: `#${tag}`,
           tasks: list,
-          badge: 'border-emerald-500/20 text-emerald-300',
+          badge: 'text-[#004266] dark:text-[#7CC4EB]',
         }));
 
       if (noTagTasks.length > 0) {
@@ -371,7 +362,7 @@ export const ListView: React.FC<ListViewProps> = ({
           id: 'no-tag',
           title: 'Sans étiquette',
           tasks: noTagTasks,
-          badge: 'border-emerald-500/20 text-slate-400',
+          badge: 'text-[#64748B] dark:text-[#9FB3C8]',
         });
       }
 
@@ -407,7 +398,7 @@ export const ListView: React.FC<ListViewProps> = ({
         particleCount: 45,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#10B981', '#34D399', '#6EE7B7'],
+        colors: ['#004266', '#F77F00', '#3895C9'],
       });
     } else {
       soundManager.playClickSound();
@@ -436,7 +427,7 @@ export const ListView: React.FC<ListViewProps> = ({
         particleCount: 45,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#10B981', '#34D399', '#6EE7B7'],
+        colors: ['#004266', '#F77F00', '#3895C9'],
       });
     } else {
       soundManager.playClickSound();
@@ -473,13 +464,13 @@ export const ListView: React.FC<ListViewProps> = ({
 
   return (
     <div className="space-y-3.5 pb-16 md:pb-6">
-      {/* Linear-Style Sleek Quick Add Form */}
+      {/* Quick Add Form */}
       <form
         onSubmit={handleQuickAddSubmit}
-        className="bg-[#051812]/95 rounded-2xl border border-emerald-500/20 p-2.5 sm:p-3 shadow-lg shadow-black/40 transition-all focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/30 text-slate-100"
+        className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-2.5 sm:p-3 shadow-sm transition-all focus-within:border-[#004266] dark:focus-within:border-[#3895C9] focus-within:ring-1 focus-within:ring-[#004266]/20 dark:focus-within:ring-[#3895C9]/30 text-[#0B1F30] dark:text-[#F1F5F9]"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/25">
+          <div className="w-7 h-7 rounded-lg bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] flex items-center justify-center shrink-0 border border-[#004266]/20 dark:border-[#3895C9]/30">
             <Plus className="w-4 h-4 stroke-[2.5]" />
           </div>
           <input
@@ -496,14 +487,15 @@ export const ListView: React.FC<ListViewProps> = ({
               setShowAdvancedQuickAdd(true);
             }}
             placeholder="Créer une tâche rapidement... (Appuyez sur Entrée)"
-            className="w-full text-xs sm:text-sm font-medium text-white placeholder:text-slate-400 focus:outline-hidden bg-transparent"
+            className="w-full text-xs sm:text-sm font-medium text-[#0B1F30] dark:text-[#F1F5F9] placeholder:text-[#64748B] dark:placeholder:text-[#9FB3C8]/70 focus:outline-hidden bg-transparent"
           />
           <Button
             type="submit"
             id="quick-add-submit-btn"
+            variant="accent"
             size="xs"
             disabled={!quickTitle.trim()}
-            className="shrink-0 font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-xs cursor-pointer rounded-lg px-3"
+            className="shrink-0 font-bold shadow-xs cursor-pointer rounded-lg px-3"
           >
             Créer
           </Button>
@@ -511,17 +503,17 @@ export const ListView: React.FC<ListViewProps> = ({
 
         {/* Quick Add Error banner */}
         {quickAddError && (
-          <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+          <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-500/40 text-rose-700 dark:text-rose-200 text-xs">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
             <span>{quickAddError}</span>
           </div>
         )}
 
         {/* Expandable options row */}
         {showAdvancedQuickAdd && (
-          <div className="flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-emerald-500/15 text-xs animate-in fade-in-50 duration-150">
-            <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1 text-slate-300">
-              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/15 text-xs animate-in fade-in-50 duration-150">
+            <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1 text-[#486075] dark:text-[#9FB3C8]">
+              <Calendar className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
               <input
                 type="date"
                 min={getMinDateStr()}
@@ -530,12 +522,12 @@ export const ListView: React.FC<ListViewProps> = ({
                   setQuickDate(e.target.value);
                   setQuickAddError(null);
                 }}
-                className="bg-transparent text-xs font-semibold text-white outline-hidden cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1 text-slate-300">
-              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1 text-[#486075] dark:text-[#9FB3C8]">
+              <Clock className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
               <input
                 type="time"
                 min={getMinTimeForDate(quickDate)}
@@ -544,17 +536,17 @@ export const ListView: React.FC<ListViewProps> = ({
                   setQuickTime(e.target.value);
                   setQuickAddError(null);
                 }}
-                className="bg-transparent text-xs font-semibold text-white outline-hidden cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden cursor-pointer"
               />
             </div>
 
             <select
               value={quickCategory}
               onChange={(e) => setQuickCategory(e.target.value)}
-              className="bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1 text-xs font-semibold text-white outline-hidden cursor-pointer"
+              className="bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1 text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden cursor-pointer"
             >
               {categories.map((c) => (
-                <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                <option key={c.id} value={c.id} className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">
                   {c.name}
                 </option>
               ))}
@@ -563,7 +555,7 @@ export const ListView: React.FC<ListViewProps> = ({
             <button
               type="button"
               onClick={() => onOpenTaskModal()}
-              className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 ml-auto flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-semibold text-[#004266] hover:text-[#00314D] dark:text-[#7CC4EB] dark:hover:text-white ml-auto flex items-center gap-1 cursor-pointer"
             >
               <SlidersHorizontal className="w-3 h-3" />
               <span>Plus d&apos;options</span>
@@ -572,9 +564,9 @@ export const ListView: React.FC<ListViewProps> = ({
         )}
       </form>
 
-      {/* Unified Linear-Style Filter & Command Toolbar */}
-      <div className="bg-[#051812]/95 p-2.5 sm:p-3 rounded-xl border border-emerald-500/20 shadow-md space-y-2.5 text-slate-100">
-        {/* Row 1: Segmented Status Controls (Zero-Pill Discipline) */}
+      {/* Unified Filter & Command Toolbar */}
+      <div className="bg-white dark:bg-[#0B2438] p-2.5 sm:p-3 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 shadow-sm space-y-2.5 text-[#0B1F30] dark:text-[#F1F5F9]">
+        {/* Row 1: Segmented Status Controls */}
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
           <div className="flex items-center gap-1 text-xs">
             {[
@@ -596,20 +588,20 @@ export const ListView: React.FC<ListViewProps> = ({
                   onClick={() => setActiveFilter(f.id as FilterType)}
                   className={`px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 select-none cursor-pointer ${
                     active
-                      ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 shadow-xs'
+                      ? 'bg-[#004266] text-white font-bold shadow-xs dark:bg-[#3895C9] dark:text-[#061826]'
                       : f.alert
-                      ? 'text-rose-300 hover:bg-rose-950/40 border border-rose-500/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
+                      ? 'text-rose-600 hover:bg-rose-50 border border-rose-200 dark:text-rose-300 dark:hover:bg-rose-950/40 dark:border-rose-500/30'
+                      : 'text-[#486075] hover:text-[#0B1F30] hover:bg-[#EDF2F7] border border-transparent dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#103049]'
                   }`}
                 >
                   <span>{f.label}</span>
                   <span
                     className={`font-mono text-[11px] tabular-nums font-semibold ${
                       active
-                        ? 'text-emerald-200'
+                        ? 'text-white/85 dark:text-[#061826]/80'
                         : f.alert
-                        ? 'text-rose-300'
-                        : 'text-slate-500'
+                        ? 'text-rose-600 dark:text-rose-300'
+                        : 'text-[#64748B] dark:text-[#9FB3C8]/70'
                     }`}
                   >
                     · {f.count}
@@ -619,13 +611,12 @@ export const ListView: React.FC<ListViewProps> = ({
             })}
           </div>
 
-          {/* Quick Header Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-rose-950/30 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                 title="Réinitialiser les filtres"
               >
                 <X className="w-3 h-3" />
@@ -637,71 +628,68 @@ export const ListView: React.FC<ListViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenCategoryTagManager('categories')}
-                className="px-2 py-1 rounded-lg text-xs font-medium gap-1 text-slate-400 hover:text-slate-200 hover:bg-emerald-500/10 border border-emerald-500/20 cursor-pointer flex items-center transition-colors"
+                className="px-2 py-1 rounded-lg text-xs font-medium gap-1 text-[#486075] hover:text-[#004266] hover:bg-[#EDF2F7] border border-[#D8E2EC] dark:text-[#9FB3C8] dark:hover:text-[#7CC4EB] dark:hover:bg-[#103049] dark:border-[#94B8D6]/20 cursor-pointer flex items-center transition-colors"
                 title="Gérer les catégories et étiquettes"
               >
-                <FolderPlus className="w-3.5 h-3.5 text-emerald-400" />
+                <FolderPlus className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9]" />
                 <span className="hidden md:inline">Catégories</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Row 2: Consolidated Command Bar (Search + Dropdown Filters + Group/Sort) */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-emerald-500/10 text-xs">
-          {/* Search Input */}
+        {/* Row 2: Search + Dropdown Filters + Group/Sort */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#D8E2EC] dark:border-[#94B8D6]/15 text-xs">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#64748B] dark:text-[#9FB3C8] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher une tâche, un pôle..."
-              className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-emerald-500/20 bg-[#03140E] text-xs font-medium text-white placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 outline-hidden transition-all"
+              className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049] text-xs font-medium text-[#0B1F30] dark:text-[#F1F5F9] placeholder:text-[#64748B] dark:placeholder:text-[#9FB3C8]/70 focus:ring-1 focus:ring-[#004266] focus:border-[#004266] dark:focus:ring-[#3895C9] dark:focus:border-[#3895C9] outline-hidden transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0B1F30] dark:text-[#9FB3C8] dark:hover:text-white p-0.5 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Pôle Selector */}
-          <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1">
-            <Filter className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
+          <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1">
+            <Filter className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9] shrink-0" />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-slate-300 outline-hidden pr-1 cursor-pointer max-w-[140px] truncate"
+              className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden pr-1 cursor-pointer max-w-[140px] truncate"
             >
-              <option value="all" className="bg-slate-900 text-white">Tous les Pôles</option>
+              <option value="all" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Tous les Pôles</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                <option key={c.id} value={c.id} className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Tag Selector */}
           {allAvailableTags.length > 0 && (
-            <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1">
-              <Tag className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
+            <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1">
+              <Tag className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9] shrink-0" />
               <select
                 value={selectedTags[0] || 'all'}
                 onChange={(e) => {
                   const val = e.target.value;
                   setSelectedTags(val === 'all' ? [] : [val]);
                 }}
-                className="bg-transparent text-xs font-semibold text-slate-300 outline-hidden pr-1 cursor-pointer max-w-[120px] truncate"
+                className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden pr-1 cursor-pointer max-w-[120px] truncate"
               >
-                <option value="all" className="bg-slate-900 text-white">Tous les Tags</option>
+                <option value="all" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Tous les Tags</option>
                 {allAvailableTags.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-900 text-white">
+                  <option key={t.name} value={t.name} className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">
                     #{t.name} ({t.count})
                   </option>
                 ))}
@@ -709,47 +697,45 @@ export const ListView: React.FC<ListViewProps> = ({
             </div>
           )}
 
-          {/* Grouping Selector */}
-          <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1">
-            <Layers className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
+          <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1">
+            <Layers className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9] shrink-0" />
             <select
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value as GroupByType)}
-              className="bg-transparent text-xs font-semibold text-slate-300 outline-hidden pr-1 cursor-pointer max-w-[130px] truncate"
+              className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden pr-1 cursor-pointer max-w-[130px] truncate"
             >
-              <option value="dueDate" className="bg-slate-900 text-white">Grouper: Date</option>
-              <option value="status" className="bg-slate-900 text-white">Grouper: Statut</option>
-              <option value="category" className="bg-slate-900 text-white">Grouper: Pôle</option>
-              <option value="tag" className="bg-slate-900 text-white">Grouper: Tag</option>
-              <option value="priority" className="bg-slate-900 text-white">Grouper: Priorité</option>
-              <option value="none" className="bg-slate-900 text-white">Sans groupe</option>
+              <option value="dueDate" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Grouper: Date</option>
+              <option value="status" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Grouper: Statut</option>
+              <option value="category" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Grouper: Pôle</option>
+              <option value="tag" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Grouper: Tag</option>
+              <option value="priority" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Grouper: Priorité</option>
+              <option value="none" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Sans groupe</option>
             </select>
           </div>
 
-          {/* Sort Selector */}
-          <div className="flex items-center gap-1.5 bg-[#03140E] border border-emerald-500/20 rounded-lg px-2.5 py-1">
-            <ArrowUpDown className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
+          <div className="flex items-center gap-1.5 bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-lg px-2.5 py-1">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#004266] dark:text-[#3895C9] shrink-0" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'priority' | 'title')}
-              className="bg-transparent text-xs font-semibold text-slate-300 outline-hidden pr-1 cursor-pointer max-w-[120px] truncate"
+              className="bg-transparent text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9] outline-hidden pr-1 cursor-pointer max-w-[120px] truncate"
             >
-              <option value="dueDate" className="bg-slate-900 text-white">Trier: Échéance</option>
-              <option value="priority" className="bg-slate-900 text-white">Trier: Priorité</option>
-              <option value="title" className="bg-slate-900 text-white">Trier: Titre</option>
+              <option value="dueDate" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Trier: Échéance</option>
+              <option value="priority" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Trier: Priorité</option>
+              <option value="title" className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]">Trier: Titre</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Task Groups and Linear-Style Items */}
+      {/* Task Groups */}
       {groupedTasks.length === 0 || sortedTasks.length === 0 ? (
-        <div className="bg-[#051812]/90 rounded-2xl border border-emerald-500/15 p-10 text-center text-slate-400 shadow-md">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-10 text-center text-[#486075] dark:text-[#9FB3C8] shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] border border-[#004266]/20 dark:border-[#3895C9]/30 flex items-center justify-center mx-auto mb-3">
             <Calendar className="w-6 h-6 stroke-[1.8]" />
           </div>
-          <h3 className="text-sm font-bold text-white">Aucune tâche trouvée</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-[#0B1F30] dark:text-[#F1F5F9]">Aucune tâche trouvée</h3>
+          <p className="text-xs mt-1 max-w-sm mx-auto">
             {hasActiveFilters
               ? 'Aucune tâche ne correspond aux filtres actifs.'
               : 'Aucune tâche enregistrée pour le moment.'}
@@ -761,9 +747,10 @@ export const ListView: React.FC<ListViewProps> = ({
               </Button>
             )}
             <Button
+              variant="accent"
               onClick={() => onOpenTaskModal()}
               size="sm"
-              className="font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow-xs"
+              className="font-bold text-xs cursor-pointer shadow-xs"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
               <span>Créer une tâche</span>
@@ -774,22 +761,20 @@ export const ListView: React.FC<ListViewProps> = ({
         <div className="space-y-4">
           {groupedTasks.map((group) => (
             <div key={group.id} className="space-y-1.5">
-              {/* Group Header */}
               {groupBy !== 'none' && (
                 <div className="flex items-center justify-between px-1 pt-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-300">
+                    <span className="text-xs font-bold text-[#0B1F30] dark:text-[#F1F5F9]">
                       {group.title}
                     </span>
-                    <span className="font-mono text-[11px] tabular-nums text-emerald-400/80 font-bold">
+                    <span className="font-mono text-[11px] tabular-nums text-[#004266] dark:text-[#7CC4EB] font-bold">
                       {group.tasks.length}
                     </span>
                   </div>
                 </div>
               )}
 
-              {/* Tasks List Container with Linear Styling */}
-              <div className="rounded-xl border border-emerald-500/15 divide-y divide-emerald-500/10 overflow-hidden bg-[#051812]/95 shadow-md">
+              <div className="rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 divide-y divide-[#D8E2EC] dark:divide-[#94B8D6]/15 overflow-hidden bg-white dark:bg-[#0B2438] shadow-sm">
                 <AnimatePresence initial={false}>
                   {group.tasks.map((task) => {
                     const cat = getCategory(task.category);
@@ -808,15 +793,6 @@ export const ListView: React.FC<ListViewProps> = ({
                     const subtaskProgress =
                       totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
-                    const priorityStripe =
-                      task.priority === 'urgent'
-                        ? 'border-l-rose-500'
-                        : task.priority === 'high'
-                        ? 'border-l-amber-500'
-                        : task.priority === 'medium'
-                        ? 'border-l-emerald-500/60'
-                        : 'border-l-slate-600';
-
                     return (
                       <motion.div
                         key={task.id}
@@ -825,12 +801,12 @@ export const ListView: React.FC<ListViewProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                        className={`group p-3 sm:p-3.5 transition-colors hover:bg-[#08241b] border-l-3 ${
+                        className={`group p-3 sm:p-3.5 transition-colors hover:bg-[#F4F7FA] dark:hover:bg-[#103049]/80 ${
                           task.completed
-                            ? 'border-l-slate-700 bg-slate-950/20 opacity-70'
+                            ? 'bg-[#F4F7FA]/60 dark:bg-[#061826]/30 opacity-70'
                             : isOverdue
-                            ? 'border-l-rose-500 bg-rose-950/15'
-                            : priorityStripe
+                            ? 'bg-rose-50/50 dark:bg-rose-950/15'
+                            : ''
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -842,8 +818,8 @@ export const ListView: React.FC<ListViewProps> = ({
                               onClick={() => handleCheckboxClick(task.id, task.completed)}
                               className={`mt-0.5 transition-colors shrink-0 focus:outline-hidden ${
                                 !canComplete
-                                  ? 'opacity-30 cursor-not-allowed text-slate-600'
-                                  : 'text-slate-500 hover:text-emerald-400 cursor-pointer'
+                                  ? 'opacity-30 cursor-not-allowed text-slate-400'
+                                  : 'text-[#64748B] hover:text-[#004266] dark:text-[#9FB3C8] dark:hover:text-[#7CC4EB] cursor-pointer'
                               }`}
                               title={
                                 !canComplete
@@ -854,9 +830,9 @@ export const ListView: React.FC<ListViewProps> = ({
                               }
                             >
                               {task.completed ? (
-                                <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
+                                <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
                               ) : (
-                                <Circle className="w-4.5 h-4.5 hover:text-emerald-400 transition-colors" />
+                                <Circle className="w-4.5 h-4.5" />
                               )}
                             </button>
 
@@ -864,84 +840,80 @@ export const ListView: React.FC<ListViewProps> = ({
                               <div className="flex flex-wrap items-center gap-2">
                                 <h4
                                   onClick={() => onOpenTaskModal(task, 'view')}
-                                  className={`text-xs sm:text-sm font-semibold cursor-pointer hover:text-emerald-300 transition-colors leading-snug ${
+                                  className={`text-xs sm:text-sm font-semibold cursor-pointer hover:text-[#004266] dark:hover:text-[#7CC4EB] transition-colors leading-snug ${
                                     task.completed
-                                      ? 'line-through text-slate-400'
-                                      : 'text-slate-100'
+                                      ? 'line-through text-[#64748B] dark:text-[#9FB3C8]/70'
+                                      : 'text-[#0B1F30] dark:text-[#F1F5F9]'
                                   }`}
                                 >
                                   {task.title}
                                 </h4>
 
-                                {/* Clean Unboxed Metadata Separators */}
-                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                                <div className="flex items-center gap-1.5 text-[11px] text-[#486075] dark:text-[#9FB3C8] font-medium">
                                   <span>·</span>
                                   <div className="flex items-center gap-1">
                                     <CategoryIcon name={cat.iconName} className="w-2.5 h-2.5" style={{ color: cat.color }} />
-                                    <span className="text-slate-200 font-semibold">{cat.name}</span>
+                                    <span className="text-[#0B1F30] dark:text-[#F1F5F9] font-semibold">{cat.name}</span>
                                   </div>
                                   <span>·</span>
-                                  <span className={`font-semibold ${
-                                    task.priority === 'urgent'
-                                      ? 'text-rose-300'
-                                      : task.priority === 'high'
-                                      ? 'text-amber-300'
-                                      : 'text-slate-300'
-                                  }`}>
+                                  <span
+                                    className={`inline-flex items-center gap-1 font-semibold ${
+                                      task.priority === 'urgent'
+                                        ? 'text-rose-600 dark:text-rose-300'
+                                        : task.priority === 'high'
+                                        ? 'text-[#B85A00] dark:text-[#FFB35C]'
+                                        : 'text-[#486075] dark:text-[#9FB3C8]'
+                                    }`}
+                                  >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
                                     {priority.label}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Description preview */}
                               {task.description && (
-                                <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">
+                                <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8] line-clamp-2 leading-relaxed">
                                   {task.description}
                                 </p>
                               )}
 
-                              {/* Tabular Numerals Metadata Bar */}
-                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 pt-0.5">
-                                {/* Due Date & Time */}
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-[#486075] dark:text-[#9FB3C8] pt-0.5">
                                 <span
                                   className={`flex items-center gap-1 font-mono tabular-nums text-[11px] ${
                                     isOverdue
-                                      ? 'text-rose-300 font-bold'
+                                      ? 'text-rose-600 dark:text-rose-300 font-bold'
                                       : task.dueDate === new Date().toISOString().split('T')[0]
-                                      ? 'text-amber-300 font-bold'
-                                      : 'text-slate-300'
+                                      ? 'text-[#B85A00] dark:text-[#FFB35C] font-bold'
+                                      : 'text-[#486075] dark:text-[#9FB3C8]'
                                   }`}
                                 >
-                                  <Calendar className="w-3 h-3 text-emerald-400" />
+                                  <Calendar className="w-3 h-3 text-[#004266] dark:text-[#3895C9]" />
                                   {formatDueDateFrench(task.dueDate, task.dueTime)}
                                 </span>
 
-                                {/* Automated Reminder */}
                                 {task.reminderMinutesBefore >= 0 && !task.completed && (
-                                  <span className="flex items-center gap-1 text-[11px] text-emerald-300 font-mono">
-                                    <Bell className="w-3 h-3 text-emerald-400" />
+                                  <span className="flex items-center gap-1 text-[11px] text-[#004266] dark:text-[#7CC4EB] font-mono tabular-nums">
+                                    <Bell className="w-3 h-3" />
                                     {task.reminderMinutesBefore === 0
                                       ? 'Rappel à l’heure'
                                       : `${task.reminderMinutesBefore}m`}
                                   </span>
                                 )}
 
-                                {/* Assignee Name */}
                                 {task.assigneeName && (
-                                  <span className="text-slate-300 text-[11px] flex items-center gap-1">
+                                  <span className="text-[#486075] dark:text-[#9FB3C8] text-[11px] flex items-center gap-1">
                                     <span>·</span>
                                     <span>{task.assigneeName.split(' ')[0]}</span>
                                   </span>
                                 )}
 
-                                {/* Subtasks progress indicator */}
                                 {totalSubtasks > 0 && (
                                   <button
                                     type="button"
                                     onClick={() => toggleTaskExpand(task.id)}
-                                    className="flex items-center gap-1 text-emerald-300 hover:text-white font-mono text-[11px] tabular-nums cursor-pointer"
+                                    className="flex items-center gap-1 text-[#004266] hover:text-[#00314D] dark:text-[#7CC4EB] dark:hover:text-white font-mono text-[11px] tabular-nums cursor-pointer"
                                   >
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                    <CheckCircle2 className="w-3 h-3" />
                                     <span>
                                       {completedSubtasks}/{totalSubtasks}
                                     </span>
@@ -953,27 +925,25 @@ export const ListView: React.FC<ListViewProps> = ({
                                   </button>
                                 )}
 
-                                {/* Tracked files */}
                                 {task.trackedFiles && task.trackedFiles.length > 0 && (
                                   <span
                                     onClick={() => onOpenTaskModal(task)}
-                                    className="flex items-center gap-1 text-amber-300 text-[11px] font-mono cursor-pointer hover:underline"
+                                    className="flex items-center gap-1 text-[#B85A00] dark:text-[#FFB35C] text-[11px] font-mono cursor-pointer hover:underline tabular-nums"
                                     title={`${task.trackedFiles.length} document(s)`}
                                   >
-                                    <FileText className="w-3 h-3 text-amber-400" />
+                                    <FileText className="w-3 h-3" />
                                     <span>{task.trackedFiles.length} doc</span>
                                   </span>
                                 )}
 
-                                {/* Tags */}
                                 {task.tags && task.tags.length > 0 && (
-                                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-emerald-300">
+                                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-[#004266] dark:text-[#7CC4EB]">
                                     {task.tags.map((t) => (
                                       <button
                                         key={t}
                                         type="button"
                                         onClick={() => toggleTagFilter(t)}
-                                        className="hover:text-emerald-100 cursor-pointer"
+                                        className="hover:underline cursor-pointer"
                                       >
                                         #{t}
                                       </button>
@@ -984,8 +954,8 @@ export const ListView: React.FC<ListViewProps> = ({
                             </div>
                           </div>
 
-                          {/* Quick Actions (Status Selector + Linear-Style Hover Buttons) */}
-                          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-center opacity-90 group-hover:opacity-100 transition-opacity">
+                          {/* Quick Actions */}
+                          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-center opacity-95 group-hover:opacity-100 transition-opacity">
                             <select
                               aria-label={`Statut de ${task.title}`}
                               value={taskStatus}
@@ -1000,7 +970,7 @@ export const ListView: React.FC<ListViewProps> = ({
                                   key={statusOption}
                                   value={statusOption}
                                   disabled={statusOption === 'completed' && !canComplete}
-                                  className="bg-slate-900 text-white"
+                                  className="bg-white text-[#0B1F30] dark:bg-[#0B2438] dark:text-[#F1F5F9]"
                                 >
                                   {TASK_STATUS_CONFIG[statusOption].label}
                                 </option>
@@ -1012,7 +982,7 @@ export const ListView: React.FC<ListViewProps> = ({
                                 type="button"
                                 onClick={() => onPostponeTask(task.id, 1)}
                                 title="Reporter à demain (+1 jour)"
-                                className="px-2 py-0.5 rounded text-slate-300 hover:text-white hover:bg-emerald-500/20 transition-colors font-mono text-[11px] font-semibold border border-emerald-500/20 cursor-pointer shrink-0"
+                                className="px-2 py-0.5 rounded text-[#004266] hover:bg-[#004266]/10 dark:text-[#7CC4EB] dark:hover:bg-[#3895C9]/20 transition-colors font-mono text-[11px] font-semibold border border-[#D8E2EC] dark:border-[#94B8D6]/25 cursor-pointer shrink-0"
                               >
                                 +1j
                               </button>
@@ -1022,7 +992,7 @@ export const ListView: React.FC<ListViewProps> = ({
                               type="button"
                               onClick={() => onOpenTaskModal(task, 'edit')}
                               title="Modifier la tâche"
-                              className="p-1 rounded text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                              className="p-1 rounded text-[#486075] hover:text-[#004266] hover:bg-[#004266]/10 dark:text-[#9FB3C8] dark:hover:text-[#7CC4EB] dark:hover:bg-[#3895C9]/15 transition-colors cursor-pointer"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
@@ -1031,7 +1001,7 @@ export const ListView: React.FC<ListViewProps> = ({
                               type="button"
                               onClick={() => onDuplicateTask(task)}
                               title="Dupliquer la tâche"
-                              className="p-1 rounded text-slate-400 hover:text-white hover:bg-emerald-500/15 transition-colors hidden sm:inline-flex cursor-pointer"
+                              className="p-1 rounded text-[#486075] hover:text-[#004266] hover:bg-[#004266]/10 dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#3895C9]/15 transition-colors hidden sm:inline-flex cursor-pointer"
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
@@ -1051,8 +1021,8 @@ export const ListView: React.FC<ListViewProps> = ({
                               }
                               className={`p-1 rounded transition-colors ${
                                 canDelete
-                                  ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 cursor-pointer'
-                                  : 'text-slate-700 opacity-20 cursor-not-allowed'
+                                  ? 'text-[#486075] hover:text-rose-600 hover:bg-rose-50 dark:text-[#9FB3C8] dark:hover:text-rose-400 dark:hover:bg-rose-950/40 cursor-pointer'
+                                  : 'text-slate-400 opacity-25 cursor-not-allowed'
                               }`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1062,27 +1032,27 @@ export const ListView: React.FC<ListViewProps> = ({
 
                         {/* Expanded Subtasks Inline Checklist */}
                         {isExpanded && task.subtasks && task.subtasks.length > 0 && (
-                          <div className="mt-2.5 pl-7 pr-2 pt-2.5 border-t border-emerald-500/10 space-y-2 animate-in fade-in-50 duration-150">
-                            <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-400">
+                          <div className="mt-2.5 pl-7 pr-2 pt-2.5 border-t border-[#D8E2EC] dark:border-[#94B8D6]/15 space-y-2 animate-in fade-in-50 duration-150">
+                            <div className="flex items-center justify-between text-[11px] font-semibold text-[#004266] dark:text-[#7CC4EB]">
                               <span className="uppercase tracking-wider">Sous-tâches</span>
                               <span className="font-mono tabular-nums">{Math.round(subtaskProgress)}%</span>
                             </div>
 
-                            <Progress value={subtaskProgress} className="h-1 bg-slate-900" />
+                            <Progress value={subtaskProgress} className="h-1.5" />
 
                             <div className="space-y-1 pt-0.5">
                               {task.subtasks.map((st) => (
                                 <label
                                   key={st.id}
-                                  className="flex items-center gap-2 p-1.5 rounded-lg bg-[#03140E]/80 hover:bg-emerald-950/40 text-xs font-medium text-slate-300 cursor-pointer transition-colors border border-emerald-500/15"
+                                  className="flex items-center gap-2 p-1.5 rounded-lg bg-[#F4F7FA] hover:bg-[#EDF2F7] dark:bg-[#103049] dark:hover:bg-[#143B59] text-xs font-medium text-[#0B1F30] dark:text-[#F1F5F9] cursor-pointer transition-colors border border-[#D8E2EC] dark:border-[#94B8D6]/20"
                                 >
                                   <input
                                     type="checkbox"
                                     checked={st.completed}
                                     onChange={() => onToggleSubtask(task.id, st.id)}
-                                    className="rounded text-emerald-500 focus:ring-emerald-400 w-3.5 h-3.5 cursor-pointer accent-emerald-500"
+                                    className="rounded text-[#004266] focus:ring-[#004266] w-3.5 h-3.5 cursor-pointer accent-[#004266] dark:accent-[#3895C9]"
                                   />
-                                  <span className={st.completed ? 'line-through text-slate-500' : 'text-slate-200'}>
+                                  <span className={st.completed ? 'line-through text-[#64748B]' : ''}>
                                     {st.title}
                                   </span>
                                 </label>

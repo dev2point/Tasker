@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -10,7 +11,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#10B981',
+  themeColor: '#004266',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -18,21 +19,21 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
+  title: 'La Maison de la Fiscalité — Gestion, Calendrier & Revue Métier',
   description:
-    'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif et au mode hors-ligne.',
-  applicationName: 'mfisca-tasks',
+    'Espace collaboratif de La Maison de la Fiscalité : pilotage des tâches, calendrier des échéances fiscales et plateforme de revue métier.',
+  applicationName: 'La Maison de la Fiscalité',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'mfisca-tasks',
+    title: 'La Maison de la Fiscalité',
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/logos/logo-normal-512.png', type: 'image/png' },
       { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
       { url: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
@@ -40,16 +41,16 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   openGraph: {
-    title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
+    title: 'La Maison de la Fiscalité — Gestion, Calendrier & Revue Métier',
     description:
-      'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif et au mode hors-ligne.',
+      'Espace collaboratif de La Maison de la Fiscalité : pilotage des tâches, calendrier des échéances et revue métier.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'mfisca-tasks - Tâches, Calendrier & Revue Métier',
+    title: 'La Maison de la Fiscalité — Gestion, Calendrier & Revue Métier',
     description:
-      'Organisez vos journées, suivez vos échéances et ne manquez aucun rappel grâce au calendrier interactif.',
+      'Espace collaboratif de La Maison de la Fiscalité : tâches, échéances fiscales et revue métier.',
   },
 };
 
@@ -57,14 +58,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
-      className={`${plusJakarta.variable} dark h-full bg-[#03140E] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden`}
+      suppressHydrationWarning
+      className={`${plusJakarta.variable} h-full bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 antialiased selection:bg-[#F77F00] selection:text-white overflow-x-hidden`}
     >
-      <body suppressHydrationWarning className="min-h-full font-sans antialiased overflow-x-hidden bg-[#03140E] text-slate-100">
+      <body
+        suppressHydrationWarning
+        className="min-h-full font-sans antialiased overflow-x-hidden bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 transition-colors duration-200"
+      >
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
         <Script src="/pwa-install-capture.js" strategy="beforeInteractive" />
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
 }
-
-

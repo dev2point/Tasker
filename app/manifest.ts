@@ -3,16 +3,16 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'PlanIt - Tâches & Calendrier',
-    short_name: 'PlanIt',
+    name: 'La Maison de la Fiscalité — Tâches & Revue Métier',
+    short_name: 'LMF Fiscalité',
     description:
-      'Application moderne et intelligente de gestion de tâches, calendrier, rappels et productivité.',
+      'Plateforme de pilotage des tâches, échéances fiscales et revue métier de La Maison de la Fiscalité.',
     start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait-primary',
-    background_color: '#f8fafc',
-    theme_color: '#4f46e5',
+    background_color: '#F4F7FA',
+    theme_color: '#004266',
     lang: 'fr',
     icons: [
       {
@@ -34,7 +34,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'maskable',
       },
     ],
-    categories: ['productivity', 'utilities'],
+    categories: ['productivity', 'business'],
     shortcuts: [
       {
         name: 'Nouvelle Tâche',
