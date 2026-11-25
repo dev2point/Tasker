@@ -59,11 +59,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="fr"
       suppressHydrationWarning
-      className={`${plusJakarta.variable} h-full bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 antialiased selection:bg-[#F77F00] selection:text-white overflow-x-hidden`}
+      className={`${plusJakarta.variable} min-h-full bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 antialiased selection:bg-[#F77F00] selection:text-white overflow-x-clip`}
     >
       <body
         suppressHydrationWarning
-        className="min-h-full font-sans antialiased overflow-x-hidden bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 transition-colors duration-200"
+        className="min-h-full font-sans antialiased overflow-x-clip bg-[#F4F7FA] dark:bg-[#061826] text-[#0B1F30] dark:text-slate-100 transition-colors duration-200"
       >
         <Script src="/theme-init.js" strategy="beforeInteractive" />
         <Script src="/pwa-install-capture.js" strategy="beforeInteractive" />

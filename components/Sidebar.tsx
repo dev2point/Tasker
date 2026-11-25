@@ -262,19 +262,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="main-desktop-sidebar"
-      className={`hidden md:block md:sticky md:top-0 md:h-screen shrink-0 select-none z-30 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
+      className={`hidden md:block shrink-0 select-none transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isFloatingHoverDrawer ? 'z-40' : 'z-30'
+      } ${isCollapsed ? 'w-20' : 'w-64'}`}
     >
       <div
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`flex flex-col h-full bg-white/95 dark:bg-[#0B2438]/95 backdrop-blur-2xl border-r border-[#D8E2EC] dark:border-[#94B8D6]/18 text-[#0B1F30] dark:text-slate-100 transition-[width,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`md:fixed md:top-0 md:bottom-0 md:left-0 md:h-dvh flex flex-col bg-white/95 dark:bg-[#0B2438]/95 backdrop-blur-2xl border-r border-[#D8E2EC] dark:border-[#94B8D6]/18 text-[#0B1F30] dark:text-slate-100 transition-[width,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isFloatingHoverDrawer
-            ? 'absolute top-0 bottom-0 left-0 w-64 shadow-[24px_0_60px_-15px_rgba(0,66,102,0.18)] dark:shadow-[24px_0_60px_-15px_rgba(0,0,0,0.85)] border-[#004266]/25 dark:border-[#3895C9]/40'
+            ? 'z-40 w-64 shadow-[24px_0_60px_-15px_rgba(0,66,102,0.18)] dark:shadow-[24px_0_60px_-15px_rgba(0,0,0,0.85)] border-[#004266]/25 dark:border-[#3895C9]/40'
             : isVisuallyCollapsed
-              ? 'w-20 shadow-md shadow-[#004266]/5 dark:shadow-black/50'
-              : 'w-64 shadow-lg shadow-[#004266]/5 dark:shadow-black/40'
+              ? 'z-30 w-20 shadow-md shadow-[#004266]/5 dark:shadow-black/50'
+              : 'z-30 w-64 shadow-lg shadow-[#004266]/5 dark:shadow-black/40'
         }`}
       >
       {/* 1. Header: Official Brand Logo & Discreet Collapse Toggle */}
@@ -331,7 +331,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* 2. Top Banner / Live Clock (Expanded Only) */}
       {!isVisuallyCollapsed && (
-        <div className="px-4 py-2 bg-[#F4F7FA] dark:bg-[#061826]/60 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15 flex items-center justify-between text-xs font-mono whitespace-nowrap animate-in fade-in duration-200">
+        <div className="px-4 py-2 bg-[#F4F7FA] dark:bg-[#061826]/60 border-b border-[#D8E2EC] dark:border-[#94B8D6]/15 flex items-center justify-between text-xs font-mono whitespace-nowrap shrink-0 animate-in fade-in duration-200">
           <span className="truncate text-[#486075] dark:text-slate-300 font-medium">{currentDateStr}</span>
           <div className="flex items-center gap-1 font-semibold text-[#004266] dark:text-[#7CC4EB] shrink-0 tabular-nums">
             <Clock className="w-3 h-3 text-[#F77F00]" />
@@ -367,7 +367,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 4. Scrollable Middle Section: Navigation & Tools */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-6 custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-2 space-y-6 custom-scrollbar">
         
         {/* Navigation Group */}
         <div>
