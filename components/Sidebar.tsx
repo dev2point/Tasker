@@ -669,12 +669,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
 
-            {/* Database Diagnostic for Admin */}
+            {/* Cloud Save & Sync for Admin */}
             {onOpenPostgresModal && currentUser?.role === 'admin' && (
               <button
                 type="button"
                 onClick={onOpenPostgresModal}
-                title={isVisuallyCollapsed ? 'Diagnostic Base SQL' : undefined}
+                title={isVisuallyCollapsed ? 'Sauvegarde & Synchro' : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
                   activeModal === 'postgres'
                     ? 'bg-[#004266] text-white dark:bg-[#103049] border border-[#004266] dark:border-[#3895C9]/50 font-bold shadow-sm'
@@ -684,7 +684,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Database className={`w-4 h-4 shrink-0 transition-colors ${
                   activeModal === 'postgres' ? 'text-[#F77F00]' : 'text-[#004266] dark:text-[#3895C9]'
                 }`} />
-                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Diagnostic Base SQL</span>}
+                {!isVisuallyCollapsed && <span className="truncate flex-1 text-left whitespace-nowrap animate-in fade-in duration-200">Sauvegarde &amp; Synchro</span>}
               </button>
             )}
           </div>

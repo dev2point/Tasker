@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         id: catData.id,
         name: catData.name,
         color: catData.color,
-        bgLight: catData.bgLight || 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30',
+        bgLight: catData.bgLight || 'bg-[#004266]/10 text-[#004266] border-[#004266]/25',
         iconName: catData.iconName || 'Tag',
         isDefault: Boolean(catData.isDefault),
         createdAt: new Date(),
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
         set: {
           name: catData.name,
           color: catData.color,
-          bgLight: catData.bgLight || 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30',
+          bgLight: catData.bgLight || 'bg-[#004266]/10 text-[#004266] border-[#004266]/25',
           iconName: catData.iconName || 'Tag',
           isDefault: Boolean(catData.isDefault),
         },

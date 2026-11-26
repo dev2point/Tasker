@@ -238,26 +238,26 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
     <ModalPortal>
       <div
         id="category-tag-manager-modal"
-        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md animate-in fade-in duration-200"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
       <div
-        className="bg-[#061A13]/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 text-slate-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+        className="bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-3xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 text-[#0B1F30] dark:text-slate-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-5 py-4 sm:px-6 border-b border-emerald-500/20 flex items-center justify-between bg-emerald-950/40">
+        <div className="px-5 py-4 sm:px-6 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center justify-between bg-[#F4F7FA] dark:bg-[#061826]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border border-[#004266]/20 dark:border-[#3895C9]/35 flex items-center justify-center shadow-xs">
               <Layers className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
+              <h2 className="text-base sm:text-lg font-bold text-[#0B1F30] dark:text-white leading-tight">
                 Gestion des Catégories & Étiquettes
               </h2>
-              <p className="text-xs text-slate-300 font-medium">
+              <p className="text-xs text-[#486075] dark:text-[#9FB3C8] font-medium">
                 Personnalisez les dossiers et tags pour organiser vos tâches
               </p>
             </div>
@@ -266,29 +266,36 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
+            aria-label="Fermer"
+            className="p-1.5 rounded-xl text-[#486075] dark:text-[#9FB3C8] hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-5 sm:px-6 pt-3 pb-2 border-b border-emerald-500/20 flex items-center gap-2">
+        <div className="px-5 sm:px-6 pt-3 pb-2.5 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center gap-2 bg-white dark:bg-[#0B2438]">
           <button
             type="button"
             onClick={() => {
               setActiveTab('categories');
               soundManager.playClickSound();
             }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               activeTab === 'categories'
-                ? 'bg-emerald-500/30 text-white border border-emerald-400/50 shadow-md'
-                : 'text-slate-300 hover:text-white hover:bg-emerald-500/20'
+                ? 'bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] border-[#004266] dark:border-[#3895C9] shadow-xs'
+                : 'bg-[#F4F7FA] dark:bg-[#061826] text-[#486075] dark:text-slate-300 border-[#D8E2EC] dark:border-[#94B8D6]/20 hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049]'
             }`}
           >
-            <FolderPlus className="w-3.5 h-3.5 text-emerald-400" />
+            <FolderPlus className={`w-3.5 h-3.5 ${activeTab === 'categories' ? 'text-[#F77F00] dark:text-[#061826]' : 'text-[#004266] dark:text-[#7CC4EB]'}`} />
             <span>Catégories</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 font-bold">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeTab === 'categories'
+                  ? 'bg-white/20 text-white dark:bg-[#061826]/20 dark:text-[#061826]'
+                  : 'bg-[#EDF2F7] dark:bg-[#103049] text-[#004266] dark:text-[#7CC4EB] border border-[#D8E2EC] dark:border-[#94B8D6]/20'
+              }`}
+            >
               {categories.length}
             </span>
           </button>
@@ -299,15 +306,21 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
               setActiveTab('tags');
               soundManager.playClickSound();
             }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               activeTab === 'tags'
-                ? 'bg-emerald-500/30 text-white border border-emerald-400/50 shadow-md'
-                : 'text-slate-300 hover:text-white hover:bg-emerald-500/20'
+                ? 'bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] border-[#004266] dark:border-[#3895C9] shadow-xs'
+                : 'bg-[#F4F7FA] dark:bg-[#061826] text-[#486075] dark:text-slate-300 border-[#D8E2EC] dark:border-[#94B8D6]/20 hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049]'
             }`}
           >
-            <Tag className="w-3.5 h-3.5 text-emerald-400" />
+            <Tag className={`w-3.5 h-3.5 ${activeTab === 'tags' ? 'text-[#F77F00] dark:text-[#061826]' : 'text-[#004266] dark:text-[#7CC4EB]'}`} />
             <span>Étiquettes / Tags</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 font-bold">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeTab === 'tags'
+                  ? 'bg-white/20 text-white dark:bg-[#061826]/20 dark:text-[#061826]'
+                  : 'bg-[#EDF2F7] dark:bg-[#103049] text-[#004266] dark:text-[#7CC4EB] border border-[#D8E2EC] dark:border-[#94B8D6]/20'
+              }`}
+            >
               {tagStats.length}
             </span>
           </button>
@@ -324,19 +337,19 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
               {isAddingCategory ? (
                 <form
                   onSubmit={handleSaveCategorySubmit}
-                  className="bg-emerald-950/40 rounded-2xl p-4 sm:p-5 border border-emerald-500/30 space-y-4 animate-in fade-in-50 duration-150 shadow-md"
+                  className="bg-[#F4F7FA] dark:bg-[#061826] rounded-2xl p-4 sm:p-5 border border-[#D8E2EC] dark:border-[#94B8D6]/25 space-y-4 animate-in fade-in-50 duration-150 shadow-sm"
                 >
-                  <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2.5">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-2.5 flex-wrap gap-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                       {editingCategoryId ? 'Modifier la catégorie' : 'Nouvelle catégorie personnalisée'}
                     </h3>
                     {/* Live Preview Pill */}
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-slate-400 font-medium">Aperçu :</span>
+                      <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] font-medium">Aperçu :</span>
                       <span
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border shadow-xs"
                         style={{
-                          backgroundColor: `${catColor}25`,
+                          backgroundColor: `${catColor}20`,
                           color: catColor,
                           borderColor: `${catColor}50`,
                         }}
@@ -348,16 +361,16 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                   </div>
 
                   {categoryError && (
-                    <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-500/40 text-rose-700 dark:text-rose-200 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
                       <span>{categoryError}</span>
                     </div>
                   )}
 
                   {/* Name Input */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
-                      Nom de la catégorie <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-bold text-[#0B1F30] dark:text-slate-200 mb-1">
+                      Nom de la catégorie <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -366,15 +379,15 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       placeholder="Ex: Marketing, Famille, Sport, Clients..."
                       maxLength={40}
                       autoFocus
-                      className="w-full px-3.5 py-2 text-xs font-medium rounded-xl border border-emerald-500/30 bg-[#061A13] text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400"
+                      className="w-full px-3.5 py-2 text-xs font-medium rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white placeholder:text-[#8599AD] focus:outline-hidden focus:ring-2 focus:ring-[#004266]/40 dark:focus:ring-[#3895C9]/40 focus:border-[#004266] dark:focus:border-[#3895C9]"
                     />
                   </div>
 
                   {/* Color Selector */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+                    <label className="block text-xs font-bold text-[#0B1F30] dark:text-slate-200 mb-1.5 flex items-center justify-between">
                       <span>Couleur thématique</span>
-                      <span className="text-[11px] font-mono text-slate-400 font-normal">{catColor}</span>
+                      <span className="text-[11px] font-mono text-[#486075] dark:text-[#9FB3C8] font-normal">{catColor}</span>
                     </label>
                     <div className="flex flex-wrap items-center gap-2">
                       {PRESET_CATEGORY_COLORS.map((preset) => (
@@ -385,7 +398,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                           title={preset.name}
                           className={`w-7 h-7 rounded-xl transition-transform flex items-center justify-center cursor-pointer shadow-xs ${
                             catColor === preset.hex
-                              ? 'ring-2 ring-offset-2 ring-offset-[#061A13] ring-white scale-110'
+                              ? 'ring-2 ring-offset-2 ring-offset-[#F4F7FA] dark:ring-offset-[#061826] ring-[#004266] dark:ring-white scale-110'
                               : 'hover:scale-105 opacity-85 hover:opacity-100'
                           }`}
                           style={{ backgroundColor: preset.hex }}
@@ -399,7 +412,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                           type="color"
                           value={catColor}
                           onChange={(e) => setCatColor(e.target.value)}
-                          className="w-7 h-7 rounded-xl cursor-pointer border border-emerald-500/30 p-0 overflow-hidden bg-transparent"
+                          className="w-7 h-7 rounded-xl cursor-pointer border border-[#D8E2EC] dark:border-[#94B8D6]/30 p-0 overflow-hidden bg-transparent"
                           title="Couleur personnalisée"
                         />
                       </div>
@@ -408,10 +421,10 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
 
                   {/* Icon Selector Grid */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                    <label className="block text-xs font-bold text-[#0B1F30] dark:text-slate-200 mb-1.5">
                       Icône représentative
                     </label>
-                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-[#061A13] rounded-xl border border-emerald-500/30">
+                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-[#0B2438] rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25">
                       {AVAILABLE_CATEGORY_ICONS.map((iconItem) => {
                         const isSelected = catIcon === iconItem.name;
                         const IconComponent = iconItem.component;
@@ -423,8 +436,8 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                             title={iconItem.label}
                             className={`p-2 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-emerald-500/30 text-white font-bold ring-1 ring-emerald-400'
-                                : 'text-slate-400 hover:text-white hover:bg-emerald-500/20'
+                                ? 'bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] font-bold shadow-xs'
+                                : 'text-[#486075] dark:text-slate-300 hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049]'
                             }`}
                           >
                             <IconComponent className="w-4 h-4" />
@@ -441,19 +454,18 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       variant="outline"
                       size="sm"
                       onClick={handleCancelCategoryForm}
-                      className="border-emerald-500/30 text-slate-300 hover:text-white hover:bg-emerald-500/20"
                     >
                       Annuler
                     </Button>
-                    <Button type="submit" size="sm" className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer">
+                    <Button type="submit" variant="accent" size="sm" className="font-bold cursor-pointer">
                       <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>{editingCategoryId ? 'Enregistrer les modifications' : 'Créer la catégorie'}</span>
                     </Button>
                   </div>
                 </form>
               ) : (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-semibold text-[#486075] dark:text-[#9FB3C8]">
                     {categories.length} catégorie{categories.length > 1 ? 's' : ''} configurée{categories.length > 1 ? 's' : ''}
                   </span>
                   <div className="flex items-center gap-2">
@@ -463,16 +475,17 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       size="sm"
                       onClick={onResetDefaultCategories}
                       title="Restaurer les catégories standards"
-                      className="text-xs border-emerald-500/30 text-slate-300 hover:text-white hover:bg-emerald-500/20 gap-1 cursor-pointer"
+                      className="text-xs gap-1 cursor-pointer"
                     >
-                      <RotateCcw className="w-3 h-3 text-emerald-400" />
+                      <RotateCcw className="w-3 h-3 text-[#004266] dark:text-[#7CC4EB]" />
                       <span className="hidden sm:inline">Réinitialiser</span>
                     </Button>
                     <Button
                       type="button"
+                      variant="accent"
                       size="sm"
                       onClick={handleStartAddCategory}
-                      className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-white shadow-md cursor-pointer border border-emerald-400/50"
+                      className="font-bold gap-1 shadow-sm cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>Ajouter une catégorie</span>
@@ -489,13 +502,13 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                   return (
                     <div
                       key={cat.id}
-                      className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 hover:border-emerald-400/50 transition-all flex items-center justify-between gap-2 shadow-xs"
+                      className="p-3.5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826] hover:border-[#004266]/35 dark:hover:border-[#3895C9]/45 transition-all flex items-center justify-between gap-2 shadow-xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div
-                          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/20"
+                          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 shadow-xs border border-black/5 dark:border-white/10"
                           style={{
-                            backgroundColor: `${cat.color}25`,
+                            backgroundColor: `${cat.color}20`,
                             color: cat.color,
                           }}
                         >
@@ -503,16 +516,16 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <h4 className="text-xs font-bold text-white truncate">
+                            <h4 className="text-xs font-bold text-[#0B1F30] dark:text-white truncate">
                               {cat.name}
                             </h4>
                             {cat.isDefault && (
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 font-semibold uppercase">
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#EDF2F7] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 text-[#004266] dark:text-[#7CC4EB] font-semibold uppercase">
                                 Défaut
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 font-medium">
+                          <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8] font-medium">
                             {taskCount} tâche{taskCount > 1 ? 's' : ''}
                           </p>
                         </div>
@@ -523,7 +536,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                         <button
                           type="button"
                           onClick={() => handleStartEditCategory(cat)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-[#486075] dark:text-[#9FB3C8] hover:text-[#004266] dark:hover:text-[#7CC4EB] hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors cursor-pointer"
                           title="Modifier la catégorie"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -531,7 +544,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                         <button
                           type="button"
                           onClick={() => setDeletingCatId(cat.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/50 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-[#486075] dark:text-[#9FB3C8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                           title="Supprimer la catégorie"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -544,15 +557,15 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
 
               {/* Delete Category Confirmation Dialog */}
               {deletingCatId && (
-                <div className="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-xs space-y-3 animate-in fade-in-50">
-                  <div className="flex items-start gap-2 text-rose-200 font-bold">
-                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-500/40 text-xs space-y-3 animate-in fade-in-50">
+                  <div className="flex items-start gap-2 text-rose-800 dark:text-rose-200 font-bold">
+                    <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                     <span>
                       Confirmer la suppression de la catégorie «{' '}
                       {categories.find((c) => c.id === deletingCatId)?.name} » ?
                     </span>
                   </div>
-                  <p className="text-rose-300 text-[11px] leading-relaxed">
+                  <p className="text-rose-700 dark:text-rose-300 text-[11px] leading-relaxed">
                     Les tâches associées ne seront pas supprimées. Elles seront automatiquement réassignées à la catégorie par défaut.
                   </p>
                   <div className="flex items-center justify-end gap-2 pt-1">
@@ -561,15 +574,15 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       variant="outline"
                       size="sm"
                       onClick={() => setDeletingCatId(null)}
-                      className="border-rose-500/30 text-rose-200 hover:bg-rose-900/50"
                     >
                       Annuler
                     </Button>
                     <Button
                       type="button"
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleConfirmDeleteCategory(deletingCatId)}
-                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold"
+                      className="font-bold"
                     >
                       Supprimer la catégorie
                     </Button>
@@ -588,17 +601,17 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
               {isAddingTag ? (
                 <form
                   onSubmit={handleSaveTagSubmit}
-                  className="bg-emerald-950/40 rounded-2xl p-4 border border-emerald-500/30 space-y-3 animate-in fade-in-50 shadow-md"
+                  className="bg-[#F4F7FA] dark:bg-[#061826] rounded-2xl p-4 border border-[#D8E2EC] dark:border-[#94B8D6]/25 space-y-3 animate-in fade-in-50 shadow-sm"
                 >
-                  <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                       Ajouter une nouvelle étiquette
                     </h3>
                     {/* Live Preview */}
                     <span
                       className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold border"
                       style={{
-                        backgroundColor: `${newTagColor}25`,
+                        backgroundColor: `${newTagColor}20`,
                         color: newTagColor,
                         borderColor: `${newTagColor}50`,
                       }}
@@ -609,8 +622,8 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                   </div>
 
                   {tagError && (
-                    <div className="p-2 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                    <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-500/40 text-rose-700 dark:text-rose-200 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
                       <span>{tagError}</span>
                     </div>
                   )}
@@ -623,7 +636,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                       placeholder="Nom du tag (ex: urgent, backend, sprint-2...)"
                       maxLength={30}
                       autoFocus
-                      className="w-full sm:flex-1 px-3.5 py-1.5 text-xs font-medium rounded-xl border border-emerald-500/30 bg-[#061A13] text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-400/50"
+                      className="w-full sm:flex-1 px-3.5 py-1.5 text-xs font-medium rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white placeholder:text-[#8599AD] focus:outline-hidden focus:ring-2 focus:ring-[#004266]/40 dark:focus:ring-[#3895C9]/40"
                     />
 
                     {/* Color Presets */}
@@ -634,7 +647,9 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                           type="button"
                           onClick={() => setNewTagColor(color.hex)}
                           className={`w-6 h-6 rounded-lg transition-transform cursor-pointer ${
-                            newTagColor === color.hex ? 'ring-2 ring-white scale-110' : 'opacity-80'
+                            newTagColor === color.hex
+                              ? 'ring-2 ring-offset-1 ring-offset-[#F4F7FA] dark:ring-offset-[#061826] ring-[#004266] dark:ring-white scale-110'
+                              : 'opacity-80 hover:opacity-100'
                           }`}
                           style={{ backgroundColor: color.hex }}
                           title={color.name}
@@ -653,29 +668,29 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                         setNewTagName('');
                         setTagError('');
                       }}
-                      className="border-emerald-500/30 text-slate-300 hover:text-white hover:bg-emerald-500/20"
                     >
                       Annuler
                     </Button>
-                    <Button type="submit" size="sm" className="font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 cursor-pointer">
+                    <Button type="submit" variant="accent" size="sm" className="font-bold cursor-pointer">
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>Créer l’étiquette</span>
                     </Button>
                   </div>
                 </form>
               ) : (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-semibold text-[#486075] dark:text-[#9FB3C8]">
                     {tagStats.length} étiquette{tagStats.length > 1 ? 's' : ''} utilisée{tagStats.length > 1 ? 's' : ''}
                   </span>
                   <Button
                     type="button"
+                    variant="accent"
                     size="sm"
                     onClick={() => {
                       setIsAddingTag(true);
                       setTagError('');
                     }}
-                    className="font-bold gap-1 bg-emerald-500 hover:bg-emerald-400 text-white shadow-md cursor-pointer border border-emerald-400/50"
+                    className="font-bold gap-1 shadow-sm cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Nouvelle étiquette</span>
@@ -685,11 +700,11 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
 
               {/* Tags Catalog Grid */}
               {tagStats.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl border border-dashed border-emerald-500/30 bg-emerald-950/20 text-slate-400 text-xs">
-                  <Tag className="w-8 h-8 mx-auto mb-2 text-emerald-500/50" />
-                  <p className="font-semibold text-slate-200">Aucune étiquette pour le moment</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Ajoutez des tags comme <code className="bg-emerald-950/80 border border-emerald-500/30 px-1 py-0.5 rounded text-emerald-300 font-mono">#urgent</code> ou <code className="bg-emerald-950/80 border border-emerald-500/30 px-1 py-0.5 rounded text-emerald-300 font-mono">#client</code> directement sur vos tâches.
+                <div className="p-8 text-center rounded-2xl border border-dashed border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-[#F4F7FA] dark:bg-[#061826] text-[#486075] dark:text-[#9FB3C8] text-xs">
+                  <Tag className="w-8 h-8 mx-auto mb-2 text-[#004266]/45 dark:text-[#7CC4EB]/50" />
+                  <p className="font-semibold text-[#0B1F30] dark:text-slate-200">Aucune étiquette pour le moment</p>
+                  <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8] mt-0.5">
+                    Ajoutez des tags comme <code className="bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 px-1 py-0.5 rounded text-[#004266] dark:text-[#7CC4EB] font-mono">#urgent</code> ou <code className="bg-white dark:bg-[#0B2438] border border-[#D8E2EC] dark:border-[#94B8D6]/25 px-1 py-0.5 rounded text-[#004266] dark:text-[#7CC4EB] font-mono">#client</code> directement sur vos tâches.
                   </p>
                 </div>
               ) : (
@@ -701,7 +716,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                     return (
                       <div
                         key={item.name}
-                        className="p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:border-emerald-400/50 transition-all flex items-center justify-between gap-2 shadow-xs"
+                        className="p-2.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826] hover:border-[#004266]/35 dark:hover:border-[#3895C9]/45 transition-all flex items-center justify-between gap-2 shadow-xs"
                       >
                         {isEditing ? (
                           <div className="flex items-center gap-1.5 flex-1">
@@ -710,12 +725,12 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                               value={editTagNewValue}
                               onChange={(e) => setEditTagNewValue(e.target.value)}
                               autoFocus
-                              className="w-full px-2 py-1 text-xs font-semibold rounded-lg border border-emerald-500/30 bg-[#061A13] text-white"
+                              className="w-full px-2 py-1 text-xs font-semibold rounded-lg border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white"
                             />
                             <button
                               type="button"
                               onClick={() => handleRenameTagSubmit(item.name)}
-                              className="p-1 rounded-lg text-emerald-400 hover:bg-emerald-500/20"
+                              className="p-1 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15"
                               title="Valider"
                             >
                               <Check className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -723,7 +738,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                             <button
                               type="button"
                               onClick={() => setEditingTagName(null)}
-                              className="p-1 rounded-lg text-slate-400 hover:bg-emerald-500/20"
+                              className="p-1 rounded-lg text-[#486075] dark:text-[#9FB3C8] hover:bg-[#EDF2F7] dark:hover:bg-[#103049]"
                               title="Annuler"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -735,7 +750,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                               <span
                                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border"
                                 style={{
-                                  backgroundColor: `${style.bg}25`,
+                                  backgroundColor: `${style.bg}20`,
                                   color: style.text,
                                   borderColor: `${style.border}50`,
                                 }}
@@ -743,7 +758,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                                 <Hash className="w-3 h-3 opacity-70" />
                                 <span>{item.name}</span>
                               </span>
-                              <span className="text-[11px] text-slate-400 font-medium">
+                              <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] font-medium">
                                 ({item.count} tâche{item.count > 1 ? 's' : ''})
                               </span>
                             </div>
@@ -755,7 +770,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                                   setEditingTagName(item.name);
                                   setEditTagNewValue(item.name);
                                 }}
-                                className="p-1 rounded-md text-slate-400 hover:text-amber-300 hover:bg-emerald-500/20 cursor-pointer"
+                                className="p-1 rounded-md text-[#486075] dark:text-[#9FB3C8] hover:text-[#F77F00] hover:bg-[#EDF2F7] dark:hover:bg-[#103049] cursor-pointer"
                                 title="Renommer le tag (met à jour toutes les tâches)"
                               >
                                 <Edit2 className="w-3 h-3" />
@@ -771,7 +786,7 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
                                     onDeleteTag(item.name);
                                   }
                                 }}
-                                className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-950/50 cursor-pointer"
+                                className="p-1 rounded-md text-[#486075] dark:text-[#9FB3C8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                                 title="Supprimer ce tag de toutes les tâches"
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -789,9 +804,9 @@ export const CategoryTagManagerModal: React.FC<CategoryTagManagerModalProps> = (
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 sm:px-6 border-t border-emerald-500/20 bg-emerald-950/60 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-5 py-3.5 sm:px-6 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18 bg-[#F4F7FA] dark:bg-[#061826] flex items-center justify-between text-xs text-[#486075] dark:text-[#9FB3C8]">
           <span>Toutes les modifications sont synchronisées automatiquement.</span>
-          <Button size="sm" onClick={onClose} className="font-bold border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20">
+          <Button variant="default" size="sm" onClick={onClose} className="font-bold cursor-pointer">
             Fermer
           </Button>
         </div>

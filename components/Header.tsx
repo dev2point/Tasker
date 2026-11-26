@@ -430,7 +430,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <span className="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-900/60 text-[#004266] dark:text-sky-300 flex items-center justify-center">
                             <Database className="w-3.5 h-3.5" />
                           </span>
-                          <span>Diagnostic Base SQL</span>
+                          <span>Sauvegarde &amp; Synchro</span>
                         </button>
                       )}
 

@@ -105,26 +105,26 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     <ModalPortal>
       <div
         onClick={onClose}
-        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+        className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
       >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-modal-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#061A13]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 text-slate-100 cursor-default"
+        className="bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-3xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 max-w-md w-full p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 text-[#0B1F30] dark:text-slate-100 cursor-default"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+        <div className="flex items-center justify-between border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] dark:bg-[#F77F00]/20 border border-[#F77F00]/30 text-[#DE7200] dark:text-[#FFB35C] flex items-center justify-center shrink-0">
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <h2 id="export-modal-title" className="text-base font-bold text-white">
-                Synchronisation & Sauvegarde
+              <h2 id="export-modal-title" className="text-base font-bold text-[#0B1F30] dark:text-white">
+                Synchronisation &amp; Sauvegarde
               </h2>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-[#486075] dark:text-slate-300">
                 Export iCal et gestion des données
               </p>
             </div>
@@ -133,7 +133,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             variant="ghost"
             size="icon-sm"
             onClick={onClose}
-            className="text-slate-400 hover:text-white hover:bg-emerald-500/20"
+            aria-label="Fermer"
+            className="cursor-pointer"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -141,45 +142,46 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
         {/* Status alerts */}
         {successMsg && (
-          <div className="p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-xs text-emerald-200 flex items-center gap-2 font-medium">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-500/40 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 font-medium">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-500/40 text-xs text-rose-200 flex items-center gap-2 font-medium">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-500/40 text-xs text-rose-800 dark:text-rose-200 flex items-center gap-2 font-medium">
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Action Blocks */}
-        <div className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1">
+        <div className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
           {/* 0a. Executive PDF & Committee Reports */}
           {onOpenReportModal && (
-            <div className="p-4 rounded-2xl border border-emerald-500/50 bg-emerald-950/60 space-y-2.5 shadow-lg shadow-emerald-950/40">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/40">
+            <div className="p-4 rounded-2xl border border-[#004266]/25 dark:border-[#3895C9]/40 bg-[#F4F7FA] dark:bg-[#061826]/65 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center border border-[#004266]/20 dark:border-[#3895C9]/35 shrink-0">
                     <FileText className="w-3.5 h-3.5" />
                   </div>
-                  <span className="font-bold text-white">Rapport Exécutif &amp; Synthèse Comité</span>
+                  <span className="font-bold text-[#0B1F30] dark:text-white truncate">Rapport Exécutif &amp; Synthèse Comité</span>
                 </div>
-                <Badge className="bg-emerald-500 text-slate-950 font-bold text-[9px]">
+                <Badge variant="orange" className="text-[9px] font-bold shrink-0">
                   PDF Officiel
                 </Badge>
               </div>
-              <p className="text-slate-300 leading-relaxed text-[11px]">
+              <p className="text-[#486075] dark:text-slate-300 leading-relaxed text-[11px]">
                 Générez la synthèse consolidée pour les comités de direction, la revue d&apos;avancement des pôles et imprimez directement au format A4 certifié.
               </p>
               <Button
+                variant="accent"
                 onClick={() => {
                   onClose();
                   onOpenReportModal();
                 }}
                 size="sm"
-                className="w-full font-bold gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md cursor-pointer h-8 text-xs border border-emerald-400/50"
+                className="w-full font-bold gap-2 shadow-sm cursor-pointer h-8 text-xs"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Ouvrir le Générateur de Rapports PDF</span>
@@ -189,28 +191,29 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
           {/* 0b. Microsoft 365 Ecosystem */}
           {onOpenM365Modal && (
-            <div className="p-4 rounded-2xl border border-blue-500/40 bg-blue-950/30 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-blue-600/30 text-blue-300 flex items-center justify-center border border-blue-500/40">
+            <div className="p-4 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center border border-[#004266]/20 dark:border-[#3895C9]/35 shrink-0">
                     <Building className="w-3.5 h-3.5" />
                   </div>
-                  <span className="font-bold text-white">Écosystème Microsoft 365</span>
+                  <span className="font-bold text-[#0B1F30] dark:text-white truncate">Écosystème Microsoft 365</span>
                 </div>
-                <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/40 text-[9px] font-bold">
+                <Badge variant="default" className="text-[9px] font-bold shrink-0">
                   Excel • Word • Outlook
                 </Badge>
               </div>
-              <p className="text-slate-300 leading-relaxed text-[11px]">
-                Générez des classeurs Excel formatés (.xlsx), des rapports Word officiels (.docx) et synchronisez avec Outlook & OneDrive.
+              <p className="text-[#486075] dark:text-slate-300 leading-relaxed text-[11px]">
+                Générez des classeurs Excel formatés (.xlsx), des rapports Word officiels (.docx) et synchronisez avec Outlook &amp; OneDrive.
               </p>
               <Button
+                variant="default"
                 onClick={() => {
                   onClose();
                   onOpenM365Modal();
                 }}
                 size="sm"
-                className="w-full font-bold gap-2 bg-blue-600 hover:bg-blue-500 text-white shadow-md cursor-pointer h-8 text-xs"
+                className="w-full font-bold gap-2 shadow-sm cursor-pointer h-8 text-xs"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
                 <span>Ouvrir le Centre Microsoft 365</span>
@@ -219,23 +222,24 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           )}
 
           {/* 1. iCalendar (.ics) */}
-          <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 space-y-2">
+          <div className="p-4 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-amber-300" />
-                <span className="font-bold text-white">Export Google Calendar & Apple</span>
+                <Calendar className="w-4 h-4 text-[#F77F00]" />
+                <span className="font-bold text-[#0B1F30] dark:text-white">Export Google Calendar &amp; Apple</span>
               </div>
-              <Badge variant="outline" className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <Badge variant="default" className="text-[10px] font-bold">
                 .ICS
               </Badge>
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-[#486075] dark:text-slate-300 leading-relaxed">
               Exportez toutes vos tâches avec leurs dates et heures pour les importer dans Google Agenda, Apple Calendar ou Outlook.
             </p>
             <Button
+              variant="default"
               onClick={handleExportICal}
               size="sm"
-              className="w-full font-bold gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400/50 shadow-md cursor-pointer"
+              className="w-full font-bold gap-2 shadow-sm cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Télécharger le fichier .ics</span>
@@ -243,17 +247,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           {/* 2. JSON Backup */}
-          <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 space-y-2">
+          <div className="p-4 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileJson className="w-4 h-4 text-emerald-400" />
-                <span className="font-bold text-white">Sauvegarde & Restauration</span>
+                <FileJson className="w-4 h-4 text-[#004266] dark:text-[#7CC4EB]" />
+                <span className="font-bold text-[#0B1F30] dark:text-white">Sauvegarde &amp; Restauration</span>
               </div>
-              <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-300">
+              <Badge variant="secondary" className="text-[10px]">
                 JSON
               </Badge>
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-[#486075] dark:text-slate-300 leading-relaxed">
               Sauvegardez l’intégralité de vos données ou restaurez un fichier de tâches existant.
             </p>
 
@@ -262,7 +266,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleExportJSON}
-                className="font-bold gap-1.5 border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 hover:text-white"
+                className="font-bold gap-1.5 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Exporter JSON</span>
@@ -272,7 +276,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="font-bold gap-1.5 border-emerald-500/30 text-slate-200 hover:bg-emerald-500/20 hover:text-white"
+                className="font-bold gap-1.5 cursor-pointer"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Importer JSON</span>
@@ -289,44 +293,44 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           {/* 3. Local IndexedDB & Offline Engine */}
-          <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-500/30">
+          <div className="p-3.5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center shrink-0 border border-[#004266]/20 dark:border-[#3895C9]/30">
                 <Database className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-white text-xs">Moteur Local IndexedDB & PWA</span>
-                  <Badge variant="success" className="text-[9px] py-0 px-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-[#0B1F30] dark:text-white text-xs">Moteur Local IndexedDB &amp; PWA</span>
+                  <Badge variant="success" className="text-[9px] py-0 px-1.5">
                     Actif
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-300">
-                  Stockage structuré local & mode hors-ligne PWA
+                <p className="text-[11px] text-[#486075] dark:text-slate-300">
+                  Stockage structuré local &amp; mode hors-ligne PWA
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/30">
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#004266] dark:text-[#7CC4EB] bg-white dark:bg-[#0B2438] px-2.5 py-1 rounded-lg border border-[#D8E2EC] dark:border-[#94B8D6]/25 shrink-0 tabular-nums">
               <Smartphone className="w-3.5 h-3.5" />
               <span>{tasks.length} tâches</span>
             </div>
           </div>
 
           {/* 4. PostgreSQL (Supabase) + Drizzle ORM */}
-          <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-500/30">
+              <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] dark:bg-[#F77F00]/20 text-[#DE7200] dark:text-[#FFB35C] flex items-center justify-center shrink-0 border border-[#F77F00]/30">
                 <Database className="w-4 h-4" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-white text-xs">PostgreSQL Supabase (Drizzle ORM)</span>
-                  <Badge variant="apricot" className="text-[9px] py-0 px-1 font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-[#0B1F30] dark:text-white text-xs">PostgreSQL Supabase (Drizzle ORM)</span>
+                  <Badge variant="orange" className="text-[9px] py-0 px-1.5 font-bold">
                     Schéma Prêt
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-300">
-                  Support RBAC multi-utilisateurs & montée en charge
+                <p className="text-[11px] text-[#486075] dark:text-slate-300">
+                  Support RBAC multi-utilisateurs &amp; montée en charge
                 </p>
               </div>
             </div>

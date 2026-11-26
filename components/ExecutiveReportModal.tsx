@@ -184,33 +184,33 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
     <ModalPortal>
       <div
         id="executive-report-modal-backdrop"
-        className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
+        className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-4 bg-[#061826]/45 dark:bg-[#04101A]/80 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
       <div
-        className="bg-[#061A13]/98 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/30 text-slate-100 w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 my-auto"
+        className="bg-white dark:bg-[#0B2438] backdrop-blur-2xl rounded-3xl shadow-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 text-[#0B1F30] dark:text-slate-100 w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* =================================================================== */}
         {/* MODAL HEADER                                                        */}
         {/* =================================================================== */}
-        <div className="px-5 py-4 border-b border-emerald-500/20 flex items-center justify-between bg-emerald-950/40 shrink-0">
+        <div className="px-5 py-4 border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center justify-between bg-[#F4F7FA] dark:bg-[#061826] shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 flex items-center justify-center shadow-md shrink-0">
-              <FileText className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 rounded-2xl bg-[#004266]/10 dark:bg-[#3895C9]/20 border border-[#004266]/20 dark:border-[#3895C9]/35 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center shadow-xs shrink-0">
+              <FileText className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                <h2 className="text-base sm:text-lg font-black text-[#0B1F30] dark:text-white tracking-tight">
                   Génération de Rapports &amp; Synthèse Comité
                 </h2>
-                <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 text-[10px] font-bold">
+                <Badge variant="orange" className="text-[10px] font-bold">
                   Document Officiel
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400 truncate">
+              <p className="text-xs text-[#486075] dark:text-[#9FB3C8] truncate">
                 Synthèse pour comités de direction, revues de pôle et export PDF certifié
               </p>
             </div>
@@ -218,14 +218,14 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
           <div className="flex items-center gap-2 shrink-0">
             {/* View Mode Toggle: Paper Sheet vs Dark Immersive */}
-            <div className="hidden sm:flex items-center p-1 bg-emerald-950/80 border border-emerald-500/20 rounded-xl text-xs">
+            <div className="hidden sm:flex items-center p-1 bg-[#EDF2F7] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 rounded-xl text-xs">
               <button
                 type="button"
                 onClick={() => setPreviewMode('paper')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
                   previewMode === 'paper'
-                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] font-bold shadow-xs'
+                    : 'text-[#486075] dark:text-[#9FB3C8] hover:text-[#0B1F30] dark:hover:text-white'
                 }`}
               >
                 Aperçu A4 Réel
@@ -233,20 +233,21 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               <button
                 type="button"
                 onClick={() => setPreviewMode('dark')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
                   previewMode === 'dark'
-                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[#004266] dark:bg-[#3895C9] text-white dark:text-[#061826] font-bold shadow-xs'
+                    : 'text-[#486075] dark:text-[#9FB3C8] hover:text-[#0B1F30] dark:hover:text-white'
                 }`}
               >
-                Mode Émeraude
+                Mode Sombre
               </button>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-colors cursor-pointer"
+              aria-label="Fermer"
+              className="p-1.5 rounded-xl text-[#486075] dark:text-[#9FB3C8] hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -256,23 +257,23 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         {/* =================================================================== */}
         {/* MODAL ACTION BAR                                                    */}
         {/* =================================================================== */}
-        <div className="px-5 py-2.5 bg-emerald-950/60 border-b border-emerald-500/20 flex items-center justify-between flex-wrap gap-2 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-slate-300">
-            <span className="font-semibold text-emerald-400">Périmètre actif :</span>
-            <span className="font-medium text-white">{metrics.departmentLabel}</span>
-            <span className="text-slate-500">·</span>
-            <span className="text-slate-400">{metrics.periodLabel}</span>
+        <div className="px-5 py-2.5 bg-white dark:bg-[#0B2438] border-b border-[#D8E2EC] dark:border-[#94B8D6]/18 flex items-center justify-between flex-wrap gap-2 shrink-0">
+          <div className="flex items-center gap-2 text-xs text-[#486075] dark:text-slate-300">
+            <span className="font-semibold text-[#004266] dark:text-[#7CC4EB]">Périmètre actif :</span>
+            <span className="font-bold text-[#0B1F30] dark:text-white">{metrics.departmentLabel}</span>
+            <span className="text-[#8599AD]">·</span>
+            <span className="text-[#486075] dark:text-[#9FB3C8]">{metrics.periodLabel}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               type="button"
               variant="outline"
               size="xs"
               onClick={handleCopyMarkdown}
-              className="border-emerald-500/30 bg-emerald-950/60 text-slate-200 hover:bg-emerald-500/20 text-xs rounded-xl gap-1.5 cursor-pointer"
+              className="text-xs rounded-xl gap-1.5 cursor-pointer"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copié !' : 'Copier Markdown'}</span>
             </Button>
 
@@ -281,10 +282,10 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               variant="outline"
               size="xs"
               onClick={handleDownloadHTML}
-              className="border-emerald-500/30 bg-emerald-950/60 text-slate-200 hover:bg-emerald-500/20 text-xs rounded-xl gap-1.5 cursor-pointer"
+              className="text-xs rounded-xl gap-1.5 cursor-pointer"
             >
               {downloadSuccess ? (
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               ) : (
                 <Download className="w-3.5 h-3.5" />
               )}
@@ -293,28 +294,29 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
             <Button
               type="button"
-              variant="outline"
+              variant="soft"
               size="xs"
               disabled={isExportingServerPdf}
               onClick={handleDownloadServerPdf}
-              className="border-emerald-500/40 bg-emerald-950/80 text-emerald-200 hover:bg-emerald-500/20 text-xs rounded-xl gap-1.5 cursor-pointer"
+              className="text-xs rounded-xl gap-1.5 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <Download className="w-3.5 h-3.5" />
               <span>{isExportingServerPdf ? 'Génération...' : 'PDF Serveur'}</span>
             </Button>
 
             <Button
               type="button"
+              variant="accent"
               size="xs"
               onClick={handlePrint}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl gap-1.5 shadow-md cursor-pointer"
+              className="font-bold text-xs rounded-xl gap-1.5 shadow-sm cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Imprimer / PDF</span>
             </Button>
           </div>
           {pdfExportError && (
-            <div className="w-full text-[11px] text-rose-300 bg-rose-500/15 border border-rose-500/30 rounded-lg px-3 py-1.5">
+            <div className="w-full text-[11px] text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-500/35 rounded-lg px-3 py-1.5">
               {pdfExportError}
             </div>
           )}
@@ -325,10 +327,10 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
         {/* =================================================================== */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
           {/* LEFT COLUMN (4 cols): Filter & Configuration Parameters */}
-          <div className="lg:col-span-4 p-5 border-r border-emerald-500/20 overflow-y-auto custom-scrollbar space-y-5 bg-[#051610]/60">
+          <div className="lg:col-span-4 p-5 border-b lg:border-b-0 lg:border-r border-[#D8E2EC] dark:border-[#94B8D6]/18 overflow-y-auto custom-scrollbar space-y-5 bg-[#F4F7FA] dark:bg-[#061826]">
             {/* Report Type */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                 Type de Rapport
               </label>
               <div className="space-y-1.5">
@@ -342,12 +344,12 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     }}
                     className={`w-full p-2.5 rounded-xl text-left text-xs font-semibold border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       reportType === t
-                        ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/50 ring-1 ring-emerald-500/30'
-                        : 'bg-emerald-950/30 text-slate-400 border-emerald-500/15 hover:text-white hover:bg-emerald-500/10'
+                        ? 'bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] border-[#004266]/35 dark:border-[#3895C9]/50 ring-1 ring-[#004266]/20 dark:ring-[#3895C9]/30'
+                        : 'bg-white dark:bg-[#0B2438] text-[#486075] dark:text-slate-300 border-[#D8E2EC] dark:border-[#94B8D6]/20 hover:text-[#0B1F30] dark:hover:text-white hover:bg-[#EDF2F7] dark:hover:bg-[#103049]'
                     }`}
                   >
                     <span>{REPORT_TYPE_LABELS[t]}</span>
-                    {reportType === t && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                    {reportType === t && <Check className="w-3.5 h-3.5 text-[#F77F00] shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -355,16 +357,16 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
             {/* Period Selector */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                 Période d&apos;analyse
               </label>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value as ReportPeriod)}
-                className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-xs text-white focus:ring-2 focus:ring-emerald-400/50 outline-hidden font-medium"
+                className="w-full px-3 py-2 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-xs text-[#0B1F30] dark:text-white focus:ring-2 focus:ring-[#004266]/40 dark:focus:ring-[#3895C9]/40 outline-hidden font-medium"
               >
                 {Object.entries(REPORT_PERIOD_LABELS).map(([k, label]) => (
-                  <option key={k} value={k} className="bg-slate-900 text-white">
+                  <option key={k} value={k} className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                     {label}
                   </option>
                 ))}
@@ -373,139 +375,139 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
             {/* Department / Pôle Selector */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                 Périmètre Métier
               </label>
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/60 text-xs text-white focus:ring-2 focus:ring-emerald-400/50 outline-hidden font-medium"
+                className="w-full px-3 py-2 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-xs text-[#0B1F30] dark:text-white focus:ring-2 focus:ring-[#004266]/40 dark:focus:ring-[#3895C9]/40 outline-hidden font-medium"
               >
-                <option value="Tous" className="bg-slate-900 text-white">
+                <option value="Tous" className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                   Cabinet Global (Tous les pôles)
                 </option>
-                <option value="Fiscalité" className="bg-slate-900 text-white">
+                <option value="Fiscalité" className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                   Pôle Fiscalité
                 </option>
-                <option value="Comptabilité" className="bg-slate-900 text-white">
+                <option value="Comptabilité" className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                   Pôle Comptabilité
                 </option>
-                <option value="Juridique" className="bg-slate-900 text-white">
+                <option value="Juridique" className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                   Pôle Juridique
                 </option>
-                <option value="Recherche & Innovation" className="bg-slate-900 text-white">
+                <option value="Recherche & Innovation" className="bg-white dark:bg-[#0B2438] text-[#0B1F30] dark:text-white">
                   Pôle R&amp;D / Innovation
                 </option>
               </select>
             </div>
 
             {/* Inclusion Options */}
-            <div className="space-y-2 pt-2 border-t border-emerald-500/15">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
+            <div className="space-y-2 pt-3 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB] mb-1">
                 Sections Incluses
               </label>
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-xs text-[#0B1F30] dark:text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeCharts}
                   onChange={(e) => setIncludeCharts(e.target.checked)}
-                  className="rounded accent-emerald-400 w-3.5 h-3.5"
+                  className="rounded accent-[#004266] dark:accent-[#3895C9] w-3.5 h-3.5"
                 />
                 <span>Indicateurs de performance &amp; KPIs</span>
               </label>
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-xs text-[#0B1F30] dark:text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeRiskAnalysis}
                   onChange={(e) => setIncludeRiskAnalysis(e.target.checked)}
-                  className="rounded accent-emerald-400 w-3.5 h-3.5"
+                  className="rounded accent-[#004266] dark:accent-[#3895C9] w-3.5 h-3.5"
                 />
                 <span>Matrice des risques &amp; Points de vigilance</span>
               </label>
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-xs text-[#0B1F30] dark:text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeAuditTrail}
                   onChange={(e) => setIncludeAuditTrail(e.target.checked)}
-                  className="rounded accent-emerald-400 w-3.5 h-3.5"
+                  className="rounded accent-[#004266] dark:accent-[#3895C9] w-3.5 h-3.5"
                 />
                 <span>Traçabilité &amp; Circuit de revue Maker-Checker</span>
               </label>
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-xs text-[#0B1F30] dark:text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeAIRecommendations}
                   onChange={(e) => setIncludeAIRecommendations(e.target.checked)}
-                  className="rounded accent-emerald-400 w-3.5 h-3.5"
+                  className="rounded accent-[#004266] dark:accent-[#3895C9] w-3.5 h-3.5"
                 />
                 <span>Recommandations d&apos;orientation stratégique</span>
               </label>
             </div>
 
             {/* Report Metadata Customization */}
-            <div className="space-y-3 pt-2 border-t border-emerald-500/15">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
+            <div className="space-y-3 pt-3 border-t border-[#D8E2EC] dark:border-[#94B8D6]/18">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#004266] dark:text-[#7CC4EB]">
                 Personnalisation
               </label>
               <div>
-                <span className="block text-[11px] text-slate-400 mb-1">Titre personnalisé :</span>
+                <span className="block text-[11px] text-[#486075] dark:text-[#9FB3C8] mb-1">Titre personnalisé :</span>
                 <input
                   type="text"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
                   placeholder={REPORT_TYPE_LABELS[reportType]}
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/50 text-xs text-white placeholder:text-slate-600 focus:ring-1 focus:ring-emerald-400 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-xs text-[#0B1F30] dark:text-white placeholder:text-[#8599AD] focus:ring-1 focus:ring-[#004266] dark:focus:ring-[#3895C9] outline-hidden"
                 />
               </div>
               <div>
-                <span className="block text-[11px] text-slate-400 mb-1">Auteur / Signataire :</span>
+                <span className="block text-[11px] text-[#486075] dark:text-[#9FB3C8] mb-1">Auteur / Signataire :</span>
                 <input
                   type="text"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
                   placeholder="Direction de la Qualité"
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/50 text-xs text-white placeholder:text-slate-600 focus:ring-1 focus:ring-emerald-400 outline-hidden"
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/25 bg-white dark:bg-[#0B2438] text-xs text-[#0B1F30] dark:text-white placeholder:text-[#8599AD] focus:ring-1 focus:ring-[#004266] dark:focus:ring-[#3895C9] outline-hidden"
                 />
               </div>
             </div>
           </div>
 
           {/* RIGHT COLUMN (8 cols): Interactive Live Report Preview */}
-          <div className="lg:col-span-8 p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-slate-950/40">
+          <div className="lg:col-span-8 p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-[#EDF2F7] dark:bg-[#04101A]/60">
             {/* The Printable Container */}
             <div
               id="printable-report-content"
               ref={printableRef}
               className={`w-full max-w-4xl mx-auto rounded-2xl transition-all shadow-xl ${
                 previewMode === 'paper'
-                  ? 'bg-white text-slate-900 p-8 sm:p-10 border border-slate-300 font-sans'
-                  : 'bg-[#061A13]/90 text-slate-100 p-6 sm:p-8 border border-emerald-500/30'
+                  ? 'bg-white text-[#0B1F30] p-8 sm:p-10 border border-[#D8E2EC] font-sans'
+                  : 'bg-[#0B2438] text-slate-100 p-6 sm:p-8 border border-[#94B8D6]/25'
               }`}
             >
               {/* Document Header */}
               <div
-                className={`pb-5 mb-6 border-b ${
-                  previewMode === 'paper' ? 'border-emerald-600' : 'border-emerald-500/30'
+                className={`pb-5 mb-6 border-b-2 ${
+                  previewMode === 'paper' ? 'border-[#004266]' : 'border-[#3895C9]/40'
                 } flex items-start justify-between gap-4 flex-wrap`}
               >
                 <div>
                   <div
                     className={`text-[11px] font-black uppercase tracking-widest ${
-                      previewMode === 'paper' ? 'text-emerald-700' : 'text-emerald-400'
+                      previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
                     }`}
                   >
-                    MFISCA &amp; ASSOCIÉS · DIRECTION GÉNÉRALE
+                    LA MAISON DE LA FISCALITÉ · DIRECTION GÉNÉRALE
                   </div>
                   <h1
                     className={`text-xl sm:text-2xl font-black mt-1 tracking-tight ${
-                      previewMode === 'paper' ? 'text-slate-900' : 'text-white'
+                      previewMode === 'paper' ? 'text-[#0B1F30]' : 'text-white'
                     }`}
                   >
                     {activeTitle}
                   </h1>
                   <div
                     className={`text-xs mt-1 font-medium ${
-                      previewMode === 'paper' ? 'text-slate-600' : 'text-slate-300'
+                      previewMode === 'paper' ? 'text-[#486075]' : 'text-slate-300'
                     }`}
                   >
                     Périmètre : <strong>{metrics.departmentLabel}</strong> · Période :{' '}
@@ -515,26 +517,26 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
                 <div
                   className={`text-right text-xs shrink-0 ${
-                    previewMode === 'paper' ? 'text-slate-500' : 'text-slate-400'
+                    previewMode === 'paper' ? 'text-[#486075]' : 'text-[#9FB3C8]'
                   }`}
                 >
                   <div>
                     Émis le :{' '}
-                    <strong className={previewMode === 'paper' ? 'text-slate-800' : 'text-slate-200'}>
+                    <strong className={previewMode === 'paper' ? 'text-[#0B1F30]' : 'text-slate-200'}>
                       {metrics.generatedAtFormatted}
                     </strong>
                   </div>
                   <div>
                     Signataire :{' '}
-                    <strong className={previewMode === 'paper' ? 'text-slate-800' : 'text-slate-200'}>
+                    <strong className={previewMode === 'paper' ? 'text-[#0B1F30]' : 'text-slate-200'}>
                       {authorName}
                     </strong>
                   </div>
                   <div
                     className={`mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
                       previewMode === 'paper'
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'
+                        ? 'bg-[#004266]/10 text-[#004266] border border-[#004266]/20'
+                        : 'bg-[#3895C9]/20 text-[#7CC4EB] border border-[#3895C9]/35'
                     }`}
                   >
                     <ShieldCheck className="w-3 h-3" />
@@ -548,7 +550,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 <div className="mb-7">
                   <h3
                     className={`text-xs font-bold uppercase tracking-wider mb-3 ${
-                      previewMode === 'paper' ? 'text-emerald-800' : 'text-emerald-300'
+                      previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
                     }`}
                   >
                     1. Indicateurs Clés de Pilotage (KPIs)
@@ -559,17 +561,17 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     <div
                       className={`p-3.5 rounded-xl border ${
                         previewMode === 'paper'
-                          ? 'bg-slate-50 border-slate-200'
-                          : 'bg-emerald-950/40 border-emerald-500/20'
+                          ? 'bg-[#F4F7FA] border-[#D8E2EC]'
+                          : 'bg-[#061826] border-[#94B8D6]/20'
                       }`}
                     >
-                      <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                      <span className="block text-[10px] font-bold uppercase text-[#486075] dark:text-[#9FB3C8] tracking-wider">
                         Complétion Globale
                       </span>
-                      <div className="text-2xl font-black text-emerald-600 mt-1">
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                         {metrics.completionRate}%
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] block">
                         {metrics.completedTasks} sur {metrics.totalTasks} tâches
                       </span>
                     </div>
@@ -578,17 +580,21 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     <div
                       className={`p-3.5 rounded-xl border ${
                         previewMode === 'paper'
-                          ? 'bg-slate-50 border-slate-200'
-                          : 'bg-emerald-950/40 border-emerald-500/20'
+                          ? 'bg-[#F4F7FA] border-[#D8E2EC]'
+                          : 'bg-[#061826] border-[#94B8D6]/20'
                       }`}
                     >
-                      <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                      <span className="block text-[10px] font-bold uppercase text-[#486075] dark:text-[#9FB3C8] tracking-wider">
                         Dossiers Validés
                       </span>
-                      <div className="text-2xl font-black text-sky-600 mt-1">
+                      <div
+                        className={`text-2xl font-black mt-1 ${
+                          previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
+                        }`}
+                      >
                         {metrics.validatedDossiers}
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] block">
                         {metrics.totalDossiers} dossiers suivis
                       </span>
                     </div>
@@ -597,21 +603,23 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     <div
                       className={`p-3.5 rounded-xl border ${
                         previewMode === 'paper'
-                          ? 'bg-slate-50 border-slate-200'
-                          : 'bg-emerald-950/40 border-emerald-500/20'
+                          ? 'bg-[#F4F7FA] border-[#D8E2EC]'
+                          : 'bg-[#061826] border-[#94B8D6]/20'
                       }`}
                     >
-                      <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                      <span className="block text-[10px] font-bold uppercase text-[#486075] dark:text-[#9FB3C8] tracking-wider">
                         Tâches en Retard
                       </span>
                       <div
                         className={`text-2xl font-black mt-1 ${
-                          metrics.overdueTasks > 0 ? 'text-rose-600' : 'text-emerald-600'
+                          metrics.overdueTasks > 0
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         {metrics.overdueTasks}
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] block">
                         {metrics.urgentTasksCount} urgentes
                       </span>
                     </div>
@@ -620,21 +628,23 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     <div
                       className={`p-3.5 rounded-xl border ${
                         previewMode === 'paper'
-                          ? 'bg-slate-50 border-slate-200'
-                          : 'bg-emerald-950/40 border-emerald-500/20'
+                          ? 'bg-[#F4F7FA] border-[#D8E2EC]'
+                          : 'bg-[#061826] border-[#94B8D6]/20'
                       }`}
                     >
-                      <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                      <span className="block text-[10px] font-bold uppercase text-[#486075] dark:text-[#9FB3C8] tracking-wider">
                         Requêtes Inter-Pôles
                       </span>
                       <div
                         className={`text-2xl font-black mt-1 ${
-                          metrics.blockedInterDepRequests > 0 ? 'text-amber-600' : 'text-emerald-600'
+                          metrics.blockedInterDepRequests > 0
+                            ? 'text-[#F77F00]'
+                            : 'text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         {metrics.totalInterDepRequests}
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-[#486075] dark:text-[#9FB3C8] block">
                         {metrics.blockedInterDepRequests} bloquante(s)
                       </span>
                     </div>
@@ -646,7 +656,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               <div className="mb-7">
                 <h3
                   className={`text-xs font-bold uppercase tracking-wider mb-3 ${
-                    previewMode === 'paper' ? 'text-emerald-800' : 'text-emerald-300'
+                    previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
                   }`}
                 >
                   2. Ventilation Opérationnelle par Département
@@ -654,15 +664,15 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 
                 <div
                   className={`rounded-xl border overflow-hidden ${
-                    previewMode === 'paper' ? 'border-slate-200' : 'border-emerald-500/20'
+                    previewMode === 'paper' ? 'border-[#D8E2EC]' : 'border-[#94B8D6]/20'
                   }`}
                 >
                   <table className="w-full text-xs text-left">
                     <thead
                       className={`text-[11px] font-bold uppercase border-b ${
                         previewMode === 'paper'
-                          ? 'bg-slate-100 text-slate-700 border-slate-200'
-                          : 'bg-emerald-950/60 text-slate-300 border-emerald-500/20'
+                          ? 'bg-[#F4F7FA] text-[#0B1F30] border-[#D8E2EC]'
+                          : 'bg-[#061826] text-slate-200 border-[#94B8D6]/20'
                       }`}
                     >
                       <tr>
@@ -678,37 +688,37 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     <tbody
                       className={`divide-y ${
                         previewMode === 'paper'
-                          ? 'divide-slate-200 text-slate-800'
-                          : 'divide-emerald-500/15 text-slate-200'
+                          ? 'divide-[#D8E2EC] text-[#0B1F30]'
+                          : 'divide-[#94B8D6]/15 text-slate-200'
                       }`}
                     >
                       {metrics.departments.map((dept) => (
                         <tr key={dept.department}>
                           <td className="py-2.5 px-3 font-semibold flex items-center gap-1.5">
-                            {dept.department === 'Fiscalité' && <Calculator className="w-3.5 h-3.5 text-emerald-500" />}
-                            {dept.department === 'Comptabilité' && <Building2 className="w-3.5 h-3.5 text-amber-500" />}
+                            {dept.department === 'Fiscalité' && <Calculator className="w-3.5 h-3.5 text-[#004266] dark:text-[#7CC4EB]" />}
+                            {dept.department === 'Comptabilité' && <Building2 className="w-3.5 h-3.5 text-[#F77F00]" />}
                             {dept.department === 'Juridique' && <Scale className="w-3.5 h-3.5 text-indigo-500" />}
                             {dept.department === 'Recherche & Innovation' && <Sparkles className="w-3.5 h-3.5 text-purple-500" />}
                             <span>{dept.department}</span>
                           </td>
                           <td className="py-2.5 px-3 text-center">{dept.totalTasks}</td>
-                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600">
+                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">
                             {dept.completedTasks}
                           </td>
                           <td
                             className={`py-2.5 px-3 text-center font-bold ${
-                              dept.overdueTasks > 0 ? 'text-rose-600' : 'text-slate-400'
+                              dept.overdueTasks > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-[#8599AD]'
                             }`}
                           >
                             {dept.overdueTasks}
                           </td>
-                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600">
+                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">
                             {dept.completionRate}%
                           </td>
                           <td className="py-2.5 px-3 text-center">{dept.totalDossiers}</td>
                           <td
                             className={`py-2.5 px-3 text-center font-bold ${
-                              dept.blockedRequests > 0 ? 'text-rose-600' : 'text-slate-400'
+                              dept.blockedRequests > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-[#8599AD]'
                             }`}
                           >
                             {dept.blockedRequests}
@@ -725,7 +735,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 <div className="mb-7">
                   <h3
                     className={`text-xs font-bold uppercase tracking-wider mb-3 ${
-                      previewMode === 'paper' ? 'text-emerald-800' : 'text-emerald-300'
+                      previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
                     }`}
                   >
                     3. État du Circuit de Validation (Maker-Checker)
@@ -734,24 +744,32 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                   <div
                     className={`p-4 rounded-xl border space-y-2 text-xs ${
                       previewMode === 'paper'
-                        ? 'bg-slate-50 border-slate-200 text-slate-700'
-                        : 'bg-emerald-950/30 border-emerald-500/20 text-slate-300'
+                        ? 'bg-[#F4F7FA] border-[#D8E2EC] text-[#486075]'
+                        : 'bg-[#061826] border-[#94B8D6]/20 text-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <span>
                         Dossiers en révision active par les managers :{' '}
-                        <strong className="text-emerald-600">{metrics.dossiersInProgress}</strong>
+                        <strong className={previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'}>
+                          {metrics.dossiersInProgress}
+                        </strong>
                       </span>
                       <span>
                         Dossiers en attente de corrections collaborateur :{' '}
-                        <strong className={metrics.dossiersNeedCorrections > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                        <strong
+                          className={
+                            metrics.dossiersNeedCorrections > 0
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : 'text-emerald-600 dark:text-emerald-400'
+                          }
+                        >
                           {metrics.dossiersNeedCorrections}
                         </strong>
                       </span>
                       <span>
                         Dossiers verrouillés (Audit immuable) :{' '}
-                        <strong className="text-sky-600">{metrics.lockedDossiers}</strong>
+                        <strong className="text-[#F77F00]">{metrics.lockedDossiers}</strong>
                       </span>
                     </div>
                   </div>
@@ -763,7 +781,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 <div className="mb-7">
                   <h3
                     className={`text-xs font-bold uppercase tracking-wider mb-3 ${
-                      previewMode === 'paper' ? 'text-rose-800' : 'text-rose-400'
+                      previewMode === 'paper' ? 'text-rose-700' : 'text-rose-400'
                     }`}
                   >
                     4. Points de Vigilance &amp; Risques Opérationnels
@@ -773,21 +791,21 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                     {metrics.criticalTasks.map((t) => (
                       <div
                         key={t.id}
-                        className={`p-3 rounded-lg border-l-4 border-rose-500 text-xs flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-lg border-l-4 border-l-rose-500 text-xs flex items-center justify-between gap-3 ${
                           previewMode === 'paper'
-                            ? 'bg-rose-50/70 border border-slate-200 text-slate-800'
-                            : 'bg-rose-950/30 border border-rose-500/30 text-rose-200'
+                            ? 'bg-rose-50/70 border border-rose-200 text-[#0B1F30]'
+                            : 'bg-rose-950/35 border border-rose-500/30 text-rose-200'
                         }`}
                       >
                         <div className="min-w-0">
                           <span className="font-bold block truncate">{t.title}</span>
-                          <span className="text-[11px] opacity-75">
+                          <span className="text-[11px] opacity-80">
                             Échéance : {formatDueDateFrench(t.dueDate)} · Priorité : {t.priority.toUpperCase()}
                           </span>
                         </div>
                         <Badge
                           variant="destructive"
-                          className="text-[10px] font-bold bg-rose-600 text-white shrink-0"
+                          className="text-[10px] font-bold bg-rose-600 text-white border-rose-600 shrink-0"
                         >
                           Critique
                         </Badge>
@@ -802,7 +820,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                 <div className="mb-7">
                   <h3
                     className={`text-xs font-bold uppercase tracking-wider mb-3 ${
-                      previewMode === 'paper' ? 'text-emerald-800' : 'text-emerald-300'
+                      previewMode === 'paper' ? 'text-[#004266]' : 'text-[#7CC4EB]'
                     }`}
                   >
                     5. Recommandations Stratégiques pour le Comité
@@ -811,8 +829,8 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
                   <div
                     className={`p-4 rounded-xl border space-y-2.5 ${
                       previewMode === 'paper'
-                        ? 'bg-emerald-50/50 border-emerald-200 text-slate-800'
-                        : 'bg-emerald-950/40 border-emerald-500/25 text-slate-200'
+                        ? 'bg-[#EBF4FA]/60 border-[#004266]/20 text-[#0B1F30]'
+                        : 'bg-[#061826] border-[#3895C9]/30 text-slate-200'
                     }`}
                   >
                     <ol className="list-decimal pl-5 space-y-1.5 text-xs">
@@ -829,11 +847,11 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               {/* Document Footer */}
               <div
                 className={`pt-5 border-t text-[11px] flex items-center justify-between flex-wrap gap-2 ${
-                  previewMode === 'paper' ? 'border-slate-200 text-slate-500' : 'border-emerald-500/20 text-slate-400'
+                  previewMode === 'paper' ? 'border-[#D8E2EC] text-[#486075]' : 'border-[#94B8D6]/20 text-[#9FB3C8]'
                 }`}
               >
                 <span>
-                  Plateforme Planit · Cabinet Fiscal &amp; Juridique · Document certifié conforme
+                  La Maison de la Fiscalité · Plateforme Planit · Document certifié conforme
                 </span>
                 <span>Page 1 / 1 · Généré le {metrics.generatedAtFormatted}</span>
               </div>
