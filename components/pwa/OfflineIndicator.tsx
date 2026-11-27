@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WifiOff, Database } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import { useOnlineStatus } from './useOnlineStatus';
 
 export const OfflineIndicator: React.FC = () => {
@@ -20,9 +20,8 @@ export const OfflineIndicator: React.FC = () => {
       <div className="flex items-center gap-1.5 text-[11px]">
         <span>Mode Hors-ligne</span>
         <span className="text-[#F77F00]/60">•</span>
-        <span className="text-[#004266] dark:text-[#7CC4EB] font-bold flex items-center gap-1">
-          <Database className="w-3 h-3 text-[#004266] dark:text-[#7CC4EB]" />
-          IndexedDB actif
+        <span className="text-[#004266] dark:text-[#7CC4EB] font-bold">
+          Sauvegarde locale active
         </span>
       </div>
     </div>

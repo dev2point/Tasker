@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   Shield,
-  Database,
   Search,
   Plus,
   RefreshCw,
@@ -13,9 +12,6 @@ import {
   FolderOpen,
   ArrowRight,
   Filter,
-  Server,
-  Cloud,
-  Layers,
   LayoutDashboard,
   Lock,
 } from 'lucide-react';
@@ -42,7 +38,7 @@ interface AdminViewProps {
   onResetDefaultCategories?: () => void;
 }
 
-type AdminSection = 'overview' | 'users' | 'tasks' | 'database' | 'security' | 'categories';
+type AdminSection = 'overview' | 'users' | 'tasks' | 'security' | 'categories';
 
 export const AdminView: React.FC<AdminViewProps> = ({
   currentUser,
@@ -71,64 +67,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
   const [pendingResetCategories, setPendingResetCategories] = useState(false);
 
-  const [dbStatus, setDbStatus] = useState<{
-    connected?: boolean;
-    configured?: boolean;
-    serverTime?: string;
-    pgVersion?: string;
-    schemaReady?: boolean;
-    schemaMessage?: string;
-    error?: string;
-    loading: boolean;
-  }>({ loading: false });
-
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
-
-  const fetchDbStatus = useCallback(async () => {
-    setDbStatus((prev) => ({ ...prev, loading: true }));
-    try {
-      const res = await fetch('/api/db/status');
-      const data = await res.json();
-      setDbStatus({ ...data, loading: false });
-    } catch (err) {
-      setDbStatus({
-        connected: false,
-        configured: false,
-        error: err instanceof Error ? err.message : 'Erreur de connexion',
-        loading: false,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const loadStatus = async () => {
-      try {
-        const res = await fetch('/api/db/status');
-        const data = await res.json();
-        if (!isCancelled) {
-          setDbStatus({ ...data, loading: false });
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setDbStatus({
-            connected: false,
-            configured: false,
-            error: err instanceof Error ? err.message : 'Erreur de connexion',
-            loading: false,
-          });
-        }
-      }
-    };
-    loadStatus();
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
 
   const handleSyncTasks = async () => {
     setIsSyncing(true);
@@ -141,12 +84,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
       });
       const data = await res.json();
       if (data.synced) {
-        setSyncFeedback(`Synchronisation réussie : ${data.count} tâches enregistrées sur PostgreSQL.`);
+        setSyncFeedback(`Synchronisation réussie : ${data.count} tâches enregistrées.`);
         if (onTasksSynced && data.tasks) {
           onTasksSynced(data.tasks);
         }
       } else {
-        setSyncFeedback(data.message || 'Stockage local actif (IndexedDB).');
+        setSyncFeedback('Enregistrement local actif.');
       }
     } catch {
       setSyncFeedback('Erreur de connexion lors de la synchronisation.');
@@ -324,23 +267,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-white/80 mt-1">
-                Supervision globale du cabinet, des droits d’accès (RBAC), des tâches et du stockage de données.
+                Supervision globale du cabinet, des droits d’accès et des tâches de l’équipe.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchDbStatus}
-              disabled={dbStatus.loading}
-              className="gap-1.5 text-xs font-semibold border-white/25 bg-white/10 hover:bg-white/20 text-white hover:text-white cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${dbStatus.loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Vérifier connexion</span>
-            </Button>
-
             <Button
               variant="accent"
               size="sm"
@@ -374,7 +306,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       </div>
 
       {/* 2. Key Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-[#0B2438] rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-4 shadow-sm">
           <div className="flex items-center justify-between text-[#486075] dark:text-[#9FB3C8] text-xs font-medium">
             <span>Membres Actifs</span>
@@ -409,23 +341,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <div className="mt-2 flex items-baseline gap-2 tabular-nums">
             <span className="text-2xl font-bold text-[#0B1F30] dark:text-[#F1F5F9]">{stats.assignedTasks}</span>
             <span className="text-xs text-[#486075] dark:text-[#9FB3C8]">sur {stats.totalTasks}</span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#0B2438] rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-4 shadow-sm">
-          <div className="flex items-center justify-between text-[#486075] dark:text-[#9FB3C8] text-xs font-medium">
-            <span>État Stockage</span>
-            <Database className="w-4 h-4 text-[#F77F00]" />
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <div
-              className={`w-2.5 h-2.5 rounded-full ${
-                dbStatus.connected ? 'bg-emerald-500' : 'bg-[#F77F00]'
-              }`}
-            />
-            <span className="text-sm font-bold text-[#0B1F30] dark:text-[#F1F5F9]">
-              {dbStatus.connected ? 'PostgreSQL Connecté' : 'Mode Hybride Local'}
-            </span>
           </div>
         </div>
       </div>
@@ -468,20 +383,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           }`}
         >
           <Shield className="w-3.5 h-3.5" />
-          <span>Matrice des Droits (RBAC)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSection('database')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeSection === 'database'
-              ? 'bg-[#004266] text-white shadow-xs dark:bg-[#3895C9] dark:text-[#061826]'
-              : 'text-[#486075] hover:text-[#0B1F30] hover:bg-[#EDF2F7] dark:text-[#9FB3C8] dark:hover:text-white dark:hover:bg-[#103049]'
-          }`}
-        >
-          <Database className="w-3.5 h-3.5" />
-          <span>Base de données &amp; Synchronisation</span>
+          <span>Droits &amp; Permissions</span>
         </button>
 
         <button
@@ -591,7 +493,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
             <div className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-5 shadow-sm space-y-3">
               <h3 className="text-sm font-bold text-[#0B1F30] dark:text-[#F1F5F9]">Raccourcis Administrateur</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setShowAddUserModal(true)}
@@ -621,20 +523,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
                     </div>
                   </button>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('database')}
-                  className="p-3.5 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049] hover:border-[#004266]/50 dark:hover:border-[#3895C9]/50 text-left transition-colors flex flex-col justify-between cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[#004266]/10 text-[#004266] dark:bg-[#3895C9]/20 dark:text-[#7CC4EB] flex items-center justify-center mb-2 border border-[#004266]/20 dark:border-[#3895C9]/30">
-                    <Database className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-[#0B1F30] dark:text-[#F1F5F9]">Synchroniser PostgreSQL</div>
-                    <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8]">Sauvegarde cloud sécurisée</div>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
@@ -642,30 +530,16 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <div className="space-y-6">
             <div className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-5 shadow-sm space-y-4">
               <h3 className="text-sm font-bold text-[#0B1F30] dark:text-[#F1F5F9] flex items-center gap-2">
-                <Server className="w-4 h-4 text-[#F77F00]" />
-                État du Système &amp; Infrastructure
+                <Shield className="w-4 h-4 text-[#F77F00]" />
+                Sécurité &amp; Sauvegarde
               </h3>
 
               <div className="space-y-3">
                 <div className="p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9]">Moteur Base de Données</span>
-                    <Badge variant={dbStatus.connected ? 'success' : 'outline'} className="text-[10px]">
-                      {dbStatus.connected ? 'PostgreSQL En Ligne' : 'Local / Drizzle Ready'}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8]">
-                    {dbStatus.connected
-                      ? `Version : ${dbStatus.pgVersion ? dbStatus.pgVersion.split(' ')[0] : 'Supabase/PostgreSQL'}`
-                      : 'Stockage local persistant avec synchronisation Drizzle disponible.'}
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9]">Contrôle d’Accès (RBAC)</span>
+                    <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9]">Contrôle d’Accès</span>
                     <Badge variant="success" className="text-[10px]">
-                      Actif (4 Niveaux)
+                      Actif (4 profils)
                     </Badge>
                   </div>
                   <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8]">
@@ -677,7 +551,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-[#0B1F30] dark:text-[#F1F5F9]">Sauvegarde &amp; Export</span>
                     <Badge variant="apricot" className="text-[10px]">
-                      iCal / JSON
+                      Calendrier &amp; Fichier
                     </Badge>
                   </div>
                   <p className="text-[11px] text-[#486075] dark:text-[#9FB3C8]">
@@ -776,7 +650,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 <tr>
                   <th className="py-3 px-4">Utilisateur</th>
                   <th className="py-3 px-4">Département</th>
-                  <th className="py-3 px-4">Rôle (RBAC)</th>
+                  <th className="py-3 px-4">Rôle</th>
                   <th className="py-3 px-4 text-center">Tâches assignées</th>
                   <th className="py-3 px-4 text-center">Statut</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -958,7 +832,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <div>
                 <h3 className="text-base font-bold text-[#0B1F30] dark:text-[#F1F5F9] flex items-center gap-2">
                   <Shield className="w-5 h-5 text-[#F77F00]" />
-                  Matrice des Droits &amp; Permissions par Rôle (RBAC)
+                  Droits &amp; Permissions par Profil
                 </h3>
                 <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-1">
                   Tableau comparatif des privilèges accordés selon le rôle attribué à chaque compte.
@@ -1042,104 +916,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       )}
 
-      {/* SECTION 4: DATABASE & SYNC */}
-      {activeSection === 'database' && (
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-5 shadow-sm space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-bold text-[#0B1F30] dark:text-[#F1F5F9] flex items-center gap-2">
-                  <Database className="w-5 h-5 text-[#F77F00]" />
-                  Gestion de la Base de Données (PostgreSQL / Supabase)
-                </h3>
-                <p className="text-xs text-[#486075] dark:text-[#9FB3C8] mt-1">
-                  Surveillance du statut de connexion, schéma relationnel Drizzle ORM et synchronisation.
-                </p>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchDbStatus}
-                disabled={dbStatus.loading}
-                className="gap-1.5 text-xs font-semibold cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${dbStatus.loading ? 'animate-spin' : ''}`} />
-                <span>Tester la connexion</span>
-              </Button>
-            </div>
-
-            <div
-              className={`p-4 rounded-xl border flex items-start gap-3.5 ${
-                dbStatus.connected
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-200'
-                  : 'bg-[#F4F7FA] border-[#D8E2EC] text-[#0B1F30] dark:bg-[#103049] dark:border-[#94B8D6]/20 dark:text-[#F1F5F9]'
-              }`}
-            >
-              {dbStatus.connected ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-              ) : (
-                <Cloud className="w-5 h-5 text-[#F77F00] shrink-0 mt-0.5" />
-              )}
-              <div className="space-y-1">
-                <div className="font-bold text-sm">
-                  {dbStatus.connected
-                    ? 'Base de données PostgreSQL connectée et active'
-                    : 'Architecture Drizzle ORM prête'}
-                </div>
-                <p className="text-xs text-[#486075] dark:text-[#9FB3C8]">
-                  {dbStatus.connected
-                    ? `Serveur connecté avec succès. Horodatage serveur : ${new Date(
-                        dbStatus.serverTime || ''
-                      ).toLocaleString('fr-FR')}`
-                    : 'Les tables, schémas relationnels et API de synchronisation sont en place. Le stockage IndexedDB assure la continuité en local.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#F4F7FA] dark:bg-[#103049] border border-[#D8E2EC] dark:border-[#94B8D6]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="text-xs font-bold text-[#0B1F30] dark:text-[#F1F5F9]">Synchronisation des Tâches</div>
-                <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8] tabular-nums">
-                  Transférez vos {tasks.length} tâches vers le serveur PostgreSQL cloud.
-                </div>
-              </div>
-              <Button
-                variant="accent"
-                onClick={handleSyncTasks}
-                disabled={isSyncing}
-                className="gap-2 text-xs font-bold shrink-0 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>Lancer la synchronisation</span>
-              </Button>
-            </div>
-
-            <div className="pt-2">
-              <h4 className="text-xs font-bold text-[#0B1F30] dark:text-[#F1F5F9] mb-2.5 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#004266] dark:text-[#3895C9]" />
-                Tables du Schéma Drizzle ORM (PostgreSQL)
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049]">
-                  <div className="font-mono text-xs font-bold text-[#004266] dark:text-[#7CC4EB]">users</div>
-                  <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8] mt-1">Identités, rôles (RBAC), profils</div>
-                </div>
-                <div className="p-3 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049]">
-                  <div className="font-mono text-xs font-bold text-[#004266] dark:text-[#7CC4EB]">tasks</div>
-                  <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8] mt-1">Tâches, assignations, rappels</div>
-                </div>
-                <div className="p-3 rounded-xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#103049]">
-                  <div className="font-mono text-xs font-bold text-[#004266] dark:text-[#7CC4EB]">categories</div>
-                  <div className="text-[11px] text-[#486075] dark:text-[#9FB3C8] mt-1">Classification, couleurs, icônes</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SECTION 5: CABINET CATEGORIES */}
+      {/* SECTION 4: CABINET CATEGORIES */}
       {activeSection === 'categories' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-[#0B2438] rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 p-5 shadow-sm space-y-4">
@@ -1215,7 +992,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <div className="p-3.5 rounded-xl bg-[#004266]/6 dark:bg-[#3895C9]/10 border border-[#004266]/20 dark:border-[#3895C9]/25 flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#004266] dark:text-[#7CC4EB] shrink-0" />
               <div className="text-xs text-[#486075] dark:text-[#9FB3C8]">
-                <strong className="text-[#0B1F30] dark:text-white">Synchronisation Database Active :</strong> Toute modification effectuée par l’administrateur est enregistrée immédiatement dans la base de données PostgreSQL &amp; IndexedDB et s’applique instantanément à tous les utilisateurs.
+                <strong className="text-[#0B1F30] dark:text-white">Synchronisation partagée active :</strong> Toute modification effectuée par l’administrateur est enregistrée immédiatement et s’applique instantanément à tous les utilisateurs.
               </div>
             </div>
 
@@ -1332,7 +1109,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-[#0B1F30] dark:text-[#F1F5F9] mb-1">Rôle (RBAC)</label>
+                    <label className="block font-bold text-[#0B1F30] dark:text-[#F1F5F9] mb-1">Rôle</label>
                     <select
                       value={newUserRole}
                       onChange={(e) => setNewUserRole(e.target.value as UserRole)}

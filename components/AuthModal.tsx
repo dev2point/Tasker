@@ -250,7 +250,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                 <span>Sécurité & Conformité RGPD</span>
               </div>
               <p className="text-[11px] text-slate-200/85 leading-relaxed">
-                Chiffrement de bout en bout, cloisonnement strict des rôles (RBAC) et journal d&apos;audit légal infalsifiable.
+                Chiffrement de bout en bout, cloisonnement strict des accès par rôle et journal d&apos;audit légal infalsifiable.
               </p>
             </div>
 
@@ -271,7 +271,7 @@ const AuthModalInner: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
                 <div className="w-5 h-5 rounded-full bg-[#F77F00]/20 border border-[#F77F00]/50 flex items-center justify-center text-[#FFD09B]">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
-                <span>Synchronisation PostgreSQL & Mode Hors-ligne</span>
+                <span>Sauvegarde sécurisée &amp; Mode Hors-ligne</span>
               </div>
             </div>
           </div>

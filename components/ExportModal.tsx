@@ -9,8 +9,6 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  Database,
-  Smartphone,
   Building,
   FileSpreadsheet,
   FileText,
@@ -289,50 +287,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 onChange={handleFileChange}
                 className="hidden"
               />
-            </div>
-          </div>
-
-          {/* 3. Local IndexedDB & Offline Engine */}
-          <div className="p-3.5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#004266]/10 dark:bg-[#3895C9]/20 text-[#004266] dark:text-[#7CC4EB] flex items-center justify-center shrink-0 border border-[#004266]/20 dark:border-[#3895C9]/30">
-                <Database className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-[#0B1F30] dark:text-white text-xs">Moteur Local IndexedDB &amp; PWA</span>
-                  <Badge variant="success" className="text-[9px] py-0 px-1.5">
-                    Actif
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-[#486075] dark:text-slate-300">
-                  Stockage structuré local &amp; mode hors-ligne PWA
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#004266] dark:text-[#7CC4EB] bg-white dark:bg-[#0B2438] px-2.5 py-1 rounded-lg border border-[#D8E2EC] dark:border-[#94B8D6]/25 shrink-0 tabular-nums">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>{tasks.length} tâches</span>
-            </div>
-          </div>
-
-          {/* 4. PostgreSQL (Supabase) + Drizzle ORM */}
-          <div className="p-3.5 rounded-2xl border border-[#D8E2EC] dark:border-[#94B8D6]/20 bg-[#F4F7FA] dark:bg-[#061826]/55 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] dark:bg-[#F77F00]/20 text-[#DE7200] dark:text-[#FFB35C] flex items-center justify-center shrink-0 border border-[#F77F00]/30">
-                <Database className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-[#0B1F30] dark:text-white text-xs">PostgreSQL Supabase (Drizzle ORM)</span>
-                  <Badge variant="orange" className="text-[9px] py-0 px-1.5 font-bold">
-                    Schéma Prêt
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-[#486075] dark:text-slate-300">
-                  Support RBAC multi-utilisateurs &amp; montée en charge
-                </p>
-              </div>
             </div>
           </div>
         </div>
